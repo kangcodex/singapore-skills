@@ -1,6 +1,6 @@
 ---
-name: cdc-voucher-locator
-description: "Find CDC Voucher merchants near a Singapore location — with caching, auto-radius, and a reusable Python script. Supports intent-based filtering: food, supermarkets, budget meal, or full generic."
+name: cdc-voucher-locator-skill
+description: "Find CDC Voucher-accepting merchants near any Singapore location. Use this skill whenever the user asks where to use CDC vouchers, hawker/heartland merchants nearby, supermarkets or budget meals near a Singapore address, or food recommendations that accept CDC vouchers. Handles intent filtering (food, supermarket, budget meal, or full generic) and auto-expands search radius when results are sparse."
 ---
 
 # CDC Voucher Locator
