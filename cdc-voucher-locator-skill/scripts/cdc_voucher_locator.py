@@ -91,15 +91,7 @@ CAT_RULES = [
 
 # ── Helpers ─────────────────────────────────────────────────────────
 
-def haversine_m(lat1, lon1, lat2, lon2):
-    if None in (lat1, lon1, lat2, lon2):
-        return None
-    R = 6371000
-    dlat = radians(lat2 - lat1)
-    dlon = radians(lon2 - lon1)
-    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
-    c = 2 * asin(sqrt(a))
-    return round(R * c)
+from singapore_api import haversine_m  # noqa: E402  (shared via sync script)
 
 def clean_addr(a):
     return a.rstrip(';').replace(';', ', ')
