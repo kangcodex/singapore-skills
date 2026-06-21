@@ -7,14 +7,14 @@ call, *in what order*, and *with what intermediate state*.
 
 > **Parent:** see [`../README.md`](../README.md) for the full skill list
 > and per-skill docs. The six skills covered here are:
-> [`smart-commuter-skill`](../smart-commuter-skill/),
-> [`resale-property-advisor-skill`](../resale-property-advisor-skill/),
-> [`weekend-planner-skill`](../weekend-planner-skill/),
-> [`mrt-rerouter-skill`](../mrt-rerouter-skill/),
-> [`dengue-risk-advisor-skill`](../dengue-risk-advisor-skill/),
-> [`hawker-discover-skill`](../hawker-discover-skill/).
+> [`smart-commuter-skill`](../skills/smart-commuter-skill/),
+> [`resale-property-advisor-skill`](../skills/resale-property-advisor-skill/),
+> [`weekend-planner-skill`](../skills/weekend-planner-skill/),
+> [`mrt-rerouter-skill`](../skills/mrt-rerouter-skill/),
+> [`dengue-risk-advisor-skill`](../skills/dengue-risk-advisor-skill/),
+> [`hawker-discover-skill`](../skills/hawker-discover-skill/).
 > Plus the existing
-> [`cdc-voucher-locator-skill`](../cdc-voucher-locator-skill/).
+> [`cdc-voucher-locator-skill`](../skills/cdc-voucher-locator-skill/).
 
 ---
 
@@ -153,7 +153,7 @@ risk), then mrt-rerouter (how to get back if it rains).
 **Step 2 — run `weekend-planner-skill`.**
 
 ```bash
-python3 weekend-planner-skill/scripts/weekend_planner.py \
+python3 skills/weekend-planner-skill/scripts/weekend_planner.py \
   --location "Bishan Park" --activity "cycling" --time 16:00
 ```
 
@@ -176,7 +176,7 @@ said `psi: good` and `uv: high (not extreme)`. Per the flowchart,
 non-extreme UV + good PSI → run dengue-risk-advisor as a sanity check.
 
 ```bash
-python3 dengue-risk-advisor-skill/scripts/dengue_risk_advisor.py \
+python3 skills/dengue-risk-advisor-skill/scripts/dengue_risk_advisor.py \
   --town BISHAN --activity "cycling" --date 2026-06-27
 ```
 
@@ -198,7 +198,7 @@ subsequently asks "how do I get home from Bishan after dinner". At
 that point, run:
 
 ```bash
-python3 mrt-rerouter-skill/scripts/mrt_rerouter.py \
+python3 skills/mrt-rerouter-skill/scripts/mrt_rerouter.py \
   --origin "Bishan Park" --destination "Woodlands"
 ```
 
@@ -230,7 +230,7 @@ This is **only** `resale-property-advisor-skill`. Do not chain
 outing. Chaining adds noise.
 
 ```bash
-python3 resale-property-advisor-skill/scripts/resale_property_advisor.py \
+python3 skills/resale-property-advisor-skill/scripts/resale_property_advisor.py \
   --town BISHAN --flat-type "4 ROOM" --since 2024-01 --asking 600000
 ```
 
@@ -241,7 +241,7 @@ This is **only** `smart-commuter-skill`. Do not chain
 outdoors for long.
 
 ```bash
-python3 smart-commuter-skill/scripts/smart_commuter.py \
+python3 skills/smart-commuter-skill/scripts/smart_commuter.py \
   "VivoCity"
 ```
 
@@ -254,7 +254,7 @@ are sufficient context. Chaining weekend-planner would duplicate the
 PSI read.
 
 ```bash
-python3 dengue-risk-advisor-skill/scripts/dengue_risk_advisor.py \
+python3 skills/dengue-risk-advisor-skill/scripts/dengue_risk_advisor.py \
   --town MACRITCHIE --activity "jogging" --date 2026-06-27
 ```
 
@@ -266,7 +266,7 @@ UV/PSI noise. Chaining dengue would add mosquito noise. Run the
 single skill:
 
 ```bash
-python3 hawker-discover-skill/scripts/hawker_discover.py \
+python3 skills/hawker-discover-skill/scripts/hawker_discover.py \
   "Toa Payoh Hub" A 1000
 ```
 

@@ -3,7 +3,7 @@
 scripts/sync_singapore_api.py — keep per-skill copies of singapore_api.py in sync.
 
 The canonical file lives at the repo root: ./singapore_api.py
-Per-skill copies live at:   <skill>/scripts/singapore_api.py
+Per-skill copies live at:   skills/<skill>/scripts/singapore_api.py
 
 Each per-skill copy is the canonical file with a 5-line SYNCED FROM header
 prepended. The header is required so the copies are self-documenting
@@ -14,13 +14,14 @@ Usage:
     python3 scripts/sync_singapore_api.py --check    # exit 1 if any copy is stale
     python3 scripts/sync_singapore_api.py --dry-run  # show what would change
 
-Add a new skill to SKILL_FOLDERS when you create a new <skill>/ folder.
+Add a new skill to SKILL_FOLDERS when you create a new skills/<skill>/ folder.
 """
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CANONICAL = REPO_ROOT / "singapore_api.py"
+SKILLS_DIR = REPO_ROOT / "skills"
 
 # Order matches PRD-S00 / INDEX dependency order. Add new skills here.
 SKILL_FOLDERS = [
@@ -47,7 +48,7 @@ SYNC_HEADER = """# SYNCED FROM: ./singapore_api.py
 
 
 def per_skill_path(skill_folder):
-    return REPO_ROOT / skill_folder / "scripts" / "singapore_api.py"
+    return SKILLS_DIR / skill_folder / "scripts" / "singapore_api.py"
 
 
 def build_body():
@@ -80,7 +81,7 @@ def main(argv):
     changed, missing = [], []
 
     for skill in SKILL_FOLDERS:
-        if not (REPO_ROOT / skill).is_dir():
+        if not (SKILLS_DIR / skill).is_dir():
             missing.append(skill)
             continue
         if sync(skill, body, dry_run=dry_run or check_only):
@@ -95,7 +96,7 @@ def main(argv):
         if changed:
             print("STALE: %d per-skill copy/ies out of sync:" % len(changed))
             for s in changed:
-                print("  - %s/scripts/singapore_api.py" % s)
+                print("  - skills/%s/scripts/singapore_api.py" % s)
             print("Run: python3 scripts/sync_singapore_api.py")
             return 1
         ok_count = len(SKILL_FOLDERS) - len(missing)
@@ -106,7 +107,7 @@ def main(argv):
         if changed:
             print("Would update %d per-skill copy/ies:" % len(changed))
             for s in changed:
-                print("  - %s/scripts/singapore_api.py" % s)
+                print("  - skills/%s/scripts/singapore_api.py" % s)
         else:
             print("All per-skill copies already match.")
         return 0

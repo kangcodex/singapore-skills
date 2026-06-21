@@ -15,6 +15,7 @@ from pathlib import Path
 
 SCRIPT_PATH = (
     Path(__file__).resolve().parents[2]
+    / "skills"
     / "cdc-voucher-locator-skill"
     / "scripts"
     / "cdc_voucher_locator.py"

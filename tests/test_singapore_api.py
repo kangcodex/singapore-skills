@@ -564,7 +564,7 @@ class TestPerSkillCopiesAreInSync(unittest.TestCase):
             "hawker-discover-skill",
         ]:
             with self.subTest(skill=skill):
-                copy = REPO_ROOT / skill / "scripts" / "singapore_api.py"
+                copy = REPO_ROOT / "skills" / skill / "scripts" / "singapore_api.py"
                 if not copy.exists():
                     self.skipTest("%s not yet present" % skill)
                 body = copy.read_text(encoding="utf-8")

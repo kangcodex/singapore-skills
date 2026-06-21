@@ -20,7 +20,7 @@ Trigger phrases:
 ## Quick start
 
 ```bash
-python3 hawker-discover-skill/scripts/hawker_discover.py "Ang Mo Kio Hub" B 500
+python3 skills/hawker-discover-skill/scripts/hawker_discover.py "Ang Mo Kio Hub" B 500
 ```
 
 Modes: `A` (generic), `B` (food), `D` (budget meal). **Mode C is not
@@ -142,7 +142,7 @@ that record). This is honest "unknown" — not silently open.
 ## Testing
 
 ```bash
-python3 -m unittest discover -s hawker-discover-skill/tests -v
+python3 -m unittest discover -s skills/hawker-discover-skill/tests -v
 ```
 
 25 tests across 6 classes:

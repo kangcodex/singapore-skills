@@ -17,9 +17,9 @@ The agent extracts the destination (a place name, postal code, or address) and r
 ## Quick Start
 
 ```bash
-python3 smart-commuter-skill/scripts/smart_commuter.py "Toa Payoh Central"
-python3 smart-commuter-skill/scripts/smart_commuter.py "310080"          # postal
-python3 smart-commuter-skill/scripts/smart_commuter.py "Marina Bay" "HE12"  # with hint
+python3 skills/smart-commuter-skill/scripts/smart_commuter.py "Toa Payoh Central"
+python3 skills/smart-commuter-skill/scripts/smart_commuter.py "310080"          # postal
+python3 skills/smart-commuter-skill/scripts/smart_commuter.py "Marina Bay" "HE12"  # with hint
 ```
 
 `smart_commuter.py` is **stdlib-only** (urllib, json, math, pathlib). It imports
@@ -104,11 +104,11 @@ Cache lives at `~/.hermes/cache/smart-commuter/` (via `singapore_api.request_jso
 ## Files
 
 ```
-smart-commuter-skill/
+skills/smart-commuter-skill/
 ├── SKILL.md                          # this file
 ├── scripts/
 │   ├── smart_commuter.py             # stdlib-only helper
-│   └── singapore_api.py              # per-skill copy (synced from /singapore_api.py)
+│   └── singapore_api.py              # per-skill copy (synced from ../../singapore_api.py)
 └── tests/
     └── test_smart_commuter.py        # smoke tests (pure fns + mocked network)
 ```

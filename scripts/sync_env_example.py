@@ -3,7 +3,7 @@
 scripts/sync_env_example.py — keep per-skill .env.example copies in sync.
 
 The canonical file lives at the repo root: ./.env.example
-Per-skill copies live at:           <skill>/.env.example
+Per-skill copies live at:           skills/<skill>/.env.example
 
 Each per-skill copy is byte-identical to the canonical — there is no header
 to append because .env.example is read by other tools (e.g. `direnv`,
@@ -15,7 +15,7 @@ Usage:
     python3 scripts/sync_env_example.py --check     # exit 1 if any copy is stale
     python3 scripts/sync_env_example.py --dry-run   # show what would change
 
-Add a new skill to SKILL_FOLDERS when you create a new <skill>/ folder.
+Add a new skill to SKILL_FOLDERS when you create a new skills/<skill>/ folder.
 This list MUST match scripts/sync_singapore_api.py (consumed by CI).
 """
 import sys
@@ -23,6 +23,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CANONICAL = REPO_ROOT / ".env.example"
+SKILLS_DIR = REPO_ROOT / "skills"
 
 SKILL_FOLDERS = [
     "cdc-voucher-locator-skill",
@@ -36,7 +37,7 @@ SKILL_FOLDERS = [
 
 
 def per_skill_path(skill_folder):
-    return REPO_ROOT / skill_folder / ".env.example"
+    return SKILLS_DIR / skill_folder / ".env.example"
 
 
 def sync(skill_folder, body, *, dry_run):
@@ -61,7 +62,7 @@ def main(argv):
     changed, missing = [], []
 
     for skill in SKILL_FOLDERS:
-        if not (REPO_ROOT / skill).is_dir():
+        if not (SKILLS_DIR / skill).is_dir():
             missing.append(skill)
             continue
         if sync(skill, body, dry_run=dry_run or check_only):
@@ -70,13 +71,13 @@ def main(argv):
     if missing:
         print("NOTE: %d skill folder(s) not yet created (will be skipped):" % len(missing))
         for s in missing:
-            print("  - %s" % s)
+            print("  - skills/%s" % s)
 
     if check_only:
         if changed:
             print("STALE: %d per-skill .env.example out of sync:" % len(changed))
             for s in changed:
-                print("  - %s/.env.example" % s)
+                print("  - skills/%s/.env.example" % s)
             print("Run: python3 scripts/sync_env_example.py")
             return 1
         ok_count = len(SKILL_FOLDERS) - len(missing)
@@ -87,7 +88,7 @@ def main(argv):
         if changed:
             print("Would update %d per-skill .env.example:" % len(changed))
             for s in changed:
-                print("  - %s/.env.example" % s)
+                print("  - skills/%s/.env.example" % s)
         else:
             print("All per-skill .env.example already match.")
         return 0

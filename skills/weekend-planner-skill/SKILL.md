@@ -8,7 +8,7 @@ description: "Plan a Singapore weekend around weather, air quality, UV, and hawk
 ## Quick start
 
 ```bash
-python3 weekend-planner-skill/scripts/weekend_planner.py \
+python3 skills/weekend-planner-skill/scripts/weekend_planner.py \
     --location "Botanic Gardens" --activity "makan" --time "Saturday noon"
 ```
 
@@ -106,7 +106,7 @@ Tunables live in the cache namespace argument, not in the script.
 Smoke tests at `tests/test_weekend_planner.py` cover pure helpers (tier classification, pivot selection, hawker open/closed check, indoor-nearest) with no network. Integration tests mock the 5 fetchers and the geocoder via `unittest.mock.patch`. Run with:
 
 ```bash
-python3 -m unittest discover -s weekend-planner-skill/tests -v
+python3 -m unittest discover -s skills/weekend-planner-skill/tests -v
 ```
 
 Or include the whole repo:

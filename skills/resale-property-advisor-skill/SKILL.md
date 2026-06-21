@@ -10,7 +10,7 @@ A Singapore HDB resale value advisor. Given a town, flat type, date window, and 
 ## Quick Start
 
 ```bash
-python3 resale-property-advisor-skill/scripts/resale_property_advisor.py \
+python3 skills/resale-property-advisor-skill/scripts/resale_property_advisor.py \
     --town BISHAN --flat-type 5-ROOM --since 2025-12-01 --asking 720000
 ```
 
@@ -102,7 +102,7 @@ Namespaces used:
 Smoke tests use stdlib `unittest` + `unittest.mock` to stub all three fetchers and `geocode`:
 
 ```bash
-python3 -m unittest discover -s resale-property-advisor-skill/tests
+python3 -m unittest discover -s skills/resale-property-advisor-skill/tests
 ```
 
 The suite covers:

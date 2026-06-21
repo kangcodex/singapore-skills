@@ -23,7 +23,7 @@ specific origin-destination pair.
 
 ```bash
 # Geocodes both endpoints, fetches live LTA + NEA data, returns ranked JSON.
-python3 mrt-rerouter-skill/scripts/mrt_rerouter.py \
+python3 skills/mrt-rerouter-skill/scripts/mrt_rerouter.py \
   --origin "Bishan MRT" --destination "Changi Airport"
 ```
 
@@ -107,7 +107,7 @@ isolated.
 ## Tests
 
 ```bash
-python3 -m unittest discover -s mrt-rerouter-skill/tests
+python3 -m unittest discover -s skills/mrt-rerouter-skill/tests
 ```
 
 All five fetchers are mocked via `unittest.mock.patch`. The downgrade

@@ -17,13 +17,13 @@ fi
 
 pass=0; fail=0
 for s in \
-  "resale-property-advisor-skill/scripts/resale_property_advisor.py --town BISHAN --flat-type '5 ROOM' --since 2025-12 --asking 800000" \
-  "weekend-planner-skill/scripts/weekend_planner.py --location BISHAN --activity makan --time 'Saturday noon'" \
-  "dengue-risk-advisor-skill/scripts/dengue_risk_advisor.py --town BISHAN --activity 'morning jog' --date 2026-06-21" \
-  "hawker-discover-skill/scripts/hawker_discover.py BISHAN A 2000" \
-  "cdc-voucher-locator-skill/scripts/cdc_voucher_locator.py 238859" \
-  "mrt-rerouter-skill/scripts/mrt_rerouter.py --origin BISHAN --destination BUGIS" \
-  "smart-commuter-skill/scripts/smart_commuter.py 238859"
+  "skills/resale-property-advisor-skill/scripts/resale_property_advisor.py --town BISHAN --flat-type '5 ROOM' --since 2025-12 --asking 800000" \
+  "skills/weekend-planner-skill/scripts/weekend_planner.py --location BISHAN --activity makan --time 'Saturday noon'" \
+  "skills/dengue-risk-advisor-skill/scripts/dengue_risk_advisor.py --town BISHAN --activity 'morning jog' --date 2026-06-21" \
+  "skills/hawker-discover-skill/scripts/hawker_discover.py BISHAN A 2000" \
+  "skills/cdc-voucher-locator-skill/scripts/cdc_voucher_locator.py 238859" \
+  "skills/mrt-rerouter-skill/scripts/mrt_rerouter.py --origin BISHAN --destination BUGIS" \
+  "skills/smart-commuter-skill/scripts/smart_commuter.py 238859"
 do
   out=$(python3 $s 2>&1)
   if echo "$out" | grep -qiE "traceback|exception|error\":"; then

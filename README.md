@@ -6,13 +6,13 @@ A collection of agent skills for Singapore-specific lookups. Each skill bundles 
 
 | Skill | Folder | What it does |
 |-------|--------|--------------|
-| `cdc-voucher-locator-skill` | [`cdc-voucher-locator-skill/`](cdc-voucher-locator-skill/) | Find CDC Voucher-accepting merchants near any Singapore location. Filters by intent (food / supermarket / budget meal / generic). |
-| `smart-commuter-skill` | [`smart-commuter-skill/`](smart-commuter-skill/) | Car driver rerouting — pick the right HDB carpark, swap to alternates when full, plus live traffic and thunderstorm advisories. |
-| `resale-property-advisor-skill` | [`resale-property-advisor-skill/`](resale-property-advisor-skill/) | "Is this asking price fair?" — compares against HDB resale cluster average, lists nearby URA future amenities, flags above-average rainfall. |
-| `weekend-planner-skill` | [`weekend-planner-skill/`](weekend-planner-skill/) | Family-friendly weekend activity planner — pivots to indoor ActiveSG when UV≥11 or PSI≥101, swaps hawker centres during cleaning windows. |
-| `mrt-rerouter-skill` | [`mrt-rerouter-skill/`](mrt-rerouter-skill/) | Cross-island MRT + bus routing with PSI/walk-leg downgrades and LTA traffic-image-driven bus-leg penalties. |
-| `dengue-risk-advisor-skill` | [`dengue-risk-advisor-skill/`](dengue-risk-advisor-skill/) | Outdoor activity dengue-risk tier (low / moderate / elevated / high) from NEA cluster density + 7-day rainfall forecast vs. 5-year history. |
-| `hawker-discover-skill` | [`hawker-discover-skill/`](hawker-discover-skill/) | Hawker centre finder — composes the CDC voucher locator via subprocess, then filters to centres that are **open today**. |
+| `cdc-voucher-locator-skill` | [`skills/cdc-voucher-locator-skill/`](skills/cdc-voucher-locator-skill/) | Find CDC Voucher-accepting merchants near any Singapore location. Filters by intent (food / supermarket / budget meal / generic). |
+| `smart-commuter-skill` | [`skills/smart-commuter-skill/`](skills/smart-commuter-skill/) | Car driver rerouting — pick the right HDB carpark, swap to alternates when full, plus live traffic and thunderstorm advisories. |
+| `resale-property-advisor-skill` | [`skills/resale-property-advisor-skill/`](skills/resale-property-advisor-skill/) | "Is this asking price fair?" — compares against HDB resale cluster average, lists nearby URA future amenities, flags above-average rainfall. |
+| `weekend-planner-skill` | [`skills/weekend-planner-skill/`](skills/weekend-planner-skill/) | Family-friendly weekend activity planner — pivots to indoor ActiveSG when UV≥11 or PSI≥101, swaps hawker centres during cleaning windows. |
+| `mrt-rerouter-skill` | [`skills/mrt-rerouter-skill/`](skills/mrt-rerouter-skill/) | Cross-island MRT + bus routing with PSI/walk-leg downgrades and LTA traffic-image-driven bus-leg penalties. |
+| `dengue-risk-advisor-skill` | [`skills/dengue-risk-advisor-skill/`](skills/dengue-risk-advisor-skill/) | Outdoor activity dengue-risk tier (low / moderate / elevated / high) from NEA cluster density + 7-day rainfall forecast vs. 5-year history. |
+| `hawker-discover-skill` | [`skills/hawker-discover-skill/`](skills/hawker-discover-skill/) | Hawker centre finder — composes the CDC voucher locator via subprocess, then filters to centres that are **open today**. |
 
 ## Install
 
@@ -31,7 +31,7 @@ npx skills add kangcodex/singapore-skills
 npx skills add kangcodex/singapore-skills --skill cdc-voucher-locator-skill
 
 # Direct subpath (works for any agent that resolves GitHub tree URLs)
-npx skills add https://github.com/kangcodex/singapore-skills/tree/main/cdc-voucher-locator-skill
+npx skills add https://github.com/kangcodex/singapore-skills/tree/main/skills/cdc-voucher-locator-skill
 ```
 
 ### Install for a specific agent only
@@ -72,7 +72,7 @@ cd singapore-skills
 
 # Copy the skill into your agent's skills directory
 mkdir -p ~/.claude/skills
-cp -r cdc-voucher-locator-skill ~/.claude/skills/
+cp -r skills/cdc-voucher-locator-skill ~/.claude/skills/cdc-voucher-locator-skill
 ```
 
 For other agents, the destination paths differ — see the [vercel-labs/skills supported agents list](https://github.com/vercel-labs/skills#supported-agents).
@@ -102,7 +102,7 @@ The agent picks a mode from the user's wording, then runs the bundled script:
 The skill bundles a standalone Python script — no `pip install` required, only stdlib:
 
 ```bash
-python3 cdc-voucher-locator-skill/scripts/cdc_voucher_locator.py "Ang Mo Kio Hub" B 500
+python3 skills/cdc-voucher-locator-skill/scripts/cdc_voucher_locator.py "Ang Mo Kio Hub" B 500
 ```
 
 Arguments: `query`, `mode` (A|B|C|D), `radius_m` (default 500).
@@ -110,7 +110,7 @@ Arguments: `query`, `mode` (A|B|C|D), `radius_m` (default 500).
 Output is JSON — pipe through `jq` for a quick look:
 
 ```bash
-python3 cdc-voucher-locator-skill/scripts/cdc_voucher_locator.py "Tiong Bahru" C | jq '.supermarkets[:3]'
+python3 skills/cdc-voucher-locator-skill/scripts/cdc_voucher_locator.py "Tiong Bahru" C | jq '.supermarkets[:3]'
 ```
 
 ### Sample report (Mode B, food)
@@ -129,7 +129,7 @@ python3 cdc-voucher-locator-skill/scripts/cdc_voucher_locator.py "Tiong Bahru" C
    Peppery pork rib soup
 ```
 
-See [`cdc-voucher-locator-skill/SKILL.md`](cdc-voucher-locator-skill/SKILL.md) for the full workflow (caching, geocoding, pitfalls, official URL params).
+See [`skills/cdc-voucher-locator-skill/SKILL.md`](skills/cdc-voucher-locator-skill/SKILL.md) for the full workflow (caching, geocoding, pitfalls, official URL params).
 
 ## How it works
 
@@ -167,28 +167,28 @@ singapore-skills/
 ├── singapore_api.py                   # canonical shared client (14 fetchers + geocode)
 ├── .env.example                       # canonical DATA_GOV_SG_API_KEY template
 ├── scripts/
-│   ├── sync_singapore_api.py          # copies the canonical to <skill>/scripts/singapore_api.py
-│   └── sync_env_example.py            # copies the canonical to <skill>/.env.example
+│   ├── sync_singapore_api.py          # copies the canonical to skills/<skill>/scripts/singapore_api.py
+│   └── sync_env_example.py            # copies the canonical to skills/<skill>/.env.example
 ├── tests/
 │   └── test_singapore_api.py          # tests for the canonical shared client (33 tests)
 ├── docs/
 │   └── ORCHESTRATION.md               # chained-tool pattern guide (plan-my-Saturday example)
-├── cdc-voucher-locator-skill/         # skill #1
-│   ├── SKILL.md
-│   ├── scripts/
-│   │   ├── cdc_voucher_locator.py
-│   │   └── singapore_api.py           # SYNCED FROM ../singapore_api.py
-│   ├── .env.example                   # SYNCED FROM ../.env.example
-│   ├── references/                    # cdc-data-format.md, cdc-url-params.md, onemap-api.md
-│   └── tests/
-│       └── test_cdc_voucher_locator.py # 20 smoke tests
-├── smart-commuter-skill/              # skill #2
-│   └── ... (same shape, 35 tests, 3 references)
-├── resale-property-advisor-skill/     # skill #3 (31 tests, 3 references)
-├── weekend-planner-skill/             # skill #4 (36 tests, 3 references)
-├── mrt-rerouter-skill/                # skill #5 (45 tests, 3 references)
-├── dengue-risk-advisor-skill/         # skill #6 (64 tests, 3 references)
-└── hawker-discover-skill/             # skill #7 (25 tests, 2 references)
+└── skills/
+    ├── cdc-voucher-locator-skill/     # skill #1
+    │   ├── SKILL.md
+    │   ├── scripts/
+    │   │   ├── cdc_voucher_locator.py
+    │   │   └── singapore_api.py       # SYNCED FROM ../../singapore_api.py
+    │   ├── .env.example               # SYNCED FROM ../../.env.example
+    │   ├── references/                # cdc-data-format.md, cdc-url-params.md, onemap-api.md
+    │   └── tests/
+    │       └── test_cdc_voucher_locator.py  # 20 smoke tests
+    ├── smart-commuter-skill/          # skill #2 (35 tests, 3 references)
+    ├── resale-property-advisor-skill/ # skill #3 (31 tests, 3 references)
+    ├── weekend-planner-skill/         # skill #4 (36 tests, 3 references)
+    ├── mrt-rerouter-skill/            # skill #5 (45 tests, 3 references)
+    ├── dengue-risk-advisor-skill/     # skill #6 (64 tests, 3 references)
+    └── hawker-discover-skill/         # skill #7 (25 tests, 2 references)
 ```
 
 Each per-skill `scripts/singapore_api.py` and `.env.example` is generated by the
@@ -208,32 +208,32 @@ covers only the **canonical shared client** (`singapore_api.py`).
 python3 -m unittest discover -s tests
 
 # Run a per-skill suite
-python3 -m unittest discover -s cdc-voucher-locator-skill/tests
-python3 -m unittest discover -s smart-commuter-skill/tests
-python3 -m unittest discover -s resale-property-advisor-skill/tests
-python3 -m unittest discover -s weekend-planner-skill/tests
-python3 -m unittest discover -s mrt-rerouter-skill/tests
-python3 -m unittest discover -s dengue-risk-advisor-skill/tests
-python3 -m unittest discover -s hawker-discover-skill/tests
+python3 -m unittest discover -s skills/cdc-voucher-locator-skill/tests
+python3 -m unittest discover -s skills/smart-commuter-skill/tests
+python3 -m unittest discover -s skills/resale-property-advisor-skill/tests
+python3 -m unittest discover -s skills/weekend-planner-skill/tests
+python3 -m unittest discover -s skills/mrt-rerouter-skill/tests
+python3 -m unittest discover -s skills/dengue-risk-advisor-skill/tests
+python3 -m unittest discover -s skills/hawker-discover-skill/tests
 
 # Or with pytest (same shape)
 pip install pytest
-pytest cdc-voucher-locator-skill/tests/
+pytest skills/cdc-voucher-locator-skill/tests/
 ```
 
 Test counts (as of 2026-06-21):
 
-| Suite                                  | Tests |
-| -------------------------------------- | ----- |
-| `tests/test_singapore_api.py`          | 33    |
-| `cdc-voucher-locator-skill/tests/`     | 20    |
-| `smart-commuter-skill/tests/`          | 35    |
-| `resale-property-advisor-skill/tests/` | 31    |
-| `weekend-planner-skill/tests/`         | 36    |
-| `mrt-rerouter-skill/tests/`            | 45    |
-| `dengue-risk-advisor-skill/tests/`     | 64    |
-| `hawker-discover-skill/tests/`         | 25    |
-| **Total**                              | **289** |
+| Suite                                            | Tests |
+| ------------------------------------------------ | ----- |
+| `tests/test_singapore_api.py`                    | 33    |
+| `skills/cdc-voucher-locator-skill/tests/`        | 20    |
+| `skills/smart-commuter-skill/tests/`             | 35    |
+| `skills/resale-property-advisor-skill/tests/`    | 31    |
+| `skills/weekend-planner-skill/tests/`            | 36    |
+| `skills/mrt-rerouter-skill/tests/`               | 45    |
+| `skills/dengue-risk-advisor-skill/tests/`        | 64    |
+| `skills/hawker-discover-skill/tests/`            | 25    |
+| **Total**                                        | **289** |
 
 Network-dependent paths are mocked so the suite passes in offline / sandboxed
 environments. The pure helpers and the network seam are both covered.
@@ -255,28 +255,28 @@ singapore-skills/
 ├── singapore_api.py                   # canonical shared client (14 fetchers + geocode)
 ├── .env.example                       # canonical DATA_GOV_SG_API_KEY template
 ├── scripts/
-│   ├── sync_singapore_api.py          # copies the canonical to <skill>/scripts/singapore_api.py
-│   └── sync_env_example.py            # copies the canonical to <skill>/.env.example
+│   ├── sync_singapore_api.py          # copies the canonical to skills/<skill>/scripts/singapore_api.py
+│   └── sync_env_example.py            # copies the canonical to skills/<skill>/.env.example
 ├── tests/
 │   └── test_singapore_api.py          # tests for the canonical shared client (33 tests)
 ├── docs/
 │   └── ORCHESTRATION.md               # chained-tool pattern guide (plan-my-Saturday example)
-├── cdc-voucher-locator-skill/         # skill #1
-│   ├── SKILL.md
-│   ├── scripts/
-│   │   ├── cdc_voucher_locator.py
-│   │   └── singapore_api.py           # SYNCED FROM ../singapore_api.py
-│   ├── .env.example                   # SYNCED FROM ../.env.example
-│   ├── references/                    # cdc-data-format.md, cdc-url-params.md, onemap-api.md
-│   └── tests/
-│       └── test_cdc_voucher_locator.py # 20 smoke tests
-├── smart-commuter-skill/              # skill #2
-│   └── ... (same shape, 35 tests, 3 references)
-├── resale-property-advisor-skill/     # skill #3 (31 tests, 3 references)
-├── weekend-planner-skill/             # skill #4 (36 tests, 3 references)
-├── mrt-rerouter-skill/                # skill #5 (45 tests, 3 references)
-├── dengue-risk-advisor-skill/         # skill #6 (64 tests, 3 references)
-└── hawker-discover-skill/             # skill #7 (25 tests, 2 references)
+└── skills/
+    ├── cdc-voucher-locator-skill/     # skill #1
+    │   ├── SKILL.md
+    │   ├── scripts/
+    │   │   ├── cdc_voucher_locator.py
+    │   │   └── singapore_api.py       # SYNCED FROM ../../singapore_api.py
+    │   ├── .env.example               # SYNCED FROM ../../.env.example
+    │   ├── references/                # cdc-data-format.md, cdc-url-params.md, onemap-api.md
+    │   └── tests/
+    │       └── test_cdc_voucher_locator.py  # 20 smoke tests
+    ├── smart-commuter-skill/          # skill #2 (35 tests, 3 references)
+    ├── resale-property-advisor-skill/ # skill #3 (31 tests, 3 references)
+    ├── weekend-planner-skill/         # skill #4 (36 tests, 3 references)
+    ├── mrt-rerouter-skill/            # skill #5 (45 tests, 3 references)
+    ├── dengue-risk-advisor-skill/     # skill #6 (64 tests, 3 references)
+    └── hawker-discover-skill/         # skill #7 (25 tests, 2 references)
 ```
 
 Each per-skill `scripts/singapore_api.py` and `.env.example` is generated by the
