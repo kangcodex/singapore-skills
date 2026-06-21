@@ -103,12 +103,12 @@ class TestHdbFilter(unittest.TestCase):
         self.assertIsNone(self.m.cluster_average([]))
 
     def test_hdb_records_filters_by_month(self):
-        envelope = {"result": {"records": [
+        rows = [
             _hdb_record("bishan", "5-ROOM", "2025-11", 500000),
             _hdb_record("bishan", "5-ROOM", "2025-12", 600000),
             _hdb_record("bishan", "5-ROOM", "2026-01", 700000),
-        ], "total": 3}}
-        with patch.object(self.m, "fetch_datastore_search", return_value=envelope) as fds:
+        ]
+        with patch.object(self.m, "fetch_dataset_rows", return_value=rows) as fds:
             out = self.m.fetch_hdb_records("bishan", "5-ROOM", "2025-12-01")
         self.assertEqual(len(out), 2)
         prices = [self.m.to_float(r["resale_price"]) for r in out]
@@ -163,28 +163,24 @@ class TestRainfallClassification(unittest.TestCase):
             records.append({"total_rainfall_mm": 250.0})
         for i in range(36):
             records.append({"total_rainfall_mm": 150.0})
-        envelope = {"result": {"records": records, "total": 60}}
-        with patch.object(self.m, "fetch_nea_historical_rainfall", return_value=envelope):
+        with patch.object(self.m, "fetch_nea_historical_rainfall", return_value=records):
             r = self.m.rainfall_history()
         self.assertEqual(r["classification"], "above-average")
 
     def test_rainfall_typical(self):
         records = [{"total_rainfall_mm": 170.0}] * 60
-        envelope = {"result": {"records": records, "total": 60}}
-        with patch.object(self.m, "fetch_nea_historical_rainfall", return_value=envelope):
+        with patch.object(self.m, "fetch_nea_historical_rainfall", return_value=records):
             r = self.m.rainfall_history()
         self.assertEqual(r["classification"], "typical")
 
     def test_rainfall_below_average(self):
         records = [{"total_rainfall_mm": 100.0}] * 24 + [{"total_rainfall_mm": 200.0}] * 36
-        envelope = {"result": {"records": records, "total": 60}}
-        with patch.object(self.m, "fetch_nea_historical_rainfall", return_value=envelope):
+        with patch.object(self.m, "fetch_nea_historical_rainfall", return_value=records):
             r = self.m.rainfall_history()
         self.assertEqual(r["classification"], "below-average")
 
     def test_rainfall_empty(self):
-        envelope = {"result": {"records": [], "total": 0}}
-        with patch.object(self.m, "fetch_nea_historical_rainfall", return_value=envelope):
+        with patch.object(self.m, "fetch_nea_historical_rainfall", return_value=[]):
             r = self.m.rainfall_history()
         self.assertEqual(r["classification"], "unknown")
 
@@ -220,16 +216,16 @@ class TestAssess(unittest.TestCase):
         self.m = _load_module()
 
     def test_assess_full_report(self):
-        hdb = {"result": {"records": [
+        hdb = [
             _hdb_record("bishan", "5-ROOM", "2025-12", 700000, x=30000, y=39000),
             _hdb_record("bishan", "5-ROOM", "2026-01", 710000, x=30000, y=39000),
-        ], "total": 2}}
+        ]
         ura = {"result": {"records": [
             _ura_feature("PRIMARY SCHOOL", 30050, 39050),
             _ura_feature("MRT STATION", 30100, 39100),
         ], "total": 2}}
-        rain = {"result": {"records": [{"total_rainfall_mm": 170.0}] * 60, "total": 60}}
-        with patch.object(self.m, "fetch_datastore_search", return_value=hdb), \
+        rain = [{"total_rainfall_mm": 170.0}] * 60
+        with patch.object(self.m, "fetch_dataset_rows", return_value=hdb), \
              patch.object(self.m, "fetch_ura_master_plan", return_value=ura), \
              patch.object(self.m, "fetch_nea_historical_rainfall", return_value=rain):
             result = self.m.assess("bishan", "5-ROOM", "2025-12-01", 720000)
@@ -248,8 +244,7 @@ class TestAssess(unittest.TestCase):
             self.m.assess("bishan", "99-ROOM", "2025-12-01", 720000)
 
     def test_assess_raises_on_empty_hdb(self):
-        hdb = {"result": {"records": [], "total": 0}}
-        with patch.object(self.m, "fetch_datastore_search", return_value=hdb):
+        with patch.object(self.m, "fetch_dataset_rows", return_value=[]):
             with self.assertRaises(ValueError):
                 self.m.assess("bishan", "5-ROOM", "2025-12-01", 720000)
 

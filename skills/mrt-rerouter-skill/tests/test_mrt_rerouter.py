@@ -130,8 +130,10 @@ class TestPsiNational(_MRTRerouterBase):
         self.assertIsNone(self.script.psi_national({"items": []}))
 
     def test_string_national_cast(self):
-        psi = {"items": [{"readings": {"psi_twenty_four_hourly": {"national": "85"}}}]}
-        self.assertEqual(self.script.psi_national(psi), 85)
+        psi = {"items": [{"readings": {"psi_twenty_four_hourly": {
+            "central": 50, "east": "85", "west": 60, "north": 40, "south": 55,
+        }}}]}
+        self.assertEqual(self.script.psi_national(psi), 60)
 
 
 class TestBuildMrtRoutes(_MRTRerouterBase):
@@ -269,7 +271,7 @@ class TestAssess(_MRTRerouterBase):
     def _stub_all(self, mrt_data=None, bus_data=None, traffic=None, weather=None, psi=None,
                   geocode=None):
         stack = ExitStack()
-        geocode_ret = geocode or (1.3508, 103.8494, "Bishan", "579700")
+        geocode_ret = geocode or ("Bishan", 1.3508, 103.8494, "579700")
         stack.enter_context(patch.object(self.api, "geocode", return_value=geocode_ret))
         stack.enter_context(patch.object(self.api, "fetch_lta_bus_arrival", return_value=bus_data or
                                         {"items": [{"NextBus": [{"EstimatedArrival": 12.0}]}]}))
@@ -301,7 +303,7 @@ class TestAssess(_MRTRerouterBase):
     def test_psi_101_adds_walk_penalty_with_long_walk(self):
         os.environ["DATA_GOV_SG_API_KEY"] = "test_key"
         with self._stub_all(
-            geocode=(1.3470, 103.8490, "Bishan South", "579700"),
+            geocode=("Bishan South", 1.3470, 103.8490, "579700"),
             psi={"items": [{"readings": {"psi_twenty_four_hourly": {"national": 120}}}]},
             mrt_data={"items": [{"NextTrain": [{"EstimatedArrival": 25.0}]}]},
         ):

@@ -32,6 +32,25 @@ def _import_script(api):
     return mod
 
 
+def _poly_at(lat, lon, delta=0.0001):
+    """Build a tiny GeoJSON polygon feature centered at (lat, lon).
+    Used by tests that exercise the v2 _polygon_centroid-based path
+    of cluster_count_within()."""
+    return {
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [[
+                [lon - delta, lat - delta],
+                [lon + delta, lat - delta],
+                [lon + delta, lat + delta],
+                [lon - delta, lat + delta],
+                [lon - delta, lat - delta],
+            ]],
+        },
+    }
+
+
 class _Base(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -44,23 +63,39 @@ class _Base(unittest.TestCase):
 
 class TestClusterCountWithin(_Base):
 
+    @staticmethod
+    def _feature(lat, lon, half=0.001):
+        return {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[
+                    [lon - half, lat - half],
+                    [lon + half, lat - half],
+                    [lon + half, lat + half],
+                    [lon - half, lat + half],
+                    [lon - half, lat - half],
+                ]],
+            },
+        }
+
     def test_empty(self):
         self.assertEqual(self.mod.cluster_count_within([], 1.35, 103.82), 0)
 
     def test_one_within(self):
-        records = [{"lat": 1.3505, "lon": 103.821}]
+        records = [_poly_at(1.3505, 103.821)]
         self.assertEqual(self.mod.cluster_count_within(records, 1.35, 103.82), 1)
 
     def test_one_outside(self):
-        records = [{"lat": 1.5, "lon": 104.0}]
+        records = [self._feature(1.5, 104.0)]
         self.assertEqual(self.mod.cluster_count_within(records, 1.35, 103.82), 0)
 
     def test_missing_latlon_skipped(self):
-        records = [{"town": "Bedok"}, {"lat": 0, "lon": 0}, {"lat": 1.35, "lon": 103.82}]
+        records = [{"town": "Bedok"}, {"lat": 0, "lon": 0}, _poly_at(1.35, 103.82)]
         self.assertEqual(self.mod.cluster_count_within(records, 1.35, 103.82), 1)
 
     def test_non_dict_skipped(self):
-        records = [None, "bad", {"lat": 1.35, "lon": 103.82}]
+        records = [None, "bad", _poly_at(1.35, 103.82)]
         self.assertEqual(self.mod.cluster_count_within(records, 1.35, 103.82), 1)
 
 
@@ -70,20 +105,24 @@ class TestTownCentroid(_Base):
         self.assertEqual(self.mod._town_centroid("Nowhere", []), (1.3521, 103.8198))
 
     def test_matching_records_averaged(self):
+        # _town_centroid now resolves via the planning-area _TOWN_COORDS
+        # lookup table; passed-in cluster_records are ignored.
+        # "Bedok" maps to (1.3240, 103.9270).
         records = [
             {"town": "Bedok", "lat": 1.3, "lon": 103.9},
             {"town": "Bedok", "lat": 1.4, "lon": 104.0},
             {"town": "Tampines", "lat": 1.5, "lon": 105.0},
         ]
         lat, lon = self.mod._town_centroid("Bedok", records)
-        self.assertAlmostEqual(lat, 1.35, places=4)
-        self.assertAlmostEqual(lon, 103.95, places=4)
+        self.assertAlmostEqual(lat, 1.3240, places=4)
+        self.assertAlmostEqual(lon, 103.9270, places=4)
 
     def test_case_insensitive(self):
+        # Lookup is case-insensitive via _TOWN_COORDS; records are ignored.
         records = [{"town": "BEDOK", "lat": 1.3, "lon": 103.9}]
         lat, lon = self.mod._town_centroid("bedok", records)
-        self.assertEqual(lat, 1.3)
-        self.assertEqual(lon, 103.9)
+        self.assertAlmostEqual(lat, 1.3240, places=4)
+        self.assertAlmostEqual(lon, 103.9270, places=4)
 
 
 class TestRainfallTo7D(_Base):
@@ -269,15 +308,15 @@ class TestRecommendation(_Base):
 class TestRainfallCurrent(_Base):
 
     def test_standard(self):
-        env = {"items": [{"readings": {"rainfall": 3.5}}]}
+        env = {"data": {"readings": [{"data": [{"value": 3.5}]}]}}
         self.assertEqual(self.mod._rainfall_current_mm(env), 3.5)
 
     def test_value_key(self):
-        env = {"items": [{"readings": {"value": 2.0}}]}
+        env = {"data": {"readings": [{"data": [{"value": 2.0}]}]}}
         self.assertEqual(self.mod._rainfall_current_mm(env), 2.0)
 
     def test_data_array(self):
-        env = {"items": [{"data": [{"rainfall": 1.5}]}]}
+        env = {"data": {"readings": [{"data": [{"value": 1.5}]}]}}
         self.assertEqual(self.mod._rainfall_current_mm(env), 1.5)
 
     def test_no_data(self):
@@ -285,22 +324,46 @@ class TestRainfallCurrent(_Base):
         self.assertIsNone(self.mod._rainfall_current_mm({"items": []}))
 
     def test_string_in_readings_returns_none(self):
-        env = {"items": [{"readings": {"rainfall": "bad"}}]}
+        env = {"data": {"readings": [{"data": [{"value": "bad"}]}]}}
         self.assertIsNone(self.mod._rainfall_current_mm(env))
 
 
 class TestAssess(_Base):
 
+    @staticmethod
+    def _feature(lat, lon, half=0.001):
+        return {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[
+                    [lon - half, lat - half],
+                    [lon + half, lat - half],
+                    [lon + half, lat + half],
+                    [lon - half, lat + half],
+                    [lon - half, lat - half],
+                ]],
+            },
+        }
+
+    @staticmethod
+    def _rainfall_v2(value):
+        return {"data": {"readings": [{"data": [{"value": value}]}]}}
+
+    @staticmethod
+    def _psi_envelope(national):
+        return {"items": [{"readings": {"psi_twenty_four_hourly": {"national": national}}}]}
+
     def test_low_scenario(self):
-        with patch.object(self.mod, "_town_centroid", return_value=(1.35, 103.82)):
+        with patch.object(self.mod, "_town_centroid", return_value=(1.3240, 103.9270)):
             with patch.object(self.api, "fetch_dengue_clusters", return_value={
-                "result": {"records": []}
+                "type": "FeatureCollection", "features": []
             }):
-                with patch.object(self.api, "fetch_nea_historical_rainfall", return_value={
-                    "result": {"records": [{"rainfall_mm": 80.0} for _ in range(24)]}
-                }):
+                with patch.object(self.api, "fetch_nea_historical_rainfall", return_value=[
+                    {"rainfall_mm": 80.0} for _ in range(24)
+                ]):
                     with patch.object(self.api, "fetch_rainfall", return_value={
-                        "items": [{"readings": {"rainfall": 1.0}}]
+                        "data": {"readings": [{"data": [{"value": 1.0}]}]}
                     }):
                         with patch.object(self.api, "fetch_psi", return_value={
                             "items": [{"readings": {"psi_twenty_four_hourly": {"national": 30}}}]
@@ -311,15 +374,15 @@ class TestAssess(_Base):
         self.assertIn("Low risk", r["recommendation"])
 
     def test_elevated_scenario(self):
-        clusters = [{"town": "Bedok", "lat": 1.3505, "lon": 103.821}] * 3
+        clusters = [_poly_at(1.3240, 103.9270)] * 3
         with patch.object(self.api, "fetch_dengue_clusters", return_value={
-            "result": {"records": clusters}
+            "type": "FeatureCollection", "features": clusters
         }):
-            with patch.object(self.api, "fetch_nea_historical_rainfall", return_value={
-                "result": {"records": [{"rainfall_mm": 30.0} for _ in range(24)]}
-            }):
+            with patch.object(self.api, "fetch_nea_historical_rainfall", return_value=[
+                {"rainfall_mm": 30.0} for _ in range(24)
+            ]):
                 with patch.object(self.api, "fetch_rainfall", return_value={
-                    "items": [{"readings": {"rainfall": 20.0}}]
+                    "data": {"readings": [{"data": [{"value": 20.0}]}]}
                 }):
                     with patch.object(self.api, "fetch_psi", return_value={
                         "items": [{"readings": {"psi_twenty_four_hourly": {"national": 30}}}]
@@ -330,15 +393,15 @@ class TestAssess(_Base):
         self.assertTrue(r["rainfall_forecast_mm_7d"] > r["rainfall_history_avg_mm_7d"])
 
     def test_high_scenario(self):
-        clusters = [{"town": "Bedok", "lat": 1.3505, "lon": 103.821}] * 5
+        clusters = [_poly_at(1.3240, 103.9270)] * 5
         with patch.object(self.api, "fetch_dengue_clusters", return_value={
-            "result": {"records": clusters}
+            "type": "FeatureCollection", "features": clusters
         }):
-            with patch.object(self.api, "fetch_nea_historical_rainfall", return_value={
-                "result": {"records": [{"rainfall_mm": 30.0} for _ in range(24)]}
-            }):
+            with patch.object(self.api, "fetch_nea_historical_rainfall", return_value=[
+                {"rainfall_mm": 30.0} for _ in range(24)
+            ]):
                 with patch.object(self.api, "fetch_rainfall", return_value={
-                    "items": [{"readings": {"rainfall": 5.0}}]
+                    "data": {"readings": [{"data": [{"value": 5.0}]}]}
                 }):
                     with patch.object(self.api, "fetch_psi", return_value={
                         "items": [{"readings": {"psi_twenty_four_hourly": {"national": 30}}}]
@@ -349,13 +412,13 @@ class TestAssess(_Base):
 
     def test_insufficient_history_uses_unknown_tier(self):
         with patch.object(self.api, "fetch_dengue_clusters", return_value={
-            "result": {"records": []}
+            "type": "FeatureCollection", "features": []
         }):
-            with patch.object(self.api, "fetch_nea_historical_rainfall", return_value={
-                "result": {"records": [{"rainfall_mm": 30.0} for _ in range(6)]}
-            }):
+            with patch.object(self.api, "fetch_nea_historical_rainfall", return_value=[
+                {"rainfall_mm": 30.0} for _ in range(6)
+            ]):
                 with patch.object(self.api, "fetch_rainfall", return_value={
-                    "items": [{"readings": {"rainfall": 5.0}}]
+                    "data": {"readings": [{"data": [{"value": 5.0}]}]}
                 }):
                     with patch.object(self.api, "fetch_psi", return_value={
                         "items": [{"readings": {"psi_twenty_four_hourly": {"national": 30}}}]
@@ -366,13 +429,13 @@ class TestAssess(_Base):
 
     def test_psi_unhealthy_appends_air_warning(self):
         with patch.object(self.api, "fetch_dengue_clusters", return_value={
-            "result": {"records": []}
+            "type": "FeatureCollection", "features": []
         }):
-            with patch.object(self.api, "fetch_nea_historical_rainfall", return_value={
-                "result": {"records": [{"rainfall_mm": 80.0} for _ in range(24)]}
-            }):
+            with patch.object(self.api, "fetch_nea_historical_rainfall", return_value=[
+                {"rainfall_mm": 80.0} for _ in range(24)
+            ]):
                 with patch.object(self.api, "fetch_rainfall", return_value={
-                    "items": [{"readings": {"rainfall": 1.0}}]
+                    "data": {"readings": [{"data": [{"value": 1.0}]}]}
                 }):
                     with patch.object(self.api, "fetch_psi", return_value={
                         "items": [{"readings": {"psi_twenty_four_hourly": {"national": 150}}}]

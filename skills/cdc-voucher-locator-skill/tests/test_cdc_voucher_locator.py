@@ -9,7 +9,6 @@ Run with: python3 -m unittest discover tests
 Or:        python3 -m pytest tests/
 """
 
-import gzip
 import importlib.util
 import io
 import json
@@ -153,8 +152,8 @@ class TestFetchDataCaching(unittest.TestCase):
     def test_skips_download_when_cache_has_same_last_modified(self):
         hawker_data = {"locations": [], "lastUpdated": "2026-06-01"}
         supermarket_data = {"locations": [], "lastUpdated": "2026-06-01"}
-        (self.tmp_cache / "data.gzip").write_bytes(
-            gzip.compress(json.dumps(hawker_data).encode())
+        (self.tmp_cache / "data.gzip").write_text(
+            json.dumps(hawker_data)
         )
         (self.tmp_cache / "data_supermarket.json").write_text(
             json.dumps(supermarket_data)

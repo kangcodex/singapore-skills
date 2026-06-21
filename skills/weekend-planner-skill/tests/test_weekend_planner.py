@@ -264,7 +264,7 @@ class TestAssess(unittest.TestCase):
         self.addCleanup(lambda: [p.stop() for p in patches])
 
     def test_full_report_minimal(self):
-        geo = (1.3508, 103.8494, "Bishan MRT", "579837")
+        geo = ("Bishan MRT", 1.3508, 103.8494, "579837")
         psi = {"items": [{"readings": {"psi_twenty_four_hourly": {"national": 30}}}]}
         uv = {"items": [{"index": 4}]}
         forecast = {"items": [{"forecasts": [{"area": "Central", "forecast": "Fair"}]}]}
@@ -277,7 +277,7 @@ class TestAssess(unittest.TestCase):
         self.assertIn("proceed", result["recommendation"].lower())
 
     def test_uv_extreme_pivots_to_indoor(self):
-        geo = (1.3508, 103.8494, "Bishan", "579837")
+        geo = ("Bishan", 1.3508, 103.8494, "579837")
         psi = {"items": [{"readings": {"psi_twenty_four_hourly": {"national": 30}}}]}
         uv = {"items": [{"index": 12}]}
         forecast = {"items": [{"forecasts": [{"area": "Central", "forecast": "Fair"}]}]}
@@ -296,16 +296,16 @@ class TestAssess(unittest.TestCase):
                 self.m.assess("Bishan", "general", "Saturday")
 
     def test_hawker_closed_pivots_to_alternate(self):
-        geo = (1.3508, 103.8494, "Bishan", "579837")
+        geo = ("Bishan", 1.3508, 103.8494, "579837")
         psi = {"items": [{"readings": {"psi_twenty_four_hourly": {"national": 30}}}]}
         uv = {"items": [{"index": 4}]}
         forecast = {"items": [{"forecasts": [{"area": "Central", "forecast": "Fair"}]}]}
-        hawker = {"result": {"records": [
+        hawker = [
             {"name": "Bishan Hawker", "lat": 1.3508, "lon": 103.8494,
              "next_closure_start": "2020-01-01", "next_closure_end": "2030-01-01"},
             {"name": "Tiong Bahru", "lat": 1.352, "lon": 103.85,
              "next_closure_start": "2030-01-01", "next_closure_end": "2030-01-15"},
-        ]}}
+        ]
         activesg = {"result": {"records": []}}
         self._enter(self._patch_all(geo, psi, uv, forecast, hawker, activesg))
         result = self.m.assess("Bishan Hawker", "makan", "Saturday")
@@ -314,7 +314,7 @@ class TestAssess(unittest.TestCase):
         self.assertIn("Tiong Bahru", result["recommendation"])
 
     def test_psi_national_handles_missing_national(self):
-        geo = (1.3, 103.8, "X", "000000")
+        geo = ("X", 1.3, 103.8, "000000")
         psi = {"items": [{"readings": {"psi_twenty_four_hourly": {}}}]}
         uv = {"items": [{}]}
         forecast = {"items": [{}]}
