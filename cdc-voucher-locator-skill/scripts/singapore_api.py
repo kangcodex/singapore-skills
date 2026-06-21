@@ -737,23 +737,28 @@ def psi_tier(reading):
 
 def psi_national(psi_payload):
     """Drill the 24h national PSI out of a v1/v2 PSI payload. Returns int
-    (NEA publishes whole numbers) or None on missing/garbage data."""
+    (NEA publishes whole numbers) or None on missing/garbage data.
+
+    v1 includes a `national` key in psi_twenty_four_hourly; v2 omits it and
+    reports per-region values. We use the max of any numeric values as the
+    national reading, matching NEA's convention of reporting the worst region
+    as the headline PSI.
+    """
     if not isinstance(psi_payload, dict):
         return None
-    items = psi_payload.get("items") or []
+    items = psi_payload.get("items")
+    if items is None:
+        items = (psi_payload.get("data") or {}).get("items")
     if not items or not isinstance(items[0], dict):
         return None
     readings = items[0].get("readings") or {}
     if not isinstance(readings, dict):
         return None
     psi24 = readings.get("psi_twenty_four_hourly") or {}
-    if not isinstance(psi24, dict):
-        return None
-    val = psi24.get("national")
-    if val is None:
+    if not isinstance(psi24, dict) or not psi24:
         return None
     try:
-        return int(val)
+        return int(max(int(v) for v in psi24.values() if isinstance(v, (int, float))))
     except (TypeError, ValueError):
         return None
 

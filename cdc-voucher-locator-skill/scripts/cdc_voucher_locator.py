@@ -153,15 +153,12 @@ def fetch_data():
 
         if download:
             print(f"  Downloading {key}...", file=sys.stderr)
-            urllib.request.urlretrieve(info["url"], local_path)
+            req = urllib.request.Request(info["url"], headers={"Accept-Encoding": "identity"})
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                local_path.write_bytes(resp.read())
 
-        # Read
-        if info["local"].endswith(".gz") or info["local"].endswith(".gzip"):
-            with gzip.open(local_path, "rt") as f:
-                results[key] = json.load(f)
-        else:
-            with open(local_path) as f:
-                results[key] = json.load(f)
+        with open(local_path) as f:
+            results[key] = json.load(f)
 
     return results
 
