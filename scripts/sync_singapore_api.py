@@ -27,7 +27,7 @@ SKILLS_DIR = REPO_ROOT / "skills"
 SKILL_FOLDERS = [
     "cdc-voucher-locator-skill",
     "smart-commuter-skill",
-    "resale-property-advisor-skill",
+    "property-advisor-skill",
     "weekend-planner-skill",
     "mrt-rerouter-skill",
     "dengue-risk-advisor-skill",

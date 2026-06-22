@@ -28,6 +28,7 @@ import gzip
 import hashlib
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -84,6 +85,25 @@ NEA_HAWKER_CENTRES_DATASET_ID = "d_4a086da0a5553be1d89383cd90d07ecd"  # NEA Hawk
 NEA_HAWKER_CLOSURES_DATASET_ID = "d_bda4baa634dd1cc7a6c7cad5f19e2d68"  # NEA Dates of Hawker Centres Closure, CSV
 SPORTSG_FACILITIES_DATASET_ID = "d_9b87bab59d036a60fad2a91530e10773"  # SportSG sport facilities, GeoJSON
 DENGUE_CLUSTERS_DATASET_ID = "d_dbfabf16158d1b0e1c420627c0819168"  # NEA Dengue Clusters, GeoJSON
+
+# ── Property data layer (S08) ─────────────────────────────────────────
+# Property data for the property-advisor-skill v2 (S09a). URA + CEA datasets
+# are served via the v2 initiate→poll→signed-S3-URL flow (same as the
+# existing fetch_dataset_rows). SINGSTAT datasets are only reachable via
+# the legacy CKAN `datastore_search` endpoint — SINGSTAT does not appear
+# in the v2 collections catalog. See `docs/api/SINGSTAT.md` for the
+# non-v2-access justification.
+URA_RENTALS_DATASET_ID = "d_149ac00a2734bb0a03867bbe2ec0e7b0"  # URA coll 1660, Rentals of Non-Landed Residential Buildings, Quarterly
+URA_PRIVATE_RESI_TRANS_CENTRAL_DATASET_ID = "d_c287c8be114bfa7d055b27ab2c87de83"  # URA coll 1655, Private Resi Trans in CCR, Quarterly
+URA_PRIVATE_RESI_TRANS_OUTSIDE_CENTRAL_DATASET_ID = "d_1a7823f3d31e7db4b426833833762bab"  # URA coll 1656, Private Resi Trans in OCR, Quarterly
+URA_PRIVATE_RESI_TRANS_REST_CENTRAL_DATASET_ID = "d_5785799d63a9da091f4e0b456291eeb8"  # URA coll 1657, Private Resi Trans in RCR, Quarterly
+URA_PRIVATE_RESI_TRANS_WHOLE_SG_DATASET_ID = "d_7c69c943d5f0d89d6a9a773d2b51f337"  # URA coll 1658, Private Resi Trans Whole SG, Quarterly
+URA_EC_SALES_DATASET_ID = "d_19c79027c2e6be3c39d637151bd2188d"  # URA coll 1643, EC Units Launched and Sold, Quarterly
+URA_EC_POSITION_DATASET_ID = "d_8b71bc3e1386261039d7ad95efdc3328"  # URA coll 1661, Sale Position of ECs, Quarterly
+URA_UNSOLD_PRIVATE_RESI_DATASET_ID = "d_84d05d45049108f0fd2e99b66bd19cfe"  # URA coll 1663, Unsold Private Resi Units, Quarterly
+SINGSTAT_SUPPLY_PIPELINE_DATASET_ID = "d_055b6549444dedb341c50805d9682a41"  # SINGSTAT, Supply of Private Resi In Pipeline (legacy CKAN)
+SINGSTAT_VACANCY_DATASET_ID = "d_01e3556fb916ca19a7e29fc39520fa78"  # SINGSTAT, Available And Vacant Private Resi (legacy CKAN)
+CEA_SALESPERSON_DATASET_ID = "d_07c63be0f37e6e59c07a4ddc2fd87fcb"  # CEA coll 54, Salesperson Information (3x daily)
 
 
 # ── Cache helpers ─────────────────────────────────────────────────────
@@ -603,6 +623,207 @@ def fetch_dengue_clusters():
     Total record count is ~100 active clusters at any time.
     """
     return fetch_dataset_geojson(DENGUE_CLUSTERS_DATASET_ID)
+
+
+# ── Property data layer (S08) ─────────────────────────────────────────
+# Eight fetchers supporting the property-advisor-skill v2 (S09a). URA + CEA
+# use the v2 dataset flow; SINGSTAT uses the legacy CKAN endpoint because
+# SINGSTAT datasets are not in the v2 collections catalog. All follow the
+# existing convention: env-key auth (DATA_GOV_SG_API_KEY), no-auth fallback,
+# cache via the request_json() cache_namespace, no top-level network.
+
+URA_REGION_DATASET_IDS = {
+    "central": URA_PRIVATE_RESI_TRANS_CENTRAL_DATASET_ID,
+    "outside_central": URA_PRIVATE_RESI_TRANS_OUTSIDE_CENTRAL_DATASET_ID,
+    "rest_central": URA_PRIVATE_RESI_TRANS_REST_CENTRAL_DATASET_ID,
+    "whole_sg": URA_PRIVATE_RESI_TRANS_WHOLE_SG_DATASET_ID,
+}
+
+
+def _normalize_qtr_label(s):
+    """Normalise a SINGSTAT quarter column name to "YYYY-Q#".
+
+    Observed input shapes: "20261Q", "2025 4Q", "2025-Q3", "2025q3".
+    Unrecognised strings are returned unchanged so the caller can decide
+    whether to keep or drop them.
+    """
+    if not isinstance(s, str):
+        return s
+    s = s.strip()
+    m = re.match(r"^(\d{4})([1-4])Q$", s)
+    if m:
+        return "%s-Q%s" % (m.group(1), m.group(2))
+    m = re.match(r"^(\d{4})[-\s]?[qQ]([1-4])$", s)
+    if m:
+        return "%s-Q%s" % (m.group(1), m.group(2))
+    m = re.match(r"^(\d{4})[-\s]([1-4])[qQ]$", s)
+    if m:
+        return "%s-Q%s" % (m.group(1), m.group(2))
+    return s
+
+
+def _pivot_quarterly_wide(records):
+    """Pivot SINGSTAT wide-format records `[{DataSeries, "20261Q": 100, ...}]`
+    to long format `[{series, qtr, value}]`.
+
+    The `DataSeries` column carries the series name. Every other column
+    (other than `_id`) is treated as a quarter, normalised via
+    `_normalize_qtr_label`, and converted to float. Non-numeric values
+    (empty cells, "n/a") are dropped.
+    """
+    if not records:
+        return []
+    out = []
+    for r in records:
+        series = r.get("DataSeries") or r.get("data_series")
+        if not series:
+            continue
+        for col, val in r.items():
+            if col in ("DataSeries", "data_series", "_id"):
+                continue
+            qtr = _normalize_qtr_label(col)
+            if qtr == col:
+                continue
+            try:
+                fval = float(val)
+            except (TypeError, ValueError):
+                continue
+            out.append({"series": str(series).strip(), "qtr": qtr, "value": fval})
+    return out
+
+
+def _fetch_singstat_ckan(resource_id, limit=10000):
+    """Fetch all records from a SINGSTAT dataset via legacy CKAN.
+
+    SINGSTAT is not in the v2 collections catalog; the public
+    `datastore_search` endpoint still works for these resource IDs. Limit
+    10000 is the documented CKAN maximum. The SINGSTAT datasets we call
+    have at most ~30 records, so a single call is sufficient.
+    """
+    ns = "singstat-ckan:%s" % resource_id
+    cached = _cache_get(ns, "rows")
+    if cached is not None:
+        return cached
+    url = "%s?resource_id=%s&limit=%d" % (DATASTORE, resource_id, limit)
+    try:
+        body = request_json(url, namespace=ns)
+    except Exception:
+        return []
+    records = (body.get("result") or {}).get("records") or []
+    _cache_put(ns, "rows", records)
+    return records
+
+
+def fetch_ura_rentals():
+    """URA Rentals of Non-Landed Residential Buildings, quarterly (coll 1660).
+
+    Dataset: `URA_RENTALS_DATASET_ID` (`d_149ac00a2734bb0a03867bbe2ec0e7b0`).
+    Returns a list of CSV row dicts. Typical columns: `qtr`, `region`,
+    `property_type`, `median_rent_psf_pm`, `median_rent`.
+    """
+    return fetch_dataset_rows(URA_RENTALS_DATASET_ID)
+
+
+def fetch_ura_private_resi_trans(region):
+    """URA Private Residential Property Transactions, quarterly, by region.
+
+    `region` ∈ `{"whole_sg", "central", "rest_central", "outside_central"}`.
+    Raises ValueError on any other value. The four regions are served by
+    four distinct URA collections (1655–1658); see `URA_REGION_DATASET_IDS`.
+
+    Returns CSV row dicts; typical columns: `qtr`, `district`,
+    `property_type`, `sale_count`, `median_psf`, `median_trans_price`.
+    """
+    if region not in URA_REGION_DATASET_IDS:
+        raise ValueError(
+            "fetch_ura_private_resi_trans: region %r not in %s"
+            % (region, sorted(URA_REGION_DATASET_IDS))
+        )
+    return fetch_dataset_rows(URA_REGION_DATASET_IDS[region])
+
+
+def fetch_ura_ec_sales():
+    """URA Executive Condominium Units Launched and Sold, quarterly (coll 1643).
+
+    Dataset: `URA_EC_SALES_DATASET_ID` (`d_19c79027c2e6be3c39d637151bd2188d`).
+    Returns CSV row dicts; typical columns: `qtr`, `ec_name`, `units_launched`,
+    `units_sold`.
+    """
+    return fetch_dataset_rows(URA_EC_SALES_DATASET_ID)
+
+
+def fetch_ura_ec_position():
+    """URA Sale Position of Executive Condominiums, quarterly (coll 1661).
+
+    Dataset: `URA_EC_POSITION_DATASET_ID`
+    (`d_8b71bc3e1386261039d7ad95efdc3328`). Returns CSV row dicts; typical
+    columns: `qtr`, `ec_name`, `units_unsold`, `launch_year`.
+    """
+    return fetch_dataset_rows(URA_EC_POSITION_DATASET_ID)
+
+
+def fetch_ura_unsold_private_resi():
+    """URA Unsold Private Residential Units, quarterly (coll 1663).
+
+    Dataset: `URA_UNSOLD_PRIVATE_RESI_DATASET_ID`
+    (`d_84d05d45049108f0fd2e99b66bd19cfe`). This collection has 0
+    childDatasets in the v2 catalog metadata, but the dataset itself is
+    reachable via the v2 initiate-poll flow (verified 2026-06-22, 948
+    records, columns include `quarter` and `unsold_units`).
+
+    Returns CSV row dicts; typical columns: `quarter`, `market_segment`,
+    `unsold_units`.
+    """
+    return fetch_dataset_rows(URA_UNSOLD_PRIVATE_RESI_DATASET_ID)
+
+
+def fetch_singstat_supply_pipeline():
+    """SINGSTAT Supply Of Private Residential Properties In The Pipeline.
+
+    Dataset: `SINGSTAT_SUPPLY_PIPELINE_DATASET_ID`
+    (`d_055b6549444dedb341c50805d9682a41`). SINGSTAT is not in the v2
+    collections catalog; this fetcher uses the legacy CKAN
+    `datastore_search` endpoint and pivots the wide `DataSeries × quarter`
+    shape to long format. Returns `[{series, qtr, value}]` with ~10 series
+    (e.g. "In Planning", "Under Construction", "Completed").
+    """
+    records = _fetch_singstat_ckan(SINGSTAT_SUPPLY_PIPELINE_DATASET_ID)
+    return _pivot_quarterly_wide(records)
+
+
+def fetch_singstat_vacancy():
+    """SINGSTAT Available And Vacant Private Residential Properties.
+
+    Dataset: `SINGSTAT_VACANCY_DATASET_ID`
+    (`d_01e3556fb916ca19a7e29fc39520fa78`). SINGSTAT is not in the v2
+    collections catalog; legacy CKAN + wide-to-long pivot. Returns
+    `[{series, qtr, value}]` with ~6 series (e.g. "Available", "Vacant").
+    """
+    records = _fetch_singstat_ckan(SINGSTAT_VACANCY_DATASET_ID)
+    return _pivot_quarterly_wide(records)
+
+
+def fetch_cea_salesperson(query):
+    """CEA Salesperson Information, refreshed 3x daily (coll 54).
+
+    Dataset: `CEA_SALESPERSON_DATASET_ID`
+    (`d_07c63be0f37e6e59c07a4ddc2fd87fcb`). `query` is either a
+    registration number (case-insensitive exact match, e.g. "R012345X") or
+    a name fragment (case-insensitive substring match). Empty/None query
+    returns `[]`.
+
+    Returns a list of CSV row dicts; typical columns: `registration_no`,
+    `name`, `status`, `agency`.
+    """
+    if not query:
+        return []
+    q = str(query).strip().lower()
+    if not q:
+        return []
+    rows = fetch_dataset_rows(CEA_SALESPERSON_DATASET_ID)
+    if q.startswith("r") and len(q) >= 3:
+        return [r for r in rows if str(r.get("registration_no", "")).strip().lower() == q]
+    return [r for r in rows if q in str(r.get("name", "")).lower()]
 
 
 # ── SVY21 → WGS84 ─────────────────────────────────────────────────────

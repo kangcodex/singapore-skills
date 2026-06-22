@@ -83,7 +83,8 @@ class TestModuleImport(unittest.TestCase):
 
     def test_no_top_level_network_calls(self):
         m = _load_module()
-        # All 14 fetchers + geocode + request_json must be callable
+        # 14 real-time + 7 S03a + 1 S05a + 8 S08 property fetchers
+        # + geocode + request_json must be callable
         names = [
             "fetch_pm25", "fetch_psi", "fetch_uv",
             "fetch_two_hour_forecast", "fetch_twenty_four_hour_forecast",
@@ -92,10 +93,40 @@ class TestModuleImport(unittest.TestCase):
             "fetch_lta_traffic_images", "fetch_hdb_carpark_availability",
             "fetch_lta_bus_arrival", "fetch_lta_mrt_arrival", "fetch_lta_taxi_availability",
             "geocode", "request_json",
+            "fetch_ura_rentals", "fetch_ura_private_resi_trans",
+            "fetch_ura_ec_sales", "fetch_ura_ec_position",
+            "fetch_ura_unsold_private_resi",
+            "fetch_singstat_supply_pipeline", "fetch_singstat_vacancy",
+            "fetch_cea_salesperson",
         ]
         for n in names:
             with self.subTest(name=n):
                 self.assertTrue(callable(getattr(m, n)), "%s not callable" % n)
+
+    def test_s08_constants_exist(self):
+        m = _load_module()
+        for n in [
+            "URA_RENTALS_DATASET_ID",
+            "URA_PRIVATE_RESI_TRANS_CENTRAL_DATASET_ID",
+            "URA_PRIVATE_RESI_TRANS_OUTSIDE_CENTRAL_DATASET_ID",
+            "URA_PRIVATE_RESI_TRANS_REST_CENTRAL_DATASET_ID",
+            "URA_PRIVATE_RESI_TRANS_WHOLE_SG_DATASET_ID",
+            "URA_EC_SALES_DATASET_ID",
+            "URA_EC_POSITION_DATASET_ID",
+            "URA_UNSOLD_PRIVATE_RESI_DATASET_ID",
+            "SINGSTAT_SUPPLY_PIPELINE_DATASET_ID",
+            "SINGSTAT_VACANCY_DATASET_ID",
+            "CEA_SALESPERSON_DATASET_ID",
+            "URA_REGION_DATASET_IDS",
+        ]:
+            with self.subTest(name=n):
+                self.assertTrue(hasattr(m, n), "%s missing" % n)
+
+    def test_s08_helpers_exist(self):
+        m = _load_module()
+        for n in ["_normalize_qtr_label", "_pivot_quarterly_wide", "_fetch_singstat_ckan"]:
+            with self.subTest(name=n):
+                self.assertTrue(callable(getattr(m, n, None)), "%s missing" % n)
 
     def test_v2_helpers_exist(self):
         m = _load_module()
@@ -547,6 +578,210 @@ class TestTierAndClassificationHelpers(unittest.TestCase):
     def test_psi_national_returns_none_for_non_dict(self):
         self.assertIsNone(self.m.psi_national("bad"))
         self.assertIsNone(self.m.psi_national(None))
+
+
+class TestS08PropertyFetchers(unittest.TestCase):
+    """8 property fetchers + 3 helpers added in S08."""
+
+    def setUp(self):
+        self.m = _load_module()
+        self._cache_patcher = patch.object(self.m, "_cache_get", return_value=None)
+        self._cache_patcher.start()
+        self.addCleanup(self._cache_patcher.stop)
+
+    def _mock_two_step(self, csv_body="col\nval\n"):
+        from urllib.request import Request as _Req
+
+        def _side(req, *a, **k):
+            url = req.full_url if isinstance(req, _Req) else req
+            if "initiate-download" in url:
+                return _mock_urlopen({})
+            if "poll-download" in url:
+                return _mock_urlopen({"data": {"url": "https://s3.example/csv"}})
+            if "s3.example" in url:
+                resp = MagicMock()
+                resp.read.return_value = csv_body.encode("utf-8") if isinstance(csv_body, str) else csv_body
+                resp.headers = {}
+                resp.__enter__ = lambda s: s
+                resp.__exit__ = lambda s, *a: False
+                return resp
+            raise AssertionError("unexpected url: " + url)
+
+        return _side
+
+    def _mock_singstat_ckan(self, records):
+        from urllib.request import Request as _Req
+
+        def _side(req, *a, **k):
+            url = req.full_url if isinstance(req, _Req) else req
+            if "datastore_search" in url and "resource_id" in url:
+                return _mock_urlopen({"result": {"records": records}})
+            raise AssertionError("unexpected url: " + url)
+        return _side
+
+    def test_fetch_ura_rentals_uses_v2_dataset_flow(self):
+        with patch("urllib.request.urlopen", side_effect=self._mock_two_step()) as uo:
+            self.m.fetch_ura_rentals()
+        urls = _collected_urls(uo)
+        self.assertTrue(any("initiate-download" in u for u in urls))
+        self.assertTrue(
+            any("poll-download" in u and self.m.URA_RENTALS_DATASET_ID in u for u in urls)
+        )
+
+    def test_fetch_ura_private_resi_trans_whole_sg_uses_v2_dataset_flow(self):
+        with patch("urllib.request.urlopen", side_effect=self._mock_two_step()) as uo:
+            self.m.fetch_ura_private_resi_trans("whole_sg")
+        urls = _collected_urls(uo)
+        self.assertTrue(
+            any(
+                "poll-download" in u
+                and self.m.URA_PRIVATE_RESI_TRANS_WHOLE_SG_DATASET_ID in u
+                for u in urls
+            )
+        )
+
+    def test_fetch_ura_private_resi_trans_invalid_region_raises(self):
+        with self.assertRaises(ValueError) as cm:
+            self.m.fetch_ura_private_resi_trans("narnia")
+        self.assertIn("narnia", str(cm.exception))
+        self.assertIn("central", str(cm.exception))
+        self.assertIn("whole_sg", str(cm.exception))
+
+    def test_fetch_ura_private_resi_trans_all_four_regions_are_valid(self):
+        for region in ("whole_sg", "central", "rest_central", "outside_central"):
+            with self.subTest(region=region):
+                with patch("urllib.request.urlopen", side_effect=self._mock_two_step()) as uo:
+                    self.m.fetch_ura_private_resi_trans(region)
+                urls = _collected_urls(uo)
+                self.assertTrue(any("initiate-download" in u for u in urls))
+
+    def test_fetch_ura_ec_sales_uses_v2_dataset_flow(self):
+        with patch("urllib.request.urlopen", side_effect=self._mock_two_step()) as uo:
+            self.m.fetch_ura_ec_sales()
+        urls = _collected_urls(uo)
+        self.assertTrue(
+            any("poll-download" in u and self.m.URA_EC_SALES_DATASET_ID in u for u in urls)
+        )
+
+    def test_fetch_ura_ec_position_uses_v2_dataset_flow(self):
+        with patch("urllib.request.urlopen", side_effect=self._mock_two_step()) as uo:
+            self.m.fetch_ura_ec_position()
+        urls = _collected_urls(uo)
+        self.assertTrue(
+            any("poll-download" in u and self.m.URA_EC_POSITION_DATASET_ID in u for u in urls)
+        )
+
+    def test_fetch_ura_unsold_private_resi_uses_v2_dataset_flow(self):
+        with patch("urllib.request.urlopen", side_effect=self._mock_two_step()) as uo:
+            self.m.fetch_ura_unsold_private_resi()
+        urls = _collected_urls(uo)
+        self.assertTrue(
+            any(
+                "poll-download" in u
+                and self.m.URA_UNSOLD_PRIVATE_RESI_DATASET_ID in u
+                for u in urls
+            )
+        )
+
+    def test_fetch_singstat_supply_pipeline_uses_ckan_and_pivots(self):
+        records = [
+            {"_id": 1, "DataSeries": "In Planning", "20261Q": 12000, "20254Q": 11500},
+            {"_id": 2, "DataSeries": "Under Construction", "20261Q": 32000, "20254Q": 30000},
+        ]
+        with patch("urllib.request.urlopen", side_effect=self._mock_singstat_ckan(records)) as uo:
+            out = self.m.fetch_singstat_supply_pipeline()
+        urls = _collected_urls(uo)
+        self.assertTrue(any("datastore_search" in u for u in urls))
+        self.assertTrue(any(self.m.SINGSTAT_SUPPLY_PIPELINE_DATASET_ID in u for u in urls))
+        self.assertEqual(len(out), 4)
+        planning = [r for r in out if r["series"] == "In Planning"]
+        self.assertEqual(planning[0]["qtr"], "2026-Q1")
+        self.assertEqual(planning[0]["value"], 12000.0)
+        self.assertEqual(planning[1]["value"], 11500.0)
+
+    def test_fetch_singstat_vacancy_uses_ckan_and_pivots(self):
+        records = [
+            {"_id": 1, "DataSeries": "Available", "20261Q": 25000},
+            {"_id": 2, "DataSeries": "Vacant", "20261Q": 6800},
+        ]
+        with patch("urllib.request.urlopen", side_effect=self._mock_singstat_ckan(records)) as uo:
+            out = self.m.fetch_singstat_vacancy()
+        urls = _collected_urls(uo)
+        self.assertTrue(any(self.m.SINGSTAT_VACANCY_DATASET_ID in u for u in urls))
+        self.assertEqual(len(out), 2)
+        self.assertEqual({r["series"] for r in out}, {"Available", "Vacant"})
+
+    def test_fetch_singstat_supply_pipeline_returns_empty_on_network_error(self):
+        with patch("urllib.request.urlopen", side_effect=OSError("boom")):
+            out = self.m.fetch_singstat_supply_pipeline()
+        self.assertEqual(out, [])
+
+    def test_fetch_cea_salesperson_empty_query_returns_empty(self):
+        with patch("urllib.request.urlopen", side_effect=self._mock_two_step()) as uo:
+            self.assertEqual(self.m.fetch_cea_salesperson(""), [])
+            self.assertEqual(self.m.fetch_cea_salesperson(None), [])
+            self.assertEqual(self.m.fetch_cea_salesperson("   "), [])
+        self.assertEqual(uo.call_count, 0)
+
+    def test_fetch_cea_salesperson_reg_no_exact_match(self):
+        rows = [
+            {"registration_no": "R012345X", "name": "Alice Tan", "status": "active", "agency": "ERA"},
+            {"registration_no": "R999999Z", "name": "Bob Lim", "status": "inactive", "agency": "PropNex"},
+        ]
+        csv_body = "registration_no,name,status,agency\n" + "\n".join(
+            f"{r['registration_no']},{r['name']},{r['status']},{r['agency']}" for r in rows
+        )
+        with patch("urllib.request.urlopen", side_effect=self._mock_two_step(csv_body)):
+            out = self.m.fetch_cea_salesperson("R012345X")
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["name"], "Alice Tan")
+
+    def test_fetch_cea_salesperson_name_substring_match(self):
+        rows = [
+            {"registration_no": "R012345X", "name": "Alice Tan", "status": "active", "agency": "ERA"},
+            {"registration_no": "R678901Y", "name": "Alice Wong", "status": "active", "agency": "OrangeTee"},
+            {"registration_no": "R999999Z", "name": "Bob Lim", "status": "inactive", "agency": "PropNex"},
+        ]
+        csv_body = "registration_no,name,status,agency\n" + "\n".join(
+            f"{r['registration_no']},{r['name']},{r['status']},{r['agency']}" for r in rows
+        )
+        with patch("urllib.request.urlopen", side_effect=self._mock_two_step(csv_body)):
+            out = self.m.fetch_cea_salesperson("alice")
+        self.assertEqual(len(out), 2)
+        self.assertEqual({r["name"] for r in out}, {"Alice Tan", "Alice Wong"})
+
+    def test_normalize_qtr_label_handles_all_observed_shapes(self):
+        self.assertEqual(self.m._normalize_qtr_label("20261Q"), "2026-Q1")
+        self.assertEqual(self.m._normalize_qtr_label("2025 4Q"), "2025-Q4")
+        self.assertEqual(self.m._normalize_qtr_label("2025-Q3"), "2025-Q3")
+        self.assertEqual(self.m._normalize_qtr_label("2025q3"), "2025-Q3")
+        self.assertEqual(self.m._normalize_qtr_label("  20254Q  "), "2025-Q4")
+        self.assertEqual(self.m._normalize_qtr_label("not-a-quarter"), "not-a-quarter")
+        self.assertEqual(self.m._normalize_qtr_label(""), "")
+        self.assertIsNone(self.m._normalize_qtr_label(None))
+
+    def test_pivot_quarterly_wide_handles_real_singstat_shape(self):
+        records = [
+            {"_id": 1, "DataSeries": "Available", "20261Q": 25000, "20254Q": 24000, "20251Q": 23000},
+            {"_id": 2, "DataSeries": "Vacant", "20261Q": 6800, "20254Q": 6500, "n/a": "skip-me"},
+            {"_id": 3, "DataSeries": "  Total  ", "20261Q": 30000, "": "drop-empty-col"},
+        ]
+        out = self.m._pivot_quarterly_wide(records)
+        self.assertEqual(len(out), 6)
+        total = [r for r in out if r["series"] == "Total"]
+        self.assertEqual(len(total), 1)
+        self.assertEqual(total[0]["qtr"], "2026-Q1")
+        vacant = [r for r in out if r["series"] == "Vacant"]
+        self.assertEqual(len(vacant), 2)
+        self.assertTrue(all(isinstance(r["value"], float) for r in out))
+
+    def test_pivot_quarterly_wide_empty_input_returns_empty(self):
+        self.assertEqual(self.m._pivot_quarterly_wide([]), [])
+        self.assertEqual(self.m._pivot_quarterly_wide(None), [])
+
+    def test_pivot_quarterly_wide_skips_records_without_dataseries(self):
+        records = [{"_id": 1, "20261Q": 100, "no-series-here": True}]
+        self.assertEqual(self.m._pivot_quarterly_wide(records), [])
 
 
 class TestPerSkillCopiesAreInSync(unittest.TestCase):
