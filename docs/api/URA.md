@@ -46,6 +46,20 @@ curl --location '<signed_url_from_poll_response>'
 | `d_f65e490a8ad430f60a9a3d9df2bff2a0` | Private Property Price Index of Non-landed Residential Properties | quarterly |
 | `d_a283de8cb3b4e80a228bf5f5e0bc4449` | Completed Private Residential Units Sold in the Quarter | quarterly |
 
+### Residential Property Datasets
+
+| ID | Description | Format |
+|---|---|---|
+| `d_149ac00a2734bb0a03867bbe2ec0e7b0` | Rentals of Non-Landed Residential Buildings, Quarterly (coll 1660) | quarterly, `qtr` column |
+| `d_bf4d24df9129d5a8ff8cf82e20959ee0` | Master Plan 2019 Region Boundary (coll 1717) | GeoJSON |
+| `d_be71daeab5930f96b90ad2857454d876` | Number of Dwelling Units (coll 1665) | quarterly |
+| `d_7c69c943d5f0d89d6a9a773d2b51f337` | Private Residential Property Transactions in the Whole of Singapore, Quarterly (coll 1658) | quarterly |
+| `d_a283de8cb3b4e80a228bf5f5e0bc4449` | Completed Private Residential Units Sold in the Quarter (coll 1639) | quarterly |
+| `d_1a7823f3d31e7db4b426833833762bab` | Private Residential Property Transactions in Outside Central Region, Quarterly (coll 1656) | quarterly |
+| `d_84d05d45049108f0fd2e99b66bd19cfe` | Unsold Private Residential Units with Planning Approvals by Market Segment, Quarterly (coll 1663) | quarterly, `quarter` column from 2006-Q3 |
+
+> Note: `d_84d05d45049108f0fd2e99b66bd19cfe` is served by the URA pipeline but is not enumerated in collection 1663's `childDatasets` in the v2 catalog. It is still accessible via the standard initiate → poll → download flow.
+
 ## Collection Catalog
 
 All 273 URA collections, ordered by `collectionId`. Each row maps to one or more child dataset IDs (use the initiate → poll → download flow above to fetch the actual file).
