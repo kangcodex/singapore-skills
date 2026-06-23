@@ -114,6 +114,7 @@ URA_UNSOLD_PRIVATE_RESI_DATASET_ID = "d_84d05d45049108f0fd2e99b66bd19cfe"  # URA
 SINGSTAT_SUPPLY_PIPELINE_DATASET_ID = "d_055b6549444dedb341c50805d9682a41"  # SINGSTAT, Supply of Private Resi In Pipeline (legacy CKAN)
 SINGSTAT_VACANCY_DATASET_ID = "d_01e3556fb916ca19a7e29fc39520fa78"  # SINGSTAT, Available And Vacant Private Resi (legacy CKAN)
 CEA_SALESPERSON_DATASET_ID = "d_07c63be0f37e6e59c07a4ddc2fd87fcb"  # CEA coll 54, Salesperson Information (3x daily)
+CEA_TRANSACTION_RECORDS_DATASET_ID = "d_ee7e46d3c57f7865790704632b0aef71"  # CEA coll 55, Salespersons' Property Transaction Records (residential, monthly)
 
 
 # ── Cache helpers ─────────────────────────────────────────────────────
@@ -836,12 +837,54 @@ def fetch_cea_salesperson(query):
     return [r for r in rows if q in str(r.get("name", "")).lower()]
 
 
+def fetch_cea_transaction_records(town=None, flat_type=None, since=None):
+    """CEA Salespersons' Property Transaction Records (coll 55, monthly).
+
+    Dataset: `CEA_TRANSACTION_RECORDS_DATASET_ID`
+    (`d_ee7e46d3c57f7865790704632b0aef71`). Pulls the full resource via the
+    v2 dataset flow (~30k rows) and applies optional `town`, `flat_type`,
+    `since` (YYYY-MM, inclusive) filters client-side. Typical columns:
+    `transaction_id`, `salesperson_reg_no`, `salesperson_name`, `agency`,
+    `transaction_date`, `property_type`, `district`, `sale_type`,
+    `trans_price`. Empty filters return all rows.
+    """
+    rows = fetch_dataset_rows(CEA_TRANSACTION_RECORDS_DATASET_ID)
+    if not (town or flat_type or since):
+        return rows
+    town_lc = town.lower().strip() if town else None
+    flat_norm = flat_type.upper().strip().replace(" ", "-") if flat_type else None
+    since_yyyymm = None
+    if since:
+        parts = since.split("-")
+        if len(parts) >= 2:
+            since_yyyymm = int(parts[0]) * 100 + int(parts[1])
+    out = []
+    for r in rows:
+        if town_lc:
+            r_town = str(r.get("town") or r.get("estate") or "").lower().strip()
+            if r_town != town_lc:
+                continue
+        if flat_norm:
+            r_flat = str(r.get("flat_type") or r.get("property_type") or "").upper().strip().replace(" ", "-")
+            if r_flat != flat_norm:
+                continue
+        if since_yyyymm is not None:
+            date_str = str(r.get("transaction_date") or r.get("date") or "")[:7].replace("-", "")
+            try:
+                if int(date_str) < since_yyyymm:
+                    continue
+            except (TypeError, ValueError):
+                continue
+        out.append(r)
+    return out
+
+
 # ── SVY21 → WGS84 ─────────────────────────────────────────────────────
 # Singapore uses SVY21 (a Transverse Mercator projection) for cadastral
 # data. URA Master Plan records carry geometry in SVY21 easting/northing;
 # callers that need lat/lon go through svy21_to_wgs84().
 
-def svy21_to_wgs84(easting, northing):
+def svy21_to_wgs84(easting: float, northing: float) -> tuple[float, float]:
     """Convert SVY21 projected coordinates (meters) to WGS84 lat/lon.
 
     Inverse Transverse Mercator using Singapore Land Authority parameters.
@@ -899,7 +942,7 @@ def svy21_to_wgs84(easting, northing):
     return math.degrees(phi), math.degrees(lam)
 
 
-def haversine_m(lat1, lon1, lat2, lon2):
+def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float | None:
     """Great-circle distance in metres between two WGS84 points. Returns
     None if any input is None (graceful degradation when an upstream record
     has missing coordinates — caller checks for None before using the result)."""

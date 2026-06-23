@@ -98,6 +98,7 @@ class TestModuleImport(unittest.TestCase):
             "fetch_ura_unsold_private_resi",
             "fetch_singstat_supply_pipeline", "fetch_singstat_vacancy",
             "fetch_cea_salesperson",
+            "fetch_cea_transaction_records",
         ]
         for n in names:
             with self.subTest(name=n):
@@ -117,6 +118,7 @@ class TestModuleImport(unittest.TestCase):
             "SINGSTAT_SUPPLY_PIPELINE_DATASET_ID",
             "SINGSTAT_VACANCY_DATASET_ID",
             "CEA_SALESPERSON_DATASET_ID",
+            "CEA_TRANSACTION_RECORDS_DATASET_ID",
             "URA_REGION_DATASET_IDS",
         ]:
             with self.subTest(name=n):
@@ -783,6 +785,54 @@ class TestS08PropertyFetchers(unittest.TestCase):
         records = [{"_id": 1, "20261Q": 100, "no-series-here": True}]
         self.assertEqual(self.m._pivot_quarterly_wide(records), [])
 
+    def test_fetch_cea_transaction_records_basic(self):
+        rows = [
+            {"transaction_id": "T1", "salesperson_reg_no": "R012345X", "town": "bishan",
+             "flat_type": "5-ROOM", "transaction_date": "2025-12-15", "trans_price": "1200000"},
+            {"transaction_id": "T2", "salesperson_reg_no": "R678901Y", "town": "tampines",
+             "flat_type": "4-ROOM", "transaction_date": "2025-11-20", "trans_price": "850000"},
+        ]
+        csv_body = "transaction_id,salesperson_reg_no,town,flat_type,transaction_date,trans_price\n" + "\n".join(
+            f"{r['transaction_id']},{r['salesperson_reg_no']},{r['town']},{r['flat_type']},{r['transaction_date']},{r['trans_price']}"
+            for r in rows
+        )
+        with patch("urllib.request.urlopen", side_effect=self._mock_two_step(csv_body)):
+            out = self.m.fetch_cea_transaction_records()
+        self.assertEqual(len(out), 2)
+        self.assertEqual(out[0]["transaction_id"], "T1")
+
+    def test_fetch_cea_transaction_records_town_filter(self):
+        rows = [
+            {"transaction_id": "T1", "salesperson_reg_no": "R012345X", "town": "bishan",
+             "flat_type": "5-ROOM", "transaction_date": "2025-12-15", "trans_price": "1200000"},
+            {"transaction_id": "T2", "salesperson_reg_no": "R678901Y", "town": "tampines",
+             "flat_type": "4-ROOM", "transaction_date": "2025-11-20", "trans_price": "850000"},
+        ]
+        csv_body = "transaction_id,salesperson_reg_no,town,flat_type,transaction_date,trans_price\n" + "\n".join(
+            f"{r['transaction_id']},{r['salesperson_reg_no']},{r['town']},{r['flat_type']},{r['transaction_date']},{r['trans_price']}"
+            for r in rows
+        )
+        with patch("urllib.request.urlopen", side_effect=self._mock_two_step(csv_body)):
+            out = self.m.fetch_cea_transaction_records(town="bishan")
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["town"], "bishan")
+
+    def test_fetch_cea_transaction_records_since_filter(self):
+        rows = [
+            {"transaction_id": "T1", "salesperson_reg_no": "R012345X", "town": "bishan",
+             "flat_type": "5-ROOM", "transaction_date": "2025-12-15", "trans_price": "1200000"},
+            {"transaction_id": "T2", "salesperson_reg_no": "R678901Y", "town": "bishan",
+             "flat_type": "4-ROOM", "transaction_date": "2025-08-20", "trans_price": "800000"},
+        ]
+        csv_body = "transaction_id,salesperson_reg_no,town,flat_type,transaction_date,trans_price\n" + "\n".join(
+            f"{r['transaction_id']},{r['salesperson_reg_no']},{r['town']},{r['flat_type']},{r['transaction_date']},{r['trans_price']}"
+            for r in rows
+        )
+        with patch("urllib.request.urlopen", side_effect=self._mock_two_step(csv_body)):
+            out = self.m.fetch_cea_transaction_records(since="2025-10")
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["transaction_id"], "T1")
+
 
 class TestPerSkillCopiesAreInSync(unittest.TestCase):
     """Defensive: if sync_singapore_api.py is stale, the build should know."""
@@ -792,11 +842,14 @@ class TestPerSkillCopiesAreInSync(unittest.TestCase):
         for skill in [
             "cdc-voucher-locator-skill",
             "smart-commuter-skill",
-            "resale-property-advisor-skill",
+            "property-advisor-skill",
             "weekend-planner-skill",
             "mrt-rerouter-skill",
             "dengue-risk-advisor-skill",
             "hawker-discover-skill",
+            "agent-match-skill",
+            "rental-yield-calculator-skill",
+            "air-quality-advisor-skill",
         ]:
             with self.subTest(skill=skill):
                 copy = REPO_ROOT / "skills" / skill / "scripts" / "singapore_api.py"
