@@ -32,6 +32,9 @@ SKILL_FOLDERS = [
     "mrt-rerouter-skill",
     "dengue-risk-advisor-skill",
     "hawker-discover-skill",
+    "agent-match-skill",
+    "rental-yield-calculator-skill",
+    "air-quality-advisor-skill",
 ]
 
 SYNC_HEADER = """# SYNCED FROM: ./singapore_api.py
