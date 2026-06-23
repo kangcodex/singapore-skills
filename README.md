@@ -8,11 +8,14 @@ A collection of agent skills for Singapore-specific lookups. Each skill bundles 
 |-------|--------|--------------|
 | `cdc-voucher-locator-skill` | [`skills/cdc-voucher-locator-skill/`](skills/cdc-voucher-locator-skill/) | Find CDC Voucher-accepting merchants near any Singapore location. Filters by intent (food / supermarket / budget meal / generic). |
 | `smart-commuter-skill` | [`skills/smart-commuter-skill/`](skills/smart-commuter-skill/) | Car driver rerouting — pick the right HDB carpark, swap to alternates when full, plus live traffic and thunderstorm advisories. |
-| `resale-property-advisor-skill` | [`skills/resale-property-advisor-skill/`](skills/resale-property-advisor-skill/) | "Is this asking price fair?" — compares against HDB resale cluster average, lists nearby URA future amenities, flags above-average rainfall. |
+| `property-advisor-skill` | [`skills/property-advisor-skill/`](skills/property-advisor-skill/) | Five-mode property advisor — HDB resale cluster baseline, private condo resale by URA region, rental yield, EC sales, and an investment-lens overlay (SINGSTAT supply pipeline + URA unsold). Includes trend block (QoQ/YoY + sparkline), location block, optional CEA salesperson verification. |
 | `weekend-planner-skill` | [`skills/weekend-planner-skill/`](skills/weekend-planner-skill/) | Family-friendly weekend activity planner — pivots to indoor ActiveSG when UV≥11 or PSI≥101, swaps hawker centres during cleaning windows. |
 | `mrt-rerouter-skill` | [`skills/mrt-rerouter-skill/`](skills/mrt-rerouter-skill/) | Cross-island MRT + bus routing with PSI/walk-leg downgrades and LTA traffic-image-driven bus-leg penalties. |
 | `dengue-risk-advisor-skill` | [`skills/dengue-risk-advisor-skill/`](skills/dengue-risk-advisor-skill/) | Outdoor activity dengue-risk tier (low / moderate / elevated / high) from NEA cluster density + 7-day rainfall forecast vs. 5-year history. |
 | `hawker-discover-skill` | [`skills/hawker-discover-skill/`](skills/hawker-discover-skill/) | Hawker centre finder — composes the CDC voucher locator via subprocess, then filters to centres that are **open today**. |
+| `agent-match-skill` | [`skills/agent-match-skill/`](skills/agent-match-skill/) | Look up CEA-registered property salespersons by name or registration number. Filter to a postcode sector; attach track-record (closed-deal count by town + flat type) from CEA monthly transaction records. |
+| `rental-yield-calculator-skill` | [`skills/rental-yield-calculator-skill/`](skills/rental-yield-calculator-skill/) | Estimate gross + net rental yield on a private condo purchase. Combines URA Private Resi Trans (buy baseline) with URA Rentals Non-Landed (rent series) and an 8-quarter trend block. |
+| `air-quality-advisor-skill` | [`skills/air-quality-advisor-skill/`](skills/air-quality-advisor-skill/) | "Should I go for a run right now?" — combines current PSI / PM2.5 / UV (NEA realtime) with a 4-day forecast and a 5-band health advisory. |
 
 ## Install
 
