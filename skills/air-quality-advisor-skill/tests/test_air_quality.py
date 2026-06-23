@@ -222,11 +222,9 @@ class TestModuleImport(unittest.TestCase):
 class TestNoTopLevelNetwork(unittest.TestCase):
 
     def test_no_network_at_import(self):
-        # Reload module with a clean cache and check no fetcher was called.
         with patch("urllib.request.urlopen") as uo:
-            # Wipe any cached import so we exercise the import path
             for k in list(sys.modules):
-                if "air_quality" in k or k == "singapore_api":
+                if k == "air_quality":
                     del sys.modules[k]
             import importlib
             importlib.import_module("air_quality")

@@ -12,9 +12,11 @@ if SCRIPTS_DIR not in sys.path:
 
 def _load_module():
     import importlib
-    m = importlib.import_module("rental_yield")
-    importlib.reload(m)
-    return m
+    if "rental_yield" in sys.modules:
+        del sys.modules["rental_yield"]
+    if "singapore_api" in sys.modules and sys.modules["singapore_api"].__file__ and SCRIPTS_DIR not in sys.modules["singapore_api"].__file__:
+        del sys.modules["singapore_api"]
+    return importlib.import_module("rental_yield")
 
 
 def _ura_envelope():
@@ -46,11 +48,17 @@ class TestYieldCalculation(unittest.TestCase):
 
     def test_gross_yield_for_private_condo(self):
         m = _load_module()
+        # Re-resolve singapore_api to the fresh copy bound to m. The module-
+        # level `import singapore_api` at the top of this file is cached
+        # from a prior test (which may have loaded a different per-skill
+        # copy); after _load_module, m uses the rental-yield per-skill copy.
+        import importlib
+        sa = importlib.import_module("singapore_api")
         # Geocode point placed close to URA features at SVY21 (30000, 39000)
         # which converts to WGS84 ~(1.3699, 103.8522).
         with patch.object(m, "fetch_ura_rentals", return_value=_rental_records()), \
              patch.object(m, "fetch_ura_private_resi_trans", return_value=_private_trans_records()), \
-             patch.object(m, "geocode", return_value=("District 9", 1.3699, 103.8522, "238859")), \
+             patch.object(sa, "geocode", return_value=("District 9", 1.3699, 103.8522, "238859")), \
              patch.object(m, "fetch_ura_master_plan", return_value=_ura_envelope()):
             out = m.calculate(1500000, "District 9", "whole_sg", "Non-Landed", "2025-01")
         # Last rent row: median_rent = 5000 + 4*50 = 5200

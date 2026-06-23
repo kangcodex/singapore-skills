@@ -15,78 +15,24 @@ Exit 0 on success. Errors caught and returned as {"error": "..."}.
 import argparse
 import json
 import sys
-from typing import Any
 
 from singapore_api import (
+    SPARKLINE_BINS,
     URA_REGION_DATASET_IDS,
     fetch_ura_master_plan,
     fetch_ura_private_resi_trans,
     fetch_ura_rentals,
     geocode,
     haversine_m,
+    location_block,
+    sparkline,
     svy21_to_wgs84,
+    trend_block,
 )
 
 
 NET_DEDUCTION = 0.15  # 15% for tax + mgmt + insurance heuristic
 TREND_PERIODS = 8
-SPARKLINE_BINS = "▁▂▃▄▅▆▇█"
-
-
-def sparkline(values: list[float]) -> str:
-    if not values:
-        return ""
-    lo, hi = min(values), max(values)
-    if hi == lo:
-        return SPARKLINE_BINS[0] * len(values)
-    n = len(SPARKLINE_BINS)
-    spread = hi - lo
-    return "".join(SPARKLINE_BINS[min(n - 1, int((v - lo) / spread * n))] for v in values)
-
-
-def trend_block(records: list[dict], value_key: str = "median_rent_psf_pm", qtr_key: str = "qtr") -> dict:
-    series = []
-    for r in records:
-        try:
-            v = float(r.get(value_key) or 0)
-        except (TypeError, ValueError):
-            continue
-        q = r.get(qtr_key)
-        if not q:
-            continue
-        series.append({"qtr": q, "value": round(v, 2)})
-    if not series:
-        return {"last_8_quarters": [], "qoq_pct": 0.0, "yoy_pct": 0.0, "sparkline": ""}
-    last = series[-TREND_PERIODS:]
-    values = [s["value"] for s in last]
-    qoq = ((values[-1] - values[-2]) / values[-2] * 100.0) if len(values) >= 2 and values[-2] else 0.0
-    yoy = 0.0
-    if len(values) >= 5 and values[-5]:
-        yoy = (values[-1] - values[-5]) / values[-5] * 100.0
-    return {
-        "last_8_quarters": last,
-        "qoq_pct": round(qoq, 1),
-        "yoy_pct": round(yoy, 1),
-        "sparkline": sparkline(values),
-    }
-
-
-def location_block(town: str) -> dict:
-    """Geocode the town/district to extract lat/lon for URA context lookups.
-    Geocode failures are swallowed; unknown fields stay "unknown"."""
-    out: dict = {"town": town, "planning_area": "unknown", "region": "unknown", "nearest_mrt": "unknown"}
-    try:
-        result = geocode(f"{town}, Singapore")
-    except (ValueError, RuntimeError):
-        return out
-    if not result:
-        return out
-    address, lat, lon, postal = result
-    out["geocoded_address"] = str(address) if address else None
-    out["geocoded_lat"] = float(lat) if lat is not None else None
-    out["geocoded_lon"] = float(lon) if lon is not None else None
-    out["geocoded_postal"] = str(postal) if postal else None
-    return out
 
 
 def ura_context(lat: float | None, lon: float | None, radius_m: float = 1000.0) -> list[str]:

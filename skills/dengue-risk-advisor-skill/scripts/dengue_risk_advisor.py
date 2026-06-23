@@ -4,14 +4,10 @@ Stdlib only. Imports from the bundled singapore_api.py (per-skill copy
 kept in sync with the canonical at the repo root).
 """
 
-from __future__ import annotations
-
 import argparse
 import json
-import math
 import statistics
 import sys
-from typing import Any
 
 import singapore_api
 
@@ -53,7 +49,7 @@ def cluster_count_within(features, lat, lon, radius_m=CLUSTER_RADIUS_M):
             continue
         clat, clon = c
         d = singapore_api.haversine_m(lat, lon, clat, clon)
-        if d <= radius_m:
+        if d is not None and d <= radius_m:
             n += 1
     return n
 

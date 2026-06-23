@@ -16,13 +16,10 @@ Exit code 0 on success (including "no match" and error). JSON to stdout.
 import argparse
 import json
 import sys
-from typing import Any
 
 from singapore_api import (
-    CEA_TRANSACTION_RECORDS_DATASET_ID,
     fetch_cea_salesperson,
     fetch_cea_transaction_records,
-    fetch_dataset_rows,
     geocode,
 )
 

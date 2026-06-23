@@ -44,10 +44,10 @@ import json
 import re
 import statistics
 import sys
-from typing import Any
 
 from singapore_api import (
     HDB_RESALE_DATASET_ID,
+    SPARKLINE_BINS,
     fetch_cea_salesperson,
     fetch_dataset_rows,
     fetch_nea_historical_rainfall,
@@ -61,7 +61,10 @@ from singapore_api import (
     fetch_ura_unsold_private_resi,
     geocode,
     haversine_m,
+    location_block,
+    sparkline,
     svy21_to_wgs84,
+    trend_block,
 )
 
 
@@ -94,19 +97,16 @@ LU_CATEGORIES = [
     (re.compile(r"\b(industrial|factory|warehouse)\b", re.I), "industrial"),
 ]
 
-# Unicode block characters for 8-bin sparkline. Ordered low->high.
-SPARKLINE_BINS = "▁▂▃▄▅▆▇█"
 
-
-# ── Pure helpers (v1 preserved) ────────────────────────────────────────
+# ── v1 helpers (restored) ──────────────────────────────────────────────
 
 def to_float(s):
     if s is None:
         return None
-    if isinstance(s, (int, float)):
-        return float(s)
     try:
-        return float(str(s).replace(",", "").strip())
+        if isinstance(s, str):
+            return float(s.replace(",", ""))
+        return float(s)
     except (TypeError, ValueError):
         return None
 
@@ -125,81 +125,6 @@ def categorise_lu(lu_desc):
         if rx.search(lu_desc):
             return label
     return None
-
-
-def cluster_centroid_easting_northing(records):
-    if not records:
-        return None
-    xs, ys = [], []
-    for r in records:
-        x = r.get("_x") or r.get("x") or r.get("easting")
-        y = r.get("_y") or r.get("y") or r.get("northing")
-        if x is None or y is None:
-            continue
-        try:
-            xs.append(float(x))
-            ys.append(float(y))
-        except (TypeError, ValueError):
-            continue
-    if not xs:
-        return None
-    return (sum(xs) / len(xs), sum(ys) / len(ys))
-
-
-# ── Trend block (new in v2) ────────────────────────────────────────────
-
-def sparkline(values):
-    """Map `values` to 8 unicode block chars (`SPARKLINE_BINS`).
-
-    Equal-width bins across the value range. Flat series (hi == lo) -> all-low bar.
-    Empty input -> empty string.
-    """
-    if not values:
-        return ""
-    lo, hi = min(values), max(values)
-    if hi == lo:
-        return SPARKLINE_BINS[0] * len(values)
-    n = len(SPARKLINE_BINS)
-    spread = hi - lo
-    return "".join(SPARKLINE_BINS[min(n - 1, int((v - lo) / spread * n))] for v in values)
-
-
-def trend_block(records, value_key, qtr_key="qtr", n_periods=8):
-    """Build the uniform trend block: `last_8_quarters`, `qoq_pct`,
-    `yoy_pct`, `sparkline`. `records` must be sorted oldest->newest.
-
-    `value_key` is the per-period metric column (e.g. "median_psf",
-    "median_total", "median_rent_psf_pm"). QoQ uses the last 2 periods.
-    YoY uses last vs (n_periods - 4)th-from-last. Skips records where
-    `value_key` is not coercible to float.
-    """
-    series = []
-    for r in records:
-        v = to_float(r.get(value_key))
-        if v is None:
-            continue
-        q = r.get(qtr_key) or r.get("quarter") or r.get("month")
-        series.append({"qtr": q, "value": round(v, 2)})
-    if not series:
-        return {
-            "last_8_quarters": [],
-            "qoq_pct": 0.0,
-            "yoy_pct": 0.0,
-            "sparkline": "",
-        }
-    last_n = series[-n_periods:]
-    values = [s["value"] for s in last_n]
-    qoq = ((values[-1] - values[-2]) / values[-2] * 100.0) if len(values) >= 2 and values[-2] else 0.0
-    yoy_idx = -5
-    yoy = 0.0
-    if len(values) >= abs(yoy_idx) and values[yoy_idx]:
-        yoy = (values[-1] - values[yoy_idx]) / values[yoy_idx] * 100.0
-    return {
-        "last_8_quarters": last_n,
-        "qoq_pct": round(qoq, 1),
-        "yoy_pct": round(yoy, 1),
-        "sparkline": sparkline(values),
-    }
 
 
 # ── HDB mode (v1 preserved) ────────────────────────────────────────────
@@ -241,6 +166,25 @@ def premium_pct(asking, baseline):
     if baseline <= 0:
         return 0.0
     return (asking - baseline) / baseline * 100.0
+
+
+def cluster_centroid_easting_northing(records):
+    if not records:
+        return None
+    xs, ys = [], []
+    for r in records:
+        x = r.get("_x") or r.get("x") or r.get("easting")
+        y = r.get("_y") or r.get("y") or r.get("northing")
+        if x is None or y is None:
+            continue
+        try:
+            xs.append(float(x))
+            ys.append(float(y))
+        except (TypeError, ValueError):
+            continue
+    if not xs:
+        return None
+    return (sum(xs) / len(xs), sum(ys) / len(ys))
 
 
 def _amenities_around_latlon(lat, lon, radius_m):
@@ -395,28 +339,6 @@ def _median_value(records, value_key):
 
 
 # ── Location block (v2) ────────────────────────────────────────────────
-
-def location_block(town):
-    """Return {town, planning_area, region, nearest_mrt}. Falls back to
-    `planning_area=town, region=unknown, nearest_mrt=unknown` if geocoding
-    fails (which is the common offline case)."""
-    out = {
-        "town": town.upper(),
-        "planning_area": town.upper(),
-        "region": "unknown",
-        "nearest_mrt": "unknown",
-    }
-    try:
-        geocoded = geocode(f"{town}, Singapore")
-    except (ValueError, RuntimeError):
-        return out
-    if geocoded is None:
-        return out
-    # geocode returns (search_val, lat, lon). We can't reverse-geocode MRT
-    # offline, so just record coordinates-derived info if available.
-    _ = geocoded
-    return out
-
 
 # ── Investment overlay (v2) ────────────────────────────────────────────
 

@@ -879,6 +879,101 @@ def fetch_cea_transaction_records(town=None, flat_type=None, since=None):
     return out
 
 
+# ── Trend / sparkline / location helpers (consolidated from property-advisor + rental-yield) ──
+
+SPARKLINE_BINS = "\u2581\u2582\u2583\u2584\u2585\u2586\u2587\u2588"
+
+
+def sparkline(values):
+    """Map `values` to 8 unicode block chars (`SPARKLINE_BINS`).
+    Equal-width bins across the value range. Flat series (hi == lo) -> all-low bar.
+    Empty input -> empty string.
+    """
+    if not values:
+        return ""
+    lo, hi = min(values), max(values)
+    if hi == lo:
+        return SPARKLINE_BINS[0] * len(values)
+    n = len(SPARKLINE_BINS)
+    spread = hi - lo
+    return "".join(SPARKLINE_BINS[min(n - 1, int((v - lo) / spread * n))] for v in values)
+
+
+def trend_block(records, value_key="median_rent_psf_pm", qtr_key="qtr", n_periods=8):
+    """Build the uniform trend block: `last_8_quarters`, `qoq_pct`,
+    `yoy_pct`, `sparkline`. `records` must be sorted oldest->newest.
+    `value_key` is the per-period metric column. QoQ = last vs second-last.
+    YoY = last vs (n_periods - 4)th-from-last. Skips records where `value_key`
+    is not coercible to float or where no quarter/month key is present.
+    """
+    series = []
+    for r in records:
+        v = r.get(value_key)
+        try:
+            v_f = float(v) if v is not None else None
+        except (TypeError, ValueError):
+            v_f = None
+        if v_f is None:
+            continue
+        q = r.get(qtr_key) or r.get("quarter") or r.get("month")
+        if not q:
+            continue
+        series.append({"qtr": q, "value": round(v_f, 2)})
+    if not series:
+        return {"last_8_quarters": [], "qoq_pct": 0.0, "yoy_pct": 0.0, "sparkline": ""}
+    last_n = series[-n_periods:]
+    values = [s["value"] for s in last_n]
+    qoq = ((values[-1] - values[-2]) / values[-2] * 100.0) if len(values) >= 2 and values[-2] else 0.0
+    yoy = 0.0
+    if len(values) >= 5 and values[-5]:
+        yoy = (values[-1] - values[-5]) / values[-5] * 100.0
+    return {
+        "last_8_quarters": last_n,
+        "qoq_pct": round(qoq, 1),
+        "yoy_pct": round(yoy, 1),
+        "sparkline": sparkline(values),
+    }
+
+
+def location_block(town):
+    """Return {town, planning_area, region, nearest_mrt, geocoded_address,
+    geocoded_lat, geocoded_lon, geocoded_postal}. Falls back to
+    `planning_area=town, region/nearest_mrt="unknown"` on geocode failure.
+    The 4 `geocoded_*` fields are present but may be None on failure.
+    """
+    town_str = str(town).upper() if town is not None else town
+    out = {
+        "town": town_str,
+        "planning_area": "unknown",
+        "region": "unknown",
+        "nearest_mrt": "unknown",
+        "geocoded_address": None,
+        "geocoded_lat": None,
+        "geocoded_lon": None,
+        "geocoded_postal": None,
+    }
+    try:
+        result = geocode(f"{town}, Singapore")
+    except (ValueError, RuntimeError):
+        return out
+    if not result:
+        return out
+    address, lat, lon, postal = result
+    if address:
+        out["planning_area"] = str(address)
+    out["geocoded_address"] = str(address) if address else None
+    try:
+        out["geocoded_lat"] = float(lat) if lat is not None else None
+    except (TypeError, ValueError):
+        out["geocoded_lat"] = None
+    try:
+        out["geocoded_lon"] = float(lon) if lon is not None else None
+    except (TypeError, ValueError):
+        out["geocoded_lon"] = None
+    out["geocoded_postal"] = str(postal) if postal else None
+    return out
+
+
 # ── SVY21 → WGS84 ─────────────────────────────────────────────────────
 # Singapore uses SVY21 (a Transverse Mercator projection) for cadastral
 # data. URA Master Plan records carry geometry in SVY21 easting/northing;

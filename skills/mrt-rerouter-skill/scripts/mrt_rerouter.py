@@ -13,7 +13,6 @@ CLI:
 
 import argparse
 import json
-import sys
 
 import singapore_api
 

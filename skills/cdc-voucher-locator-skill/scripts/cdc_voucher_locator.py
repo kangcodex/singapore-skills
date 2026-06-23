@@ -4,7 +4,7 @@ CDC Voucher Locator — standalone helper script.
 Called by the agent skill. Caches data to ~/.hermes/cache/cdc-vouchers/
 """
 import gzip, json, os, re, sys, urllib.request, urllib.error, urllib.parse
-from math import radians, sin, cos, sqrt, asin
+from math import sin, cos
 from datetime import datetime, timezone
 from pathlib import Path
 
