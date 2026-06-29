@@ -1,0 +1,48 @@
+{
+  "skill_name": "overseas-trip-planner-skill",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "elderly-cultural-relaxed",
+      "prompt": "My elderly parents (both 70+) want a relaxed cultural trip to Kyoto in November 2026, mid-range comfort hotel, public transit. Plan a 5-day itinerary.",
+      "expected_output": "A day-by-day itinerary that respects a 4h/day activity cap for elderly travelers, prioritizes step-free routes, ends dinners by 18:00, surfaces the script's contradiction warnings (elderly + ambitious = no, elderly + late-nights = no), and includes a Skip-the-Trap section.",
+      "files": [],
+      "expectations": [
+        "Output names an explicit 5-dim preference snapshot (Companion, Style, Pace, Accommodation, Rhythm)",
+        "Output applies elderly-specific lodging rules (ground-floor / lift-access / bathtub)",
+        "Output enforces a 4h/day activity cap for elderly companions (no ambitious schedule)",
+        "Output applies elderly-specific transit rules (step-free, private car or taxi preferred)",
+        "Output includes a Skip-the-Trap section with at least one city",
+        "Output includes daylight footer with sunset time for Kyoto in November"
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "friends-classic-ambitious",
+      "prompt": "Plan a 7-day road trip around Hokkaido in February 2026 for a group of 5 friends. We want a classic must-see Hokkaido experience, ambitious pace, premium hotel, late-night izakaya vibe.",
+      "expected_output": "A 7-day Hokkaido itinerary that respects ambitious + late-nights rhythm, applies the 30% transit buffer for self-drive, includes daylight cutoffs that account for February's 16:05 sunset, and routes geographically to avoid backtracking.",
+      "files": [],
+      "expectations": [
+        "Output names the 5-dim snapshot including friends + ambitious + late-nights",
+        "Output applies 30% transit buffer to GPS estimates (self-drive)",
+        "Output routes geographically — base moves Hokkaido-east to Hokkaido-west or similar, no backtracking",
+        "Output includes daylight footer for at least one day (sunset 16:05 in Hokkaido Feb)",
+        "Output flags any Heavy Transit Day explicitly"
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "family-nature-relaxed-comfort",
+      "prompt": "We're a family of 4 (2 adults + 2 kids ages 6 and 9) planning a relaxed nature trip to Bali in July 2026. Comfort hotel, self-drive, early starts. Plan a 6-day trip.",
+      "expected_output": "A 6-day Bali itinerary that applies the One Big Event rule (1 anchor/day for family), early-starts rhythm, nature focus (rice terraces, beaches, monkey forest), with hyper-local dish recommendations per meal.",
+      "files": [],
+      "expectations": [
+        "Output names the 5-dim snapshot including family + nature + relaxed + early-starts",
+        "Output applies the One Big Event rule (max 1 anchor per day)",
+        "Output includes hyper-local dish recommendations (named dish + named venue) at least 3 times",
+        "Output includes a Skip-the-Trap section",
+        "Output ends with etiquette and packing sections"
+      ]
+    }
+  ]
+}

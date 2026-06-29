@@ -1,0 +1,47 @@
+{
+  "skill_name": "sg-fruit-price-tracker-skill",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "track-strawberry-cold-storage",
+      "prompt": "Track this week's strawberry prices at Cold Storage Singapore. Use the bundled scraper.",
+      "expected_output": "A list of fresh strawberry products from Cold Storage, each with name, weight, price, and promo flag. Excludes strawberry-flavoured drinks / yoghurt / dried / cake products.",
+      "files": [],
+      "expectations": [
+        "Output is a CSV (default) or JSON (--json)",
+        "Every record has a non-empty 'name' field",
+        "Every record has a numeric 'price_sgd' field between 0.50 and 200",
+        "No 'Yoghurt' / 'Juice' / 'Dried' / 'Cake' / 'Soap' / 'Wine' records appear",
+        "Record count > 0"
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "weekly-all-fruits-all-retailers",
+      "prompt": "Set up a weekly Saturday 9am SGT cron job that tracks lychees, peaches, strawberries, and plums across FairPrice, Cold Storage, and Sheng Siong, with rolling 7-day CSV retention.",
+      "expected_output": "A complete cron configuration and a list of which retailers are available, with Sheng Siong explicitly marked unavailable (Meteor SPA, not extractable).",
+      "files": [],
+      "expectations": [
+        "Cron line uses the bundled script (urllib.request, not curl | python3)",
+        "Cron schedule is '0 9 * * 6' (Sat 9am)",
+        "Output explicitly notes Sheng Siong is unavailable (Meteor SPA)",
+        "Output explicitly notes FairPrice is web_search only (no scraping)",
+        "Output mentions the 7-file cleanup retention"
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "compare-lychee-across-retailers",
+      "prompt": "I want to see the cheapest lychee option this week. Compare across FairPrice and Cold Storage.",
+      "expected_output": "A side-by-side comparison showing Cold Storage's lychee products with prices, sorted or annotated so the cheapest is highlighted, and FairPrice's web_search snippets for the same fruit.",
+      "files": [],
+      "expectations": [
+        "Output includes Cold Storage lychee products (name + price)",
+        "Output mentions FairPrice's lychee data is from web_search, not scraping",
+        "Output sorts by price or highlights the cheapest option",
+        "Output excludes lychee-flavoured products (juice, candy, jam, etc.)",
+        "Output flags any product outside the $0.50-200 price band"
+      ]
+    }
+  ]
+}
