@@ -4,6 +4,16 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added — 2026-06-30
+
+- **`sg-home-chef-skill`** — Singapore home chef recipe coach. Turns any dish request into a 3-tier recipe brief (beginner one-pan / intermediate tumis / advanced wok hei) calibrated to HDB-cookout-kitchen reality. Bilingual SG ingredient dictionary (Malay + Chinese + English), 2 sourcing tracks (supermarket vs wet market), dietary filters (halal / vegetarian / vegan / no-pork / no-beef / gluten-free), culinary milestone delivery (visual + aroma checkpoints, not timers). Bundles 6 starter recipes (Sambal Kang Kong, Hainanese Chicken Rice, Roti Prata, Laksa, Char Kway Teow, Bak Kut Teh).
+  - `scripts/sg_home_chef.py` (743 lines, stdlib-only, deterministic) — CLI with --dish, --skill-level, --sourcing-track, --dietary, --servings, --time-budget, --json; returns `params_complete`, `skill_strategy`, `sourcing_strategy`, `ingredient_substitutions[]`, `milestones[]`, `recipe_blueprint`, `warnings[]`
+  - `references/` (4 files): skill-levels.md, ingredient-dictionary.md (18 ingredients × 3 languages), sourcing-tracks.md, recipe-blueprint.md (8-section markdown skeleton + worked Sambal Kang Kong)
+  - `evals/evals.json` (3 evals: 29 + 21 + 20 expectations = 70 total, 100% pass)
+  - `tests/test_sg_home_chef.py` (42 unittest smoke tests, 100% pass)
+  - `docs/design/sg-home-chef-skill.md` — design notes
+  - `Makefile` — `test-sg-home-chef` and `evals-sg-home-chef` targets
+
 ### Added — 2026-06-22
 
 #### 3 new skills

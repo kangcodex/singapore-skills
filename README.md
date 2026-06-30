@@ -18,6 +18,7 @@ A collection of agent skills for Singapore-specific lookups. Each skill bundles 
 | `air-quality-advisor-skill` | [`skills/air-quality-advisor-skill/`](skills/air-quality-advisor-skill/) | "Should I go for a run right now?" — combines current PSI / PM2.5 / UV (NEA realtime) with a 4-day forecast and a 5-band health advisory. |
 | `overseas-trip-planner-skill` | [`skills/overseas-trip-planner-skill/`](skills/overseas-trip-planner-skill/) | Day-by-day overseas trip concierge for Singapore-origin travelers — persona matrix (solo / family / couple), daylight cutoff, transit buffer math, hyper-local dish enforcement, "Skip the Trap" section. |
 | `sg-fruit-price-tracker-skill` | [`skills/sg-fruit-price-tracker-skill/`](skills/sg-fruit-price-tracker-skill/) | Cron-driven weekly fruit price tracker — Cold Storage via stdlib urllib + aria-label regex, FairPrice via web_search, Sheng Siong flagged unavailable. CSV / JSON output, rolling 7-day retention, 70+ keyword blocklist. |
+| `sg-home-chef-skill` | [`skills/sg-home-chef-skill/`](skills/sg-home-chef-skill/) | Singapore home chef — turns any dish request into a 3-tier recipe brief (beginner one-pan, intermediate tumis, advanced wok hei) calibrated to HDB-cookout-kitchen reality. Bilingual SG ingredient dictionary (Malay + Chinese), 2 sourcing tracks (supermarket vs wet market), dietary filters (halal/vegetarian/vegan/gluten-free), culinary milestones (visual + aroma, not timers). |
 
 ## Install
 
@@ -238,7 +239,7 @@ Test counts (as of 2026-06-21):
 | `skills/mrt-rerouter-skill/tests/`               | 45    |
 | `skills/dengue-risk-advisor-skill/tests/`        | 64    |
 | `skills/hawker-discover-skill/tests/`            | 25    |
-| **Total**                                        | **289** |
+| **Total**                                        | **331** |
 
 Network-dependent paths are mocked so the suite passes in offline / sandboxed
 environments. The pure helpers and the network seam are both covered.
