@@ -1,14 +1,19 @@
-"""SG Fruit Price Tracker — Cold Storage scraper (stdlib only).
+"""SG Fruit Price Tracker — Cold Storage + FairPrice scraper (stdlib only).
 
-Crawls Cold Storage's product search for lychees, peaches, strawberries,
-plums. Emits CSV (default) or JSON (--json) to stdout. Designed for cron:
-no shell pipes, no subprocess, no interactive prompts.
+Crawls 30 common + exotic fruits across:
+  - Cold Storage (https://coldstorage.com.sg/) — aria-label regex on search pages
+  - FairPrice (https://www.fairprice.com.sg/) — HTML parse on /category/fruits
+  - Sheng Siong (https://shengsiong.com.sg/) — Meteor SPA, logged as unavailable
+    (the agent should fall back to web_search at runtime for that retailer)
+
+Emits CSV (default) or JSON (--json) to stdout. Stdlib only. No subprocess.
+No shell pipes. Cron-safe.
 
 Usage:
-    python3 fruit_price_tracker.py --fruit lychee
     python3 fruit_price_tracker.py --all
+    python3 fruit_price_tracker.py --fruit mango
+    python3 fruit_price_tracker.py --retailer fairprice --fruit apple
     python3 fruit_price_tracker.py --json
-    python3 fruit_price_tracker.py --retailer cold_storage
     python3 fruit_price_tracker.py --offline
 
 Exit codes:
@@ -22,8 +27,8 @@ import argparse
 import csv
 import datetime as _dt
 import hashlib
+import io
 import json
-import os
 import re
 import sys
 import time
@@ -38,20 +43,50 @@ REFERENCES = HERE.parent / "references"
 CACHE_DIR = Path.home() / ".hermes" / "cache" / "sg-fruit-prices"
 CACHE_TTL_SECONDS = 3600
 HTTP_TIMEOUT_SECONDS = 10
-USER_AGENT = "sg-fruit-price-tracker/1.0 (+cron; hermes-skill)"
+USER_AGENT = "sg-fruit-price-tracker/2.0 (+cron; hermes-skill)"
 
 COLDSTORAGE_SEARCH = "https://coldstorage.com.sg/search?q={q}"
+FAIRPRICE_FRUITS_CATEGORY = "https://www.fairprice.com.sg/category/fruits"
 
+# 30 curated fruits: common + exotic. Each maps to search keywords.
 TARGET_FRUITS: dict[str, list[str]] = {
-    "lychee":     ["lychee", "lychees"],
-    "peach":      ["peach", "peaches"],
-    "strawberry": ["strawberry", "strawberries"],
-    "plum":       ["plum", "plums"],
+    "apple":          ["apple", "fuji", "gala", "granny"],
+    "banana":         ["banana", "cavendish"],
+    "orange":         ["orange", "mandarin", "valencia"],
+    "mango":          ["mango", "susu", "harum manis"],
+    "durian":         ["durian", "musang king", "mao shan"],
+    "dragon_fruit":   ["dragon fruit", "pitaya"],
+    "rambutan":       ["rambutan"],
+    "mangosteen":     ["mangosteen"],
+    "papaya":         ["papaya", "pawpaw"],
+    "watermelon":     ["watermelon", "seedless"],
+    "pineapple":      ["pineapple", "md2"],
+    "lychee":         ["lychee", "lychees"],
+    "longan":         ["longan"],
+    "jackfruit":      ["jackfruit", "nangka"],
+    "pomelo":         ["pomelo", "limau bali"],
+    "pear":           ["pear", "ya li", "crystal"],
+    "peach":          ["peach", "donut peach"],
+    "plum":           ["plum", "japanese plum"],
+    "strawberry":     ["strawberry", "strawberries"],
+    "blueberry":      ["blueberry", "blueberries"],
+    "raspberry":      ["raspberry", "raspberries"],
+    "cherry":         ["cherry", "cherries"],
+    "grape":          ["grape", "grapes", "kyoho"],
+    "kiwi":           ["kiwi", "kiwifruit", "zespri"],
+    "lemon":          ["lemon", "meyer"],
+    "lime":           ["lime", "limau nipis"],
+    "persimmon":      ["persimmon", "fuyu"],
+    "pomegranate":    ["pomegranate"],
+    "guava":          ["guava", "jambu"],
+    "star_fruit":     ["star fruit", "carambola"],
 }
 
-# 70+ exclusion keywords. False positives (a real fruit accidentally
-# blocked) are recoverable; false negatives (yoghurt-with-fruit-in-the-name
-# sneaking through) pollute the price report. Err on the side of exclusion.
+RETAILERS = ("cold_storage", "fairprice", "sheng_siong")
+
+# 70+ exclusion keywords. False positives (real fruit blocked) are recoverable;
+# false negatives (yoghurt-with-fruit in the name sneaking through) pollute
+# the report. Err on the side of exclusion.
 EXCLUDE_KEYWORDS = [
     "juice", "drink", "beverage", "soda", "soft drink", "energy drink",
     "yoghurt", "yogurt", "kefir", "lassi",
@@ -66,12 +101,12 @@ EXCLUDE_KEYWORDS = [
     "perfume", "cologne", "candle", "diffuser", "sachet",
     "lip balm", "lip butter", "face", "skin", "hair", "body",
     "mask", "scrub", "exfoliat", "toner", "mist", "splash",
-    "supplement", "vitamin", "gummy", "collagen", "probiotic",
+    "supplement", "vitamin", "collagen", "probiotic",
     "toiletry", "toiletries", "detergent", "cleaner", "disinfect",
     "scented", "flavoured", "flavored", "infused",
     "bar", "cake", "cookie", "biscuit", "wafer", "pudding", "gelatin",
     "filling", "topping", "syrup", "sauce", "puree",
-    "mochi", "mochi", "dango", "tangyuan",
+    "mochi", "dango", "tangyuan",
     "voucher", "gift card", "coupon", "promo code",
     "recipe", "kit", "platter", "hamper",
     "floral", "bouquet", "potpourri",
@@ -81,6 +116,7 @@ EXCLUDE_KEYWORDS = [
     "pet", "dog", "cat", "bird",
     "non-food", "merchandise",
     "sku",
+    "cider vinegar", "capsule", "tablet",
 ]
 
 EXCLUDE_RE = re.compile(
@@ -88,14 +124,39 @@ EXCLUDE_RE = re.compile(
     re.IGNORECASE,
 )
 
-# aria-label = product name
-ARIA_RE = re.compile(r'aria-label="([^"]+)"')
-# price within 200 chars of a name
-PRICE_RE = re.compile(r"\$\s*(\d+(?:\.\d{1,2})?)")
-# weight in grams
+# -- Cold Storage regexes --
+CS_ARIA_RE = re.compile(r'aria-label="([^"]+)"')
+CS_PRICE_RE = re.compile(r"\$\s*(\d+(?:\.\d{1,2})?)")
+CS_RATING_RE = re.compile(r'data-rating="(\d+(?:\.\d)?)"')
+CS_REVIEW_RE = re.compile(r'data-reviews="(\d+)"')
+
+# -- FairPrice regexes --
+# Product URL slug: /product/{slug}-{id}
+FP_PRODUCT_RE = re.compile(r'href="/product/([a-z0-9-]+)"')
+# Product name: inside data-testid="product-name-and-metadata"
+FP_NAME_RE = re.compile(
+    r'data-testid="product-name-and-metadata"[^>]*>.*?'
+    r'<span[^>]*weight="normal"[^>]*>([^<]+)</span>',
+    re.DOTALL,
+)
+# Weight: next sibling span with color #666666
+FP_WEIGHT_RE = re.compile(
+    r'product-name-and-metadata"[^>]*>.*?'
+    r'<span[^>]*color="#666666"[^>]*>([^<]+)</span>',
+    re.DOTALL,
+)
+# Price: span with weight="black" containing $X.XX
+FP_PRICE_RE = re.compile(
+    r'<span[^>]*weight="black"[^>]*>\$\s*(\d+(?:\.\d{1,2})?)</span>'
+)
+# Original price (promo): aria-label="Original price" + $X.XX nearby
+FP_ORIGINAL_PRICE_RE = re.compile(
+    r'aria-label="Original price"[^<]*<[^>]+>\$\s*(\d+(?:\.\d{1,2})?)</span>'
+)
+# Rating: aria-label="Average rating is X.X"
+FP_RATING_RE = re.compile(r'aria-label="Average rating is (\d+(?:\.\d)?)"')
+
 WEIGHT_RE = re.compile(r"(\d+(?:\.\d+)?)\s*(g|gram|grams|kg)\b", re.IGNORECASE)
-RATING_RE = re.compile(r'data-rating="(\d+(?:\.\d)?)"')
-REVIEW_RE = re.compile(r'data-reviews="(\d+)"')
 
 MIN_PRICE_SGD = 0.50
 MAX_PRICE_SGD = 200.0
@@ -104,7 +165,13 @@ MAX_PRICE_SGD = 200.0
 # --------------------------------------------------------------- network --
 
 def _http_get(url: str, timeout: int = HTTP_TIMEOUT_SECONDS) -> tuple[int, str]:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml"})
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "text/html,application/xhtml+xml",
+        },
+    )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             body = resp.read()
@@ -158,7 +225,7 @@ def fetch(url: str, *, offline: bool = False, ttl: int = CACHE_TTL_SECONDS) -> t
     return status, body
 
 
-# --------------------------------------------------------------- parsing --
+# --------------------------------------------------------------- helpers --
 
 def normalize_name(name: str) -> str:
     n = name.lower()
@@ -174,7 +241,7 @@ def is_blocked(name: str) -> bool:
 def parse_price(text: str) -> float | None:
     if not text:
         return None
-    m = PRICE_RE.search(text)
+    m = CS_PRICE_RE.search(text)
     if not m:
         return None
     try:
@@ -196,21 +263,35 @@ def parse_weight(name: str) -> int | None:
     return int(grams)
 
 
-def parse_cold_storage(html: str, fruit_key: str) -> list[dict]:
-    """Extract product dicts from Cold Storage HTML for a given fruit."""
+def fruit_matches(name: str, fruit_keys: list[str]) -> bool:
+    """Check if a product name matches any of the given fruit keys."""
+    n = name.lower()
+    for k in fruit_keys:
+        for kw in TARGET_FRUITS.get(k, [k]):
+            if kw in n:
+                return True
+    return False
+
+
+def now_iso() -> str:
+    return _dt.datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+# --------------------------------------------------------------- Cold Storage --
+
+def parse_cold_storage(html: str, fruit_keys: list[str]) -> list[dict]:
+    """Extract product dicts from Cold Storage HTML for the given fruit keys."""
     if not html:
         return []
-    keywords = TARGET_FRUITS.get(fruit_key.lower(), [fruit_key.lower()])
     seen: set[str] = set()
     out: list[dict] = []
-    for m in ARIA_RE.finditer(html):
+    for m in CS_ARIA_RE.finditer(html):
         name = m.group(1).strip()
         if not name:
             continue
         if is_blocked(name):
             continue
-        name_lower = name.lower()
-        if not any(kw in name_lower for kw in keywords):
+        if not fruit_matches(name, fruit_keys):
             continue
         start = m.end()
         first_close = html.find("</div>", start)
@@ -223,7 +304,7 @@ def parse_cold_storage(html: str, fruit_key: str) -> list[dict]:
         else:
             end = min(len(html), start + 250)
         chunk = html[start:end]
-        prices = PRICE_RE.findall(chunk)
+        prices = CS_PRICE_RE.findall(chunk)
         if not prices:
             continue
         price_vals: list[float] = []
@@ -243,12 +324,13 @@ def parse_cold_storage(html: str, fruit_key: str) -> list[dict]:
             promo = True
             original = price_vals[0]
             price_sgd = price_vals[1]
-        rating_m = RATING_RE.search(chunk)
-        review_m = REVIEW_RE.search(chunk)
+        rating_m = CS_RATING_RE.search(chunk)
+        review_m = CS_REVIEW_RE.search(chunk)
         norm = normalize_name(name)
         if norm in seen:
             continue
         seen.add(norm)
+        fruit_key = fruit_keys[0] if fruit_keys else ""
         out.append({
             "retailer": "cold_storage",
             "name": name,
@@ -259,8 +341,147 @@ def parse_cold_storage(html: str, fruit_key: str) -> list[dict]:
             "rating": float(rating_m.group(1)) if rating_m else None,
             "review_count": int(review_m.group(1)) if review_m else None,
             "url": COLDSTORAGE_SEARCH.format(q=urllib.parse.quote(fruit_key)),
-            "scraped_at": _dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+            "scraped_at": now_iso(),
         })
+    return out
+
+
+# --------------------------------------------------------------- FairPrice --
+
+def parse_fairprice(html: str, fruit_keys: list[str]) -> list[dict]:
+    """Extract product dicts from FairPrice /category/fruits HTML."""
+    if not html or 'data-testid="product-name-and-metadata"' not in html:
+        return []
+    seen: set[str] = set()
+    out: list[dict] = []
+    for m in FP_PRODUCT_RE.finditer(html):
+        slug = m.group(1)
+        anchor_end = m.end()
+        # Walk forward up to 1500 chars to find the product card content.
+        end = min(len(html), anchor_end + 1500)
+        chunk = html[anchor_end:end]
+        name_m = FP_NAME_RE.search(chunk)
+        if not name_m:
+            continue
+        name = name_m.group(1).strip()
+        if not name or is_blocked(name):
+            continue
+        if not fruit_matches(name, fruit_keys):
+            continue
+        weight_m = FP_WEIGHT_RE.search(chunk)
+        weight_str = weight_m.group(1).strip() if weight_m else None
+        weight_g = parse_weight(weight_str) if weight_str else None
+        # Find prices in this card. First $X.XX = current price; if there's
+        # an "Original price" aria-label, the price inside it is the was-price.
+        prices = FP_PRICE_RE.findall(chunk)
+        if not prices:
+            continue
+        price_vals: list[float] = []
+        for p in prices[:2]:
+            try:
+                v = float(p)
+            except (ValueError, TypeError):
+                continue
+            if MIN_PRICE_SGD <= v <= MAX_PRICE_SGD:
+                price_vals.append(round(v, 2))
+        if not price_vals:
+            continue
+        original_m = FP_ORIGINAL_PRICE_RE.search(chunk)
+        original = None
+        promo = False
+        price_sgd = price_vals[0]
+        if original_m:
+            try:
+                original = round(float(original_m.group(1)), 2)
+                if MIN_PRICE_SGD <= original <= MAX_PRICE_SGD and original > price_sgd:
+                    promo = True
+            except (ValueError, TypeError):
+                original = None
+        rating_m = FP_RATING_RE.search(chunk)
+        norm = normalize_name(name)
+        if norm in seen:
+            continue
+        seen.add(norm)
+        out.append({
+            "retailer": "fairprice",
+            "name": name,
+            "weight_g": weight_g,
+            "price_sgd": price_sgd,
+            "original_price_sgd": original,
+            "promo": promo,
+            "rating": float(rating_m.group(1)) if rating_m else None,
+            "review_count": None,  # FairPrice doesn't expose review count in HTML
+            "url": f"https://www.fairprice.com.sg/product/{slug}",
+            "scraped_at": now_iso(),
+        })
+    return out
+
+
+# --------------------------------------------------------------- Sheng Siong --
+
+def scrape_sheng_siong() -> list[dict]:
+    """Sheng Siong is a Meteor SPA. urllib returns empty. Always unavailable."""
+    return []
+
+
+# --------------------------------------------------------------- retailers --
+
+def scrape_cold_storage(fruit_keys: list[str], *, offline: bool = False) -> tuple[str, list[dict] | str]:
+    fruit_key = fruit_keys[0] if fruit_keys else ""
+    url = COLDSTORAGE_SEARCH.format(q=urllib.parse.quote(fruit_key))
+    status, body = fetch(url, offline=offline)
+    if status != 200 or not body:
+        return "cold_storage", f"unavailable: http_status_{status}"
+    records = parse_cold_storage(body, fruit_keys)
+    if not records:
+        return "cold_storage", "unavailable: 0_matches"
+    return "cold_storage", records
+
+
+def scrape_fairprice(fruit_keys: list[str], *, offline: bool = False) -> tuple[str, list[dict] | str]:
+    """FairPrice: one category-page fetch covers all 30 fruits. Filter by fruit_keys."""
+    status, body = fetch(FAIRPRICE_FRUITS_CATEGORY, offline=offline)
+    if status != 200 or not body:
+        return "fairprice", f"unavailable: http_status_{status}"
+    records = parse_fairprice(body, fruit_keys)
+    if not records:
+        return "fairprice", "unavailable: 0_matches_or_unrendered"
+    return "fairprice", records
+
+
+def scrape_sheng_siong_wrapper(fruit_keys: list[str]) -> tuple[str, list[dict] | str]:
+    """Sheng Siong is a Meteor SPA. urllib can't extract. Always unavailable.
+    The agent should run web_search at runtime and inject results separately."""
+    _ = fruit_keys
+    return "sheng_siong", "unavailable: meteor_spa"
+
+
+def scrape_all(
+    fruit_keys: list[str],
+    *,
+    retailers: list[str] | None = None,
+    offline: bool = False,
+) -> list[dict]:
+    retailers = retailers or list(RETAILERS)
+    out: list[dict] = []
+    failed: list[str] = []
+    for r in retailers:
+        if r == "cold_storage":
+            retailer, payload = scrape_cold_storage(fruit_keys, offline=offline)
+        elif r == "fairprice":
+            retailer, payload = scrape_fairprice(fruit_keys, offline=offline)
+        elif r == "sheng_siong":
+            retailer, payload = scrape_sheng_siong_wrapper(fruit_keys)
+        else:
+            continue
+        if isinstance(payload, list):
+            out.extend(payload)
+        else:
+            failed.append(f"{retailer}:{payload}")
+    if failed and not out:
+        raise RuntimeError("all retailers failed: " + "; ".join(failed))
+    if failed:
+        print("# partial-failure:", *failed, file=sys.stderr)
     return out
 
 
@@ -273,7 +494,6 @@ CSV_COLUMNS = [
 
 
 def emit_csv(records: list[dict]) -> str:
-    import io
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=CSV_COLUMNS, extrasaction="ignore")
     w.writeheader()
@@ -292,7 +512,11 @@ def cleanup_old_csvs(out_dir: Path, keep: int = 7) -> int:
     """Delete CSV files older than the newest `keep` files."""
     if not out_dir.exists():
         return 0
-    files = sorted(out_dir.glob("fruit-prices-*.csv"), key=lambda p: p.stat().st_mtime, reverse=True)
+    files = sorted(
+        out_dir.glob("fruit-prices-*.csv"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
     deleted = 0
     for f in files[keep:]:
         try:
@@ -303,59 +527,55 @@ def cleanup_old_csvs(out_dir: Path, keep: int = 7) -> int:
     return deleted
 
 
-# --------------------------------------------------------------- retailers --
-
-def scrape_cold_storage(fruit_key: str, *, offline: bool = False) -> tuple[str, list[dict] | str]:
-    url = COLDSTORAGE_SEARCH.format(q=urllib.parse.quote(fruit_key))
-    status, body = fetch(url, offline=offline)
-    if status != 200 or not body:
-        return "cold_storage", f"unavailable: http_status_{status}"
-    records = parse_cold_storage(body, fruit_key)
-    if not records:
-        return "cold_storage", f"unavailable: 0_matches"
-    return "cold_storage", records
-
-
-def scrape_all(fruits: list[str], *, offline: bool = False) -> list[dict]:
-    out: list[dict] = []
-    failed: list[str] = []
-    for f in fruits:
-        retailer, payload = scrape_cold_storage(f, offline=offline)
-        if isinstance(payload, list):
-            out.extend(payload)
-        else:
-            failed.append(f"{retailer}:{payload}")
-    if failed and not out:
-        raise RuntimeError("all retailers failed: " + "; ".join(failed))
-    if failed:
-        print("# partial-failure:", *failed, file=sys.stderr)
-    return out
-
-
 # --------------------------------------------------------------- CLI ----
 
 def main(argv=None):
     p = argparse.ArgumentParser(
-        description="SG Fruit Price Tracker — Cold Storage scraper (stdlib only).",
+        description="SG Fruit Price Tracker — Cold Storage + FairPrice scraper (stdlib only).",
     )
     fruit = p.add_mutually_exclusive_group(required=True)
-    fruit.add_argument("--fruit", choices=list(TARGET_FRUITS.keys()),
-                       help="Single target fruit.")
-    fruit.add_argument("--all", action="store_true",
-                       help="All 4 target fruits (lychee, peach, strawberry, plum).")
-    p.add_argument("--retailer", default="cold_storage",
-                   help="Retailer to scrape (default: cold_storage).")
-    p.add_argument("--json", action="store_true",
-                   help="Emit JSON to stdout (default: CSV).")
-    p.add_argument("--offline", action="store_true",
-                   help="Use cache only — no network.")
-    p.add_argument("--cleanup", type=Path, default=None,
-                   help="Cleanup old CSVs in this directory (keeps 7 most recent).")
+    fruit.add_argument(
+        "--fruit", choices=list(TARGET_FRUITS.keys()),
+        help="Single target fruit (one of 30 curated).",
+    )
+    fruit.add_argument(
+        "--all", action="store_true",
+        help="All 30 target fruits.",
+    )
+    p.add_argument(
+        "--retailer", default="all",
+        help="Comma-sep retailers: cold_storage,fairprice,sheng_siong (default: all).",
+    )
+    p.add_argument(
+        "--json", action="store_true",
+        help="Emit JSON to stdout (default: CSV).",
+    )
+    p.add_argument(
+        "--offline", action="store_true",
+        help="Use cache only — no network.",
+    )
+    p.add_argument(
+        "--cleanup", type=Path, default=None,
+        help="Cleanup old CSVs in this directory (keeps 7 most recent).",
+    )
     args = p.parse_args(argv)
 
-    fruits = list(TARGET_FRUITS.keys()) if args.all else [args.fruit]
+    if args.all:
+        fruits = list(TARGET_FRUITS.keys())
+    else:
+        fruits = [args.fruit]
+
+    if args.retailer == "all":
+        retailers = list(RETAILERS)
+    else:
+        retailers = [r.strip() for r in args.retailer.split(",") if r.strip()]
+        for r in retailers:
+            if r not in RETAILERS:
+                print(f"# unknown retailer: {r}", file=sys.stderr)
+                return 1
+
     try:
-        records = scrape_all(fruits, offline=args.offline)
+        records = scrape_all(fruits, retailers=retailers, offline=args.offline)
     except RuntimeError as e:
         print(f"# error: {e}", file=sys.stderr)
         return 1
