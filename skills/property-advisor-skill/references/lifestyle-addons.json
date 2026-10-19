@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "note": "Priced lifestyle add-ons that approximate condo facilities for an HDB option, plus low-cost public alternatives. Prices are user-overridable inputs with a sourced default and an as_of date. Never assume an operator exists: operating.status says whether it was confirmed to be operating and priced in Singapore on as_of. Items with price null have no verified default: the user must supply monthly.",
+  "currency": "SGD",
+  "items": {
+    "virgin_active_long_termer": {
+      "label": "Virgin Active Long Termer (unlimited club and class access)",
+      "approximates": "condo gym and fitness classes",
+      "category": "gym",
+      "operator": "Virgin Active Singapore",
+      "per_person": true,
+      "price_basis": "weekly",
+      "price_low": "69",
+      "price": "76",
+      "default_pick": "price",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.virginactive.com.sg/membership-info",
+      "operating": {"status": "verified", "note": "Official membership page listing plans and prices was retrievable on as_of; clubs are listed on its Locations page (not read). A third-party report (13 Oct 2026) says weekly rates rose S$2-3, and a Long Termer half-price promo runs to 31 Dec 2026; neither is applied."},
+      "terms": "12 or 24 months minimum commitment; no joining fee; billed fortnightly."
+    },
+    "virgin_active_once_a_weeker": {
+      "label": "Virgin Active Once-A-Weeker (one workout or class a week)",
+      "approximates": "light gym use",
+      "category": "gym",
+      "operator": "Virgin Active Singapore",
+      "per_person": true,
+      "price_basis": "weekly",
+      "price": "41",
+      "default_pick": "price",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.virginactive.com.sg/membership-info",
+      "operating": {"status": "verified", "note": "Same official page as above; price is 'from $41 per week'."},
+      "terms": "12 weeks minimum commitment."
+    },
+    "activesg_gym_peak_pass": {
+      "label": "ActiveSG gym monthly pass (peak)",
+      "approximates": "condo gym (public alternative)",
+      "category": "gym",
+      "operator": "ActiveSG (Sport Singapore)",
+      "per_person": true,
+      "price_basis": "monthly",
+      "price": "30",
+      "default_pick": "price",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.activesg.gov.sg/gyms",
+      "operating": {"status": "unverified", "note": "The official ActiveSG page returned HTTP 403; the price is from third-party blogs for citizens/PRs. Confirm on activesg.gov.sg."}
+    },
+    "activesg_gym_offpeak_pass": {
+      "label": "ActiveSG gym monthly pass (off-peak, weekdays to 4pm)",
+      "approximates": "condo gym (public alternative)",
+      "category": "gym",
+      "operator": "ActiveSG (Sport Singapore)",
+      "per_person": true,
+      "price_basis": "monthly",
+      "price": "15",
+      "default_pick": "price",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.activesg.gov.sg/gyms",
+      "operating": {"status": "unverified", "note": "Same as above; third-party blogs only."}
+    },
+    "activesg_swim_pass": {
+      "label": "ActiveSG monthly swim pass",
+      "approximates": "condo swimming pool (public alternative)",
+      "category": "pool",
+      "operator": "ActiveSG (Sport Singapore)",
+      "per_person": true,
+      "price_basis": "monthly",
+      "price": "10",
+      "default_pick": "price",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.activesg.gov.sg/",
+      "operating": {"status": "unverified", "note": "Third-party blogs quote S$10/month for adults; pool entry prices disagree between sources. Confirm on activesg.gov.sg."}
+    },
+    "bbq_pit_equivalent": {
+      "label": "BBQ / outdoor dining equivalent (user estimate)",
+      "approximates": "condo BBQ pits",
+      "category": "bbq",
+      "operator": null,
+      "per_person": false,
+      "price_basis": "monthly",
+      "price": null,
+      "as_of": "2026-10-19",
+      "source_url": "https://www.nparks.gov.sg/",
+      "operating": {"status": "unverified", "note": "No priced Singapore operator was verified; supply monthly from your own plan (e.g. park BBQ pit bookings, venue hire averaged per month)."}
+    },
+    "function_room_equivalent": {
+      "label": "Function / party room equivalent (user estimate)",
+      "approximates": "condo function room",
+      "category": "function_room",
+      "operator": null,
+      "per_person": false,
+      "price_basis": "monthly",
+      "price": null,
+      "as_of": "2026-10-19",
+      "source_url": "https://www.onepa.gov.sg/",
+      "operating": {"status": "unverified", "note": "No priced Singapore operator was verified; supply monthly from your own plan (e.g. community-club room hire averaged per month)."}
+    }
+  }
+}

@@ -399,6 +399,8 @@ def plan(scenario: dict, policy: dict, assumptions: dict = None) -> dict:
         "checks": checks,
         "timeline": timeline,
         "upfront": upfront,
+        "down_payment": {"cash": _s(_sum_events(timeline, "cash", lambda e: e["kind"] in ("down", "stage"))),
+                         "cpf": _s(_sum_events(timeline, "cpf", lambda e: e["kind"] in ("down", "stage")))},
         "construction_payments": [{k: e[k] for k in ("stage", "date", "cash", "cpf", "loan_drawn")} for e in construction],
         "move_in_costs": move_in_costs,
         "move_in_month": ctx.move_in,
