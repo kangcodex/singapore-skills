@@ -1,0 +1,54 @@
+{
+  "profile": "dink",
+  "start_date": "2026-11-01",
+  "buyers": [
+    {
+      "age": 34,
+      "residency": "sc",
+      "existing_properties": 0,
+      "monthly_income": "9000",
+      "cpf_oa": "120000",
+      "cpf_oa_monthly": "1500"
+    },
+    {
+      "age": 32,
+      "residency": "sc",
+      "existing_properties": 0,
+      "monthly_income": "8500",
+      "cpf_oa": "90000",
+      "cpf_oa_monthly": "1400"
+    }
+  ],
+  "household": {
+    "cash": "300000",
+    "other_monthly_debts": "500"
+  },
+  "options": [
+    {
+      "name": "Resale condo, city fringe (RCR)",
+      "category": "resale_condo",
+      "price": "1350000",
+      "loan": {
+        "type": "bank",
+        "tenure_years": 30
+      },
+      "remaining_lease_years": 85
+    },
+    {
+      "name": "4-room resale HDB, mature estate",
+      "category": "resale_hdb",
+      "price": "620000",
+      "loan": {
+        "type": "hdb",
+        "tenure_years": 25
+      },
+      "remaining_lease_years": 75,
+      "lifestyle_addons": [
+        {
+          "id": "virgin_active_long_termer",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

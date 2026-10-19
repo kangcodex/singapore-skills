@@ -1,0 +1,59 @@
+{
+  "profile": "first_home_couple",
+  "start_date": "2026-11-01",
+  "buyers": [
+    {
+      "age": 29,
+      "residency": "sc",
+      "existing_properties": 0,
+      "monthly_income": "4500",
+      "cpf_oa": "60000",
+      "cpf_oa_monthly": "900"
+    },
+    {
+      "age": 28,
+      "residency": "sc",
+      "existing_properties": 0,
+      "monthly_income": "4200",
+      "cpf_oa": "50000",
+      "cpf_oa_monthly": "850"
+    }
+  ],
+  "household": {
+    "cash": "90000",
+    "other_monthly_debts": "300"
+  },
+  "options": [
+    {
+      "name": "4-room resale HDB, non-mature estate",
+      "category": "resale_hdb",
+      "price": "520000",
+      "first_timer": true,
+      "loan": {
+        "type": "hdb",
+        "tenure_years": 25
+      },
+      "remaining_lease_years": 85,
+      "lifestyle_addons": [
+        {
+          "id": "activesg_gym_peak_pass",
+          "count": 2
+        },
+        {
+          "id": "activesg_swim_pass",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "name": "Resale condo, suburban (OCR)",
+      "category": "resale_condo",
+      "price": "1100000",
+      "loan": {
+        "type": "bank",
+        "tenure_years": 30
+      },
+      "remaining_lease_years": 80
+    }
+  ]
+}
