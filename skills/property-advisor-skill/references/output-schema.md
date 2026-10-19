@@ -330,7 +330,8 @@ Additive layer (ADR-008). Uniform top-level keys are always present (`null` when
 
 `verdict` is `affordable` / `stretch` / `not affordable` for `plan`, and
 `lowest 10-year cost of occupancy: <option>` for `compare`/`advise` with several options.
-Money values are decimal strings (`"12600.00"`); ratios and rates are decimal strings.
+Money values are decimal strings (`"12600.00"`); ratios and rates are decimal strings
+(`agent.plan.checks[].ratio` is `null` when no positive income is supplied).
 `agent.profile` / `agent.plan` / `agent.comparison` are documented in
 [`agent-scenario.md`](agent-scenario.md). `summary` is the plain-language property-agent text and
 always ends with the not-financial-or-legal-advice note.

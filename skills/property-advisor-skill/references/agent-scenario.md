@@ -55,7 +55,10 @@
   `date`, `month`, `cash`, `cpf`, `loan_drawn`.
 - `plan.upfront`: minimum cash and CPF through completion (resale) or S&P signing (new launch/EC).
 - `plan.monthly_schedule[]`: first 36 months from the option date; `monthly_schedule_full` covers 180.
-- `plan.checks[]`: TDSR (bank loans) and/or MSR (HDB flats, ECs) at the stress rate.
+- `plan.checks[]`: TDSR (bank loans) and/or MSR (HDB flats, ECs) at the stress rate;
+  `ratio` is `null` when no (positive) income is supplied, and the check then fails.
+- `plan.affordability_ceiling`: largest stress-tested loan the TDSR/MSR room allows, the price at
+  the allowed LTV, `stress_rate`, `monthly_instalment_room`, `max_loan`, `max_price`, `ltv`.
 - `plan.horizon{1,5,10,15}`: cumulative `cash`/`cpf`, `interest_paid`, `principal_repaid`, `loan_balance`,
   `property_value`, `equity_value`, `equity_built`, `cpf_used_for_property`, `cpf_accrued_interest`.
 - `plan.scenarios.interest` and `.appreciation`: low/base/high, labelled `status: "assumption"`.
