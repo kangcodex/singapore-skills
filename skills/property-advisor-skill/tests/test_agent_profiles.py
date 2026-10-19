@@ -67,13 +67,6 @@ class TestProfileData(unittest.TestCase):
         with self.assertRaises(ValueError):
             pr.build_profile("nope")
 
-    def test_max_price_annotates_not_filters(self):
-        p = pr.build_profile("dink", max_price="900000", price_guides={"new_launch_condo": "1400000"})
-        by_cat = {s["category"]: s for s in p["shortlist"]}
-        self.assertEqual(len(p["shortlist"]), 4)
-        self.assertTrue(by_cat["new_launch_condo"]["likely_out_of_reach"])
-        self.assertNotIn("likely_out_of_reach", by_cat["resale_hdb"])
-
 
 if __name__ == "__main__":
     unittest.main()

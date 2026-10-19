@@ -248,7 +248,6 @@ def _simulate(ctx: _Ctx, events: list, rate: Decimal, appreciation: Decimal) -> 
     insur = D(ctx.opt.get("monthly_insurance", ctx.a["monthly_insurance"][ctx.cat]))
     tax_m = cents(ap.property_tax(av, ctx.policy) / 12)
     cpf_pays_fees = bool(ctx.a.get("cpf_pays_fees", False))
-    interest_total_by_m, cash_by_m, cpf_by_m = {}, {}, {}
     amort_started = False
     for m in range(0, horizon + 1):
         if m > 0:
@@ -413,6 +412,7 @@ def plan(scenario: dict, policy: dict, assumptions: dict = None) -> dict:
         "grants": {"ehg": _s(ctx.grant_ehg), "notes": ctx.grant_notes},
         "cash_check": {"household_cash": _s(ctx.cash), "cash_needed_to_move_in": _s(total_cash_need), "gap": _s(gap),
                        "cash_left_after_move_in": _s(left)},
+        "affordability_ceiling": _affordability_ceiling(ctx),
         "warnings": ctx.warnings,
         "unverified_assumptions": [{"item": n, "reason": r} for n, r in ap.unverified_items(ctx.policy)
                                    if n in _used_items(ctx)],
@@ -437,11 +437,10 @@ def _used_items(ctx: _Ctx) -> set:
     return used
 
 
-def max_affordable(scenario: dict, policy: dict, assumptions: dict = None) -> dict:
+def _affordability_ceiling(ctx: _Ctx) -> dict:
     """Largest loan (and price at the allowed LTV) whose stress-tested instalment fits the TDSR/MSR room."""
-    ctx = _Ctx(scenario, policy, assumptions)
     hdb_loan = ctx.loan_type == "hdb"
-    rate = ap.stress_rate(ctx.fixed_rate if hdb_loan else D(ctx.a["interest_rate"]["base"]), hdb_loan, policy)
+    rate = ap.stress_rate(ctx.fixed_rate if hdb_loan else D(ctx.a["interest_rate"]["base"]), hdb_loan, ctx.policy)
     rooms = []
     if ctx.loan_type == "bank":
         rooms.append(D(ctx.pol("tdsr")["max_ratio"]) * ctx.income - ctx.debts)
@@ -452,3 +451,7 @@ def max_affordable(scenario: dict, policy: dict, assumptions: dict = None) -> di
     loan = room * (1 - (1 + r) ** -n) / r if r else room * n
     return {"stress_rate": str(rate), "monthly_instalment_room": _s(room), "max_loan": _s(loan),
             "max_price": _s(loan / ctx.ltv) if ctx.ltv else None, "ltv": str(ctx.ltv)}
+
+
+def max_affordable(scenario: dict, policy: dict, assumptions: dict = None) -> dict:
+    return _affordability_ceiling(_Ctx(scenario, policy, assumptions))

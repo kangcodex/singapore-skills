@@ -49,7 +49,7 @@ def _expand_entry(entry: dict, categories: dict) -> dict:
     return out
 
 
-def build_profile(profile_id: str, variant: str = None, max_price=None, price_guides: dict = None) -> dict:
+def build_profile(profile_id: str, variant: str = None) -> dict:
     data = _load("buyer-profiles.json")
     dd = _load("due-diligence.json")
     if profile_id not in data["profiles"]:
@@ -67,12 +67,6 @@ def build_profile(profile_id: str, variant: str = None, max_price=None, price_gu
         shortlist_src = v.get("shortlist_override", shortlist_src)
     shortlist = [_expand_entry(e, data["categories"]) for e in shortlist_src]
     shortlist.sort(key=lambda e: e["rank"])
-    if max_price is not None and price_guides:
-        cap = Decimal(str(max_price))
-        for e in shortlist:
-            guide = price_guides.get(e["category"])
-            if guide is not None and Decimal(str(guide)) > cap:
-                e["likely_out_of_reach"] = True
     base["shortlist"] = shortlist
     base["profile_id"] = profile_id
     base["variant"] = variant

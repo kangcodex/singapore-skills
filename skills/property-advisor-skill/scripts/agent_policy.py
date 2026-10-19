@@ -69,16 +69,6 @@ def absd(price: Decimal, buyers: list, policy: dict) -> Decimal:
     return whole_dollars_down(D(price) * top)
 
 
-def ssd(price: Decimal, holding_years: Decimal, policy: dict) -> Decimal:
-    item = _item(policy, "ssd")
-    rate = D(item["after_years_rate"])
-    for band in item["by_holding_year"]:
-        if D(holding_years) <= band["up_to_years"]:
-            rate = D(band["rate"])
-            break
-    return whole_dollars_down(D(price) * rate)
-
-
 def property_tax(annual_value: Decimal, policy: dict) -> Decimal:
     return whole_dollars_down(_tiered(annual_value, _item(policy, "property_tax_owner_occupier")["tiers"]))
 

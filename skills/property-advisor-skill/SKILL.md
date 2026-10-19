@@ -133,8 +133,8 @@ reference data and does Decimal arithmetic. Existing modes are unchanged.
 
 | `--task`  | Needs                              | Returns (in `agent.*`)                                                     |
 | --------- | ---------------------------------- | -------------------------------------------------------------------------- |
-| `profile` | `--profile dink\|first_home_couple\|family_of_five` [`--variant multigen`] [`--max-price`] | shortlist by category/segment, location checks, key questions, red flags, due-diligence checklists, valuation modes to run |
-| `plan`    | `--scenario FILE` (one `option`)    | dated cash/CPF timeline, monthly schedule, TDSR/MSR, upfront cash and CPF, year 1/5/10/15 cost split cash vs CPF, interest and appreciation scenarios |
+| `profile` | `--profile dink\|first_home_couple\|family_of_five` [`--variant multigen`] | shortlist by category/segment, location checks, key questions, red flags, due-diligence checklists, valuation modes to run |
+| `plan`    | `--scenario FILE` (one `option`)    | dated cash/CPF timeline, monthly schedule, TDSR/MSR, upfront cash and CPF, affordability ceiling (largest stress-tested loan/price), year 1/5/10/15 cost split cash vs CPF, interest and appreciation scenarios |
 | `compare` | `--scenario FILE` (`options` list)  | side-by-side up-front, monthly, 5/10/15-year cost of occupancy, equity built, lifestyle add-ons, break-even |
 | `advise`  | `--scenario FILE` + `profile`       | profile + comparison (or plan) + one plain-language summary                |
 
@@ -172,7 +172,7 @@ This is guidance, not financial or legal advice; confirm figures with HDB, the b
 
 | Flag                       | Required for                | Default       | Notes                                                                  |
 | -------------------------- | --------------------------- | ------------- | ---------------------------------------------------------------------- |
-| `--mode`                   | always                      | `hdb`         | one of `hdb` / `private` / `rental` / `ec` / `investment` / `agent` (agent has its own flags: `--task`, `--profile`, `--variant`, `--scenario`, `--max-price`, `--summary-only`) |
+| `--mode`                   | always                      | `hdb`         | one of `hdb` / `private` / `rental` / `ec` / `investment` / `agent` (agent has its own flags: `--task`, `--profile`, `--variant`, `--scenario`, `--summary-only`) |
 | `--property-mode`          | `--mode investment`         | —             | one of `hdb` / `private` / `rental` / `ec`                             |
 | `--town`                   | always                      | —             | UPPERCASE; e.g. `BISHAN`, `TIONG_BAHRU`                                |
 | `--flat-type`              | `--mode hdb` / `--mode investment --property-mode hdb` | — | one of `1-ROOM` / `2-ROOM` / `3-ROOM` / `4-ROOM` / `5-ROOM` / `EXEC` / `MULTI-GEN` / `STUDIO` |

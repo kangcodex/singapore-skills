@@ -78,7 +78,7 @@ def run_task(args):
     if args.task == "profile":
         if not args.profile:
             raise ValueError("--profile is required (dink | first_home_couple | family_of_five)")
-        p = pr.build_profile(args.profile, variant=args.variant, max_price=args.max_price)
+        p = pr.build_profile(args.profile, variant=args.variant)
         return _envelope("profile", None, None, None, {"profile": p}, rp.profile_summary(p))
     scenario = _load_scenario(args.scenario)
     if args.task == "plan":
@@ -91,7 +91,7 @@ def run_task(args):
     profile_id = scenario.get("profile") or args.profile
     if not profile_id:
         raise ValueError("advise needs scenario.profile or --profile")
-    p = pr.build_profile(profile_id, variant=scenario.get("variant") or args.variant, max_price=args.max_price)
+    p = pr.build_profile(profile_id, variant=scenario.get("variant") or args.variant)
     parts, agent = [rp.profile_summary(p)], {"profile": p}
     verdict, asking = None, None
     if len(scenario.get("options", [])) >= 2:
@@ -114,7 +114,6 @@ def main(argv=None):
     ap_.add_argument("--profile", help="dink | first_home_couple | family_of_five")
     ap_.add_argument("--variant", help="profile variant, e.g. multigen for family_of_five")
     ap_.add_argument("--scenario", help="scenario JSON (see references/agent-scenario.md)")
-    ap_.add_argument("--max-price", help="annotate shortlist entries likely above this budget (SGD)")
     ap_.add_argument("--summary-only", action="store_true", help="print the plain-language summary instead of JSON")
     args = ap_.parse_args(argv)
     try:

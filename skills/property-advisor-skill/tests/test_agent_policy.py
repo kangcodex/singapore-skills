@@ -98,14 +98,6 @@ class TestStampDuty(unittest.TestCase):
                   {"residency": "spr", "existing_properties": 0}]
         self.assertEqual(ap.absd(D("1000000"), buyers, POLICY), D("50000"))
 
-    def test_ssd_holding_period_boundaries(self):
-        p = D("1000000")
-        self.assertEqual(ap.ssd(p, D("0.5"), POLICY), D("160000"))
-        self.assertEqual(ap.ssd(p, D("1"), POLICY), D("160000"))
-        self.assertEqual(ap.ssd(p, D("1.01"), POLICY), D("120000"))
-        self.assertEqual(ap.ssd(p, D("4"), POLICY), D("40000"))
-        self.assertEqual(ap.ssd(p, D("4.01"), POLICY), D("0"))
-
     def test_property_tax_owner_occupier(self):
         self.assertEqual(ap.property_tax(D("12000"), POLICY), D("0"))
         self.assertEqual(ap.property_tax(D("20000"), POLICY), D("320"))

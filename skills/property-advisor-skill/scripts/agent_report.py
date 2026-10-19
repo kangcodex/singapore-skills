@@ -21,8 +21,7 @@ def profile_summary(p: dict) -> str:
         seg = ""
         if s["segments"]:
             seg = " [" + ", ".join(x["segment"].upper() for x in s["segments"]) + "]"
-        flag = "  (may be out of reach at your budget)" if s.get("likely_out_of_reach") else ""
-        lines.append(f"  {s['rank']}. {s['label']}{seg}: {s['why']}{flag}")
+        lines.append(f"  {s['rank']}. {s['label']}{seg}: {s['why']}")
         lines.append(f"     Watch out: {s['watch_out']}")
     loc = p["location"]
     lines += ["", "Location checks:", f"  - Transport: {loc['mrt']}", f"  - Jobs: {loc['jobs']}",
@@ -64,12 +63,18 @@ def plan_summary(plan: dict) -> str:
               f"Renovation and furnishing (cash): {_m(plan['move_in_costs']['cash'])}.",
               f"Household cash {_m(plan['cash_check']['household_cash'])}; needed to move in {_m(plan['cash_check']['cash_needed_to_move_in'])}; "
               f"left {_m(plan['cash_check']['cash_left_after_move_in'])}."]
+    ceiling = plan["affordability_ceiling"]
+    lines.append("Affordability ceiling (largest loan the stress-tested TDSR/MSR room allows): "
+                 f"{_m(ceiling['max_loan'])}"
+                 + (f", i.e. a price of about {_m(ceiling['max_price'])} at LTV {Decimal(ceiling['ltv']) * 100:.0f}%"
+                    if ceiling["max_price"] is not None else "") + ".")
     lines += ["", f"Monthly commitment once instalments start: {_m(plan['steady_monthly_commitment'])} "
               "(instalment + maintenance + property tax + insurance)."]
     lines += ["", "Bank stress test:"]
     for c in plan["checks"]:
+        ratio = f"ratio {Decimal(c['ratio']) * 100:.1f}%" if c["ratio"] is not None else "ratio n/a (no income supplied)"
         lines.append(f"  {c['name']}: {'pass' if c['pass'] else 'FAIL'} at {Decimal(c['stress_rate']) * 100:.2f}% stress rate, "
-                     f"ratio {Decimal(c['ratio']) * 100:.1f}% vs limit {Decimal(c['limit']) * 100:.0f}% "
+                     f"{ratio} vs limit {Decimal(c['limit']) * 100:.0f}% "
                      f"(stressed instalment {_m(c['stressed_instalment'])}).")
     if Decimal(plan["grants"]["ehg"]) > 0:
         lines.append(f"Enhanced CPF Housing Grant counted: {_m(plan['grants']['ehg'])} (credited to CPF).")

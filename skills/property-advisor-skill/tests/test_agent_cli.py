@@ -73,6 +73,25 @@ class TestAgentCli(unittest.TestCase):
         for line in ("Option fee", "stamp duty", "Monthly"):
             self.assertIn(line.lower(), res["summary"].lower())
 
+    def test_plan_reports_affordability_ceiling(self):
+        res = json.loads(run(["--task", "plan", "--scenario", scenario_file(option=OPT_HDB)])[1])
+        ceiling = res["agent"]["plan"]["affordability_ceiling"]
+        self.assertGreater(float(ceiling["max_loan"]), 0)
+        self.assertGreater(float(ceiling["max_price"]), float(ceiling["max_loan"]))
+        self.assertIn("Affordability ceiling", res["summary"])
+
+    def test_plan_zero_income_renders_instead_of_crashing(self):
+        buyers = [{**b, "monthly_income": "0"} for b in BUYERS]
+        code, text = run(["--task", "plan", "--scenario",
+                          scenario_file(option=OPT_HDB, buyers=buyers)])
+        res = json.loads(text)
+        self.assertEqual(code, 0)
+        self.assertNotIn("error", res)
+        self.assertIn("ratio n/a", res["summary"])
+        for c in res["agent"]["plan"]["checks"]:
+            self.assertIsNone(c["ratio"])
+            self.assertFalse(c["pass"])
+
     def test_compare_task_reports_break_even(self):
         res = json.loads(run(["--task", "compare", "--scenario", scenario_file(options=[OPT_CONDO, OPT_HDB])])[1])
         self.assertTrue(res["agent"]["comparison"]["break_even"])
