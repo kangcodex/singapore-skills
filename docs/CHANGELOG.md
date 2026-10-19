@@ -4,6 +4,18 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added — 2026-10-19
+
+- **`property-advisor-skill` agent mode** (`--mode agent`, ADR-008) — a property-agent style advisory layer on top of the five valuation modes, for new-launch condos, resale condos, resale HDB and ECs. No network, stdlib only, Decimal arithmetic.
+  - `--task profile` — three buyer profiles as data (DINK couple, first-home couple, family of five + multi-generation variant): shortlist by category and OCR/RCR/CCR segment, location and risk checks, key questions, red flags, per-category due-diligence checklists, and the existing valuation modes to run.
+  - `--task plan` — dated cash/CPF timeline (option, exercise, completion or progressive payments, BSD/ABSD, fees, fit-out, move-in), month-by-month commitments, TDSR/MSR stress test, minimum upfront cash and CPF, cumulative cost and equity at year 1/5/10/15 split cash vs CPF, low/base/high interest and appreciation assumptions.
+  - `--task compare` — options side by side with 5/10/15-year cost of occupancy (explicit opportunity cost), equity built, HDB lifestyle add-ons (Virgin Active verified; ActiveSG and others flagged unverified; prices user-overridable) and the break-even monthly lifestyle spend.
+  - `--task advise` and `--summary-only` — plain-language summary with the not-financial-or-legal-advice note.
+  - New reference data: `policy-tables.json` (every policy figure with `as_of`, official `source_url`, `verified`/`unverified` status), `default-assumptions.json`, `buyer-profiles.json`, `due-diligence.json`, `lifestyle-addons.json`, `policy-sources.md`, `agent-scenario.md`, three worked scenario examples; `output-schema.md` section 7.
+  - New scripts: `agent_advisor.py`, `agent_policy.py`, `agent_profiles.py`, `agent_cashflow.py`, `agent_compare.py`, `agent_report.py`, `agent_money.py`; `property_advisor.py` delegates `--mode agent` before argparse (valuation modes unchanged).
+  - ~100 new unit tests (stamp-duty tiers, TDSR/MSR boundaries, progressive totals, CPF/cash split, break-even); no network.
+  - `docs/decisions/ADR-008-property-advisor-agent-mode.md`
+
 ### Added — 2026-06-30
 
 - **`sg-home-chef-skill`** — Singapore home chef recipe coach. Turns any dish request into a 3-tier recipe brief (beginner one-pan / intermediate tumis / advanced wok hei) calibrated to HDB-cookout-kitchen reality. Bilingual SG ingredient dictionary (Malay + Chinese + English), 2 sourcing tracks (supermarket vs wet market), dietary filters (halal / vegetarian / vegan / no-pork / no-beef / gluten-free), culinary milestone delivery (visual + aroma checkpoints, not timers). Bundles 6 starter recipes (Sambal Kang Kong, Hainanese Chicken Rice, Roti Prata, Laksa, Char Kway Teow, Bak Kut Teh).

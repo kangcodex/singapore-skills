@@ -64,6 +64,13 @@ class TestPolicyFile(unittest.TestCase):
         self.assertNotIn("bsd", names)
 
 
+class TestPolicySourcesDoc(unittest.TestCase):
+    def test_every_policy_item_is_documented(self):
+        doc = (Path(__file__).resolve().parent.parent / "references" / "policy-sources.md").read_text()
+        for name in POLICY["items"]:
+            self.assertIn(f"`{name}`", doc, name)
+
+
 class TestStampDuty(unittest.TestCase):
     def test_bsd_tier_boundaries(self):
         cases = {

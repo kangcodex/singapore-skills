@@ -320,3 +320,17 @@ expect them and should not invent them:
 - EC MOP (5-year minimum occupation period) enforcement checks
 - CEA Salespersons' Property Transaction Records (coll 55) — used by
   `agent-match-skill`, not this one
+
+## 7. Agent mode — `--mode agent`
+
+Additive layer (ADR-008). Uniform top-level keys are always present (`null` when not applicable):
+`mode` (`"agent"`), `town`, `since` (start date), `asking` (price string, `plan`/`advise` with one option),
+`verdict`, `premium_pct` (`null`), `trend` (`null`), `location` (`null`), `ura_context` (`null`),
+`cea_verification` (`null`). Added keys: `task`, `agent`, `summary`, `disclaimer`, `policy_as_of`.
+
+`verdict` is `affordable` / `stretch` / `not affordable` for `plan`, and
+`lowest 10-year cost of occupancy: <option>` for `compare`/`advise` with several options.
+Money values are decimal strings (`"12600.00"`); ratios and rates are decimal strings.
+`agent.profile` / `agent.plan` / `agent.comparison` are documented in
+[`agent-scenario.md`](agent-scenario.md). `summary` is the plain-language property-agent text and
+always ends with the not-financial-or-legal-advice note.
