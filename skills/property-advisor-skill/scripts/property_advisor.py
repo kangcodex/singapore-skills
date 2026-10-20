@@ -588,7 +588,22 @@ def assess_investment(town, flat_type, since, asking, property_mode="hdb",
 
 # ── CLI ────────────────────────────────────────────────────────────────
 
+def _agent_args(argv):
+    """argv without `--mode agent` when the agent advisor layer is requested, else None."""
+    args = list(sys.argv[1:] if argv is None else argv)
+    for i, a in enumerate(args):
+        if a == "--mode" and args[i + 1:i + 2] == ["agent"]:
+            return args[:i] + args[i + 2:]
+        if a == "--mode=agent":
+            return args[:i] + args[i + 1:]
+    return None
+
+
 def main(argv=None):
+    agent_args = _agent_args(argv)
+    if agent_args is not None:  # additive layer: no network, own CLI (see agent_advisor.py)
+        from agent_advisor import main as agent_main
+        return agent_main(agent_args)
     p = argparse.ArgumentParser(description="Singapore property advisor (HDB, private, rental, EC, investment)")
     p.add_argument("--mode", choices=MODES, default="hdb",
                    help="Advisory mode. Default 'hdb' (v1 behaviour).")

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "note": "Modelling assumptions, NOT facts and NOT policy. Every value is a placeholder the user should override in the scenario's assumptions block. Rates are annual decimals; money is SGD.",
+  "as_of": "2026-10-19",
+  "status": "assumption",
+  "source_note": "Agent defaults for scenario analysis; replace with bank quotes, MCST/HDB bills and your own estimates.",
+  "interest_rate": {"low": "0.02", "base": "0.03", "high": "0.04", "applies_to": "bank loans (floating); HDB loan uses the fixed rate in policy-tables.json"},
+  "appreciation": {"low": "0.00", "base": "0.02", "high": "0.04", "applies_to": "annual change in market value of the property"},
+  "opportunity_cost": {"cash": "0.03", "cpf": "0.025", "note": "Forgone return on the down payment: cash in a savings/T-bill alternative; CPF at the OA rate."},
+  "monthly_maintenance": {"resale_hdb": "90", "resale_condo": "400", "new_launch_condo": "450", "ec": "350"},
+  "monthly_insurance": {"resale_hdb": "20", "resale_condo": "40", "new_launch_condo": "40", "ec": "40"},
+  "annual_value_pct_of_price": {"resale_hdb": "0.025", "resale_condo": "0.03", "new_launch_condo": "0.03", "ec": "0.03"},
+  "renovation": {"resale_hdb": "40000", "resale_condo": "60000", "new_launch_condo": "80000", "ec": "70000"},
+  "furnishing": {"resale_hdb": "15000", "resale_condo": "25000", "new_launch_condo": "30000", "ec": "25000"},
+  "fit_out_weeks": 6,
+  "stretch_tdsr_ratio": "0.45",
+  "min_buffer_months": 6,
+  "horizon_years": [1, 5, 10, 15],
+  "schedule_months": 36
+}

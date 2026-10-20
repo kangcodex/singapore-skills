@@ -1,0 +1,314 @@
+{
+  "schema_version": 1,
+  "note": "Every policy figure used by the agent-mode calculators lives here. A policy change is a data edit. Money and rates are decimal strings. status=verified means the figure was read from the official page/document named in source_url on as_of; status=unverified means it could not be confirmed there and unverified_reason says why. Unverified values are placeholders to confirm with the named authority, never facts.",
+  "items": {
+    "bsd": {
+      "label": "Buyer's Stamp Duty (residential)",
+      "authority": "IRAS",
+      "as_of": "2026-10-19",
+      "effective_from": "2023-02-15",
+      "source_url": "https://www.iras.gov.sg/taxes/stamp-duty/for-property/buying-or-acquiring-property/buyer's-stamp-duty-(bsd)",
+      "status": "verified",
+      "applies_to_base": "higher of purchase price or market value; also payable on HDB resale",
+      "tiers": [
+        {"width": "180000", "rate": "0.01"},
+        {"width": "180000", "rate": "0.02"},
+        {"width": "640000", "rate": "0.03"},
+        {"width": "500000", "rate": "0.04"},
+        {"width": "1500000", "rate": "0.05"},
+        {"width": null, "rate": "0.06"}
+      ]
+    },
+    "absd": {
+      "label": "Additional Buyer's Stamp Duty (residential)",
+      "authority": "IRAS",
+      "as_of": "2026-10-19",
+      "effective_from": "2023-04-27",
+      "source_url": "https://www.iras.gov.sg/taxes/stamp-duty/for-property/buying-or-acquiring-property/additional-buyer's-stamp-duty-(absd)",
+      "status": "verified",
+      "rates": {
+        "sc": {"1": "0", "2": "0.20", "3": "0.30"},
+        "spr": {"1": "0.05", "2": "0.30", "3": "0.35"},
+        "foreigner": {"1": "0.60", "2": "0.60", "3": "0.60"},
+        "entity": {"1": "0.65", "2": "0.65", "3": "0.65"}
+      },
+      "joint_buyer_rule": {
+        "status": "unverified",
+        "unverified_reason": "Rate for joint buyers with different profiles was not confirmed on the fetched IRAS page; calculator conservatively applies the highest rate among buyers.",
+        "rule": "highest_rate_among_buyers"
+      },
+      "payment": {
+        "status": "unverified",
+        "unverified_reason": "Whether CPF can pay ABSD was not confirmed from a fetched official page; calculator treats ABSD as cash-only.",
+        "cpf_allowed": false
+      }
+    },
+    "ssd": {
+      "label": "Seller's Stamp Duty (residential), purchases on or after 4 Jul 2025",
+      "authority": "IRAS",
+      "as_of": "2026-10-19",
+      "effective_from": "2025-07-04",
+      "source_url": "https://www.iras.gov.sg/taxes/stamp-duty/for-property/selling-or-disposing-property/seller's-stamp-duty-(ssd)-for-residential-property",
+      "status": "verified",
+      "by_holding_year": [
+        {"up_to_years": 1, "rate": "0.16"},
+        {"up_to_years": 2, "rate": "0.12"},
+        {"up_to_years": 3, "rate": "0.08"},
+        {"up_to_years": 4, "rate": "0.04"}
+      ],
+      "after_years_rate": "0"
+    },
+    "property_tax_owner_occupier": {
+      "label": "Property tax, owner-occupied residential, on Annual Value",
+      "authority": "IRAS",
+      "as_of": "2026-10-19",
+      "effective_from": "2025-01-01",
+      "source_url": "https://www.iras.gov.sg/taxes/property-tax/property-owners/property-tax-rates",
+      "status": "verified",
+      "tiers": [
+        {"width": "12000", "rate": "0"},
+        {"width": "28000", "rate": "0.04"},
+        {"width": "10000", "rate": "0.06"},
+        {"width": "25000", "rate": "0.10"},
+        {"width": "10000", "rate": "0.14"},
+        {"width": "15000", "rate": "0.20"},
+        {"width": "40000", "rate": "0.26"},
+        {"width": null, "rate": "0.32"}
+      ]
+    },
+    "ltv_bank": {
+      "label": "Loan-to-value limits for housing loans from financial institutions (individuals)",
+      "authority": "MAS",
+      "as_of": "2026-10-19",
+      "effective_from": "2018-07-06",
+      "source_url": "https://www.mas.gov.sg/regulation/explainers/new-housing-loans/loan-tenure-and-loan-to-value-limits",
+      "status": "verified",
+      "by_outstanding_loans": {
+        "0": {"standard_ltv": "0.75", "standard_min_cash": "0.05", "lower_ltv": "0.55", "lower_min_cash": "0.10"},
+        "1": {"standard_ltv": "0.45", "standard_min_cash": "0.25", "lower_ltv": "0.25", "lower_min_cash": "0.25"},
+        "2": {"standard_ltv": "0.35", "standard_min_cash": "0.25", "lower_ltv": "0.15", "lower_min_cash": "0.25"}
+      },
+      "max_tenure_years": {"hdb": 30, "non_hdb": 35},
+      "lower_ltv_if_tenure_over_years": {"hdb": 25, "non_hdb": 30},
+      "lower_ltv_if_loan_ends_after_age": 65
+    },
+    "tdsr": {
+      "label": "Total Debt Servicing Ratio",
+      "authority": "MAS",
+      "as_of": "2026-10-19",
+      "effective_from": "2021-12-16",
+      "source_url": "https://www.mas.gov.sg/regulation/explainers/new-housing-loans/msr-and-tdsr-rules",
+      "status": "verified",
+      "max_ratio": "0.55",
+      "variable_income_haircut": "0.30",
+      "variable_income_source_url": "https://www.mas.gov.sg/regulation/explainers/tdsr-for-property-loans/calculating-tdsr"
+    },
+    "msr": {
+      "label": "Mortgage Servicing Ratio (HDB flats, and ECs within the minimum occupation period)",
+      "authority": "MAS",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.mas.gov.sg/regulation/explainers/new-housing-loans/msr-and-tdsr-rules",
+      "status": "verified",
+      "max_ratio": "0.30"
+    },
+    "stress_rate": {
+      "label": "Medium-term interest rate floor for TDSR/MSR on residential loans from financial institutions",
+      "authority": "MAS",
+      "as_of": "2026-10-19",
+      "effective_from": "2022-09-30",
+      "source_url": "https://www.mas.gov.sg/news/media-releases/2022/measures-to-promote-sustainable-conditions-in-the-property-market-by-ensuring-prudent-borrowing-and-moderating-demand",
+      "status": "verified",
+      "floor": "0.04",
+      "hdb_loan_assessment_floor": "0.03",
+      "hdb_loan_assessment_note": "HDB computes eligible loan amount at the higher of 3% or 0.1pp above the CPF OA rate."
+    },
+    "hdb_loan": {
+      "label": "HDB concessionary loan",
+      "authority": "HDB",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.hdb.gov.sg/managing-my-home/finances/loan-matters/interest-rate",
+      "status": "unverified",
+      "unverified_reason": "The HDB interest-rate and loan pages returned no figures when fetched. Rate (pegged 0.1pp above the CPF OA rate, 2.6% p.a. in Apr-Jun 2025) is from an HDB press-release listing; the current-quarter rate was not confirmed. LTV conflicts: the Sep 2022 joint MAS/MND/HDB release lowered it from 85% to 80%, while a search summary of HDB's FY2024/25 annual report says it was lowered again to 75%; the conservative 75% is used. Maximum tenure 25 years is unconfirmed (MAS caps HDB flat loans at 30).",
+      "rate": "0.026",
+      "ltv": "0.75",
+      "max_tenure_years": 25,
+      "min_cash_down_payment": "0"
+    },
+    "ehg": {
+      "label": "Enhanced CPF Housing Grant, first-timer families (credited to CPF OA)",
+      "authority": "HDB",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.hdb.gov.sg/-/media/buying-a-flat/flat-grant-and-loan-eligibility/couples-and-families/enhanced-cpf-housing-grant/EHG-amount-Families.pdf",
+      "status": "verified",
+      "income_ceiling": "9000",
+      "income_basis": "average gross monthly household income",
+      "min_remaining_lease_years": {
+        "status": "unverified",
+        "unverified_reason": "20 years is from a search summary of HDB pages; the page body could not be read.",
+        "value": 20
+      },
+      "table": [
+        {"up_to": "1500", "grant": "120000"},
+        {"up_to": "2000", "grant": "110000"},
+        {"up_to": "2500", "grant": "105000"},
+        {"up_to": "3000", "grant": "95000"},
+        {"up_to": "3500", "grant": "90000"},
+        {"up_to": "4000", "grant": "80000"},
+        {"up_to": "4500", "grant": "70000"},
+        {"up_to": "5000", "grant": "65000"},
+        {"up_to": "5500", "grant": "55000"},
+        {"up_to": "6000", "grant": "50000"},
+        {"up_to": "6500", "grant": "40000"},
+        {"up_to": "7000", "grant": "30000"},
+        {"up_to": "7500", "grant": "25000"},
+        {"up_to": "8000", "grant": "20000"},
+        {"up_to": "8500", "grant": "10000"},
+        {"up_to": "9000", "grant": "5000"}
+      ]
+    },
+    "income_ceilings": {
+      "label": "HDB / EC household income ceilings for citizen families",
+      "authority": "HDB",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.hdb.gov.sg/-/media/hdb-pulse/news/2026/increase-in-income-ceilings-and-greater-support-for-families-with-children/Annex-A.pdf",
+      "status": "verified",
+      "announced": "2026-08-22",
+      "resale_with_cpf_housing_grant": "16000",
+      "resale_with_cpf_housing_grant_previous": "14000",
+      "hdb_housing_loan": "16000",
+      "new_ec_from_developer": "18000",
+      "new_ec_effective_note": "applies to EC land sale tenders closing on or after 2026-08-24",
+      "extended_family": "24000",
+      "extended_family_per_nucleus": "16000",
+      "no_ceiling_without_grant": "resale Unclassified or Standard HDB flat bought without a CPF Housing Grant",
+      "effective_date_for_hdb_ceilings": {
+        "status": "unverified",
+        "unverified_reason": "Annex A gives the 24 Aug 2026 date only for ECs; the start date for HDB loan and resale grant ceilings was not stated in the extracted text."
+      }
+    },
+    "family_grant_resale": {
+      "label": "CPF Housing Grant (Family Grant), resale, first-timer families",
+      "authority": "HDB",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.hdb.gov.sg/buying-a-flat/flat-grant-and-loan-eligibility/couples-and-families/cpf-housing-grants",
+      "status": "unverified",
+      "unverified_reason": "HDB page body could not be read; amounts are from a search excerpt of an older HDB page and may be outdated.",
+      "sc_sc": {"2_to_4_room": "50000", "5_room_or_larger": "40000"},
+      "sc_spr": {"2_to_4_room": "40000", "5_room_or_larger": "30000"}
+    },
+    "proximity_housing_grant": {
+      "label": "Proximity Housing Grant, resale (live with / near parents or child)",
+      "authority": "HDB",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.hdb.gov.sg/buying-a-flat/flat-grant-and-loan-eligibility/couples-and-families/proximity-housing-grant",
+      "status": "unverified",
+      "unverified_reason": "HDB page body could not be read; amounts are from a search excerpt.",
+      "live_with": "30000",
+      "live_near_within_4km": "20000"
+    },
+    "hdb_resale_otp": {
+      "label": "HDB resale Option to Purchase terms",
+      "authority": "HDB",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.hdb.gov.sg/-/media/managing-my-home/selling-a-flat/process-for-selling-a-flat/option-to-purchase/OTP-Important-Notes.pdf",
+      "status": "verified",
+      "option_fee_max": "1000",
+      "deposit_max": "5000",
+      "option_period_days": 21,
+      "completion_within_weeks": 8
+    },
+    "private_resale_otp": {
+      "label": "Private resale option fee and exercise window (market practice)",
+      "authority": "none (negotiated)",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.cea.gov.sg/",
+      "status": "unverified",
+      "unverified_reason": "Private resale option terms are negotiated, not regulated; 1% option fee and 14-day exercise are market-practice placeholders.",
+      "option_fee_pct": "0.01",
+      "exercise_days": 14,
+      "exercise_payment_pct": "0.04",
+      "completion_weeks": 12
+    },
+    "new_launch_progressive": {
+      "label": "Progressive payment schedule, uncompleted private residential (normal scheme)",
+      "authority": "MND (Housing Developers Rules)",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.mnd.gov.sg/",
+      "status": "unverified",
+      "unverified_reason": "Statute text not retrieved; stages come from several secondary sources that agree. Booking fee 5% must be cash; later stages may use CPF.",
+      "stages": [
+        {"id": "booking", "label": "Booking / option fee", "pct": "0.05", "month_offset": 0, "cash_only": true},
+        {"id": "sp_signing", "label": "Sale and purchase agreement (within 8 weeks)", "pct": "0.15", "month_offset": 2},
+        {"id": "foundation", "label": "Foundation completed", "pct": "0.10", "month_offset": 6},
+        {"id": "rc_framework", "label": "Reinforced concrete framework", "pct": "0.10", "month_offset": 12},
+        {"id": "walls", "label": "Partition walls", "pct": "0.05", "month_offset": 18},
+        {"id": "roof", "label": "Roofing / ceiling", "pct": "0.05", "month_offset": 24},
+        {"id": "doors_wiring", "label": "Doors, windows, wiring, plumbing", "pct": "0.05", "month_offset": 30},
+        {"id": "roads", "label": "Car park, roads, drains", "pct": "0.05", "month_offset": 36},
+        {"id": "top", "label": "Temporary Occupation Permit (TOP)", "pct": "0.25", "month_offset": 42},
+        {"id": "csc", "label": "Certificate of Statutory Completion (CSC)", "pct": "0.15", "month_offset": 54}
+      ],
+      "month_offset_note": "Month offsets are illustrative assumptions (typical 4-year build to TOP); actual dates are in the developer's S&P."
+    },
+    "cpf_usage": {
+      "label": "CPF Ordinary Account usage for housing",
+      "authority": "CPF Board",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.cpf.gov.sg/member/infohub/educational-resources/how-much-cpf-savings-you-can-use-for-your-home-purchase",
+      "status": "verified",
+      "valuation_limit_rule": "lower of purchase price and valuation at time of purchase",
+      "withdrawal_limit_pct_of_valuation_limit": "1.20",
+      "withdrawal_limit_note": "above the valuation limit, usable only after setting aside the Basic Retirement Sum, up to 120% (bank-loan purchases)",
+      "lease_cover_to_age": 95,
+      "prorate": {
+        "status": "unverified",
+        "unverified_reason": "When the lease does not cover the youngest buyer to age 95 usage is pro-rated, but the formula was not stated on the fetched page (CPF's example: two 25-year-olds, 65-year lease, $550,000 price -> $495,000 usable). The calculator does not guess; supply cpf_usable_pct.",
+        "min_remaining_lease_years": 20
+      }
+    },
+    "cpf_accrued_interest": {
+      "label": "CPF accrued interest to refund on sale",
+      "authority": "CPF Board",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.cpf.gov.sg/member/home-ownership/using-your-cpf-to-buy-a-home/cpf-refund-when-selling-or-transferring-property",
+      "status": "unverified",
+      "unverified_reason": "The page states principal plus accrued interest is refunded but not the rate; 2.5% p.a. compounded (the CPF OA floor rate) is a placeholder.",
+      "rate": "0.025"
+    },
+    "hdb_mop": {
+      "label": "HDB minimum occupation period",
+      "authority": "HDB",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.hdb.gov.sg/cs/infoweb/residential/buying-a-flat/conditions-after-buying",
+      "status": "unverified",
+      "unverified_reason": "Value comes from a search summary of HDB pages; page body not read. Longer MOPs exist for Prime Location (10y) and Fresh Start (20y) flats.",
+      "standard_years": 5
+    },
+    "ec_mop": {
+      "label": "Executive Condominium minimum occupation period",
+      "authority": "HDB",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.mas.gov.sg/regulation/explainers/new-housing-loans/msr-and-tdsr-rules",
+      "status": "unverified",
+      "unverified_reason": "Source_url is the MAS page that mentions the EC minimum occupation period; the length itself was not fetched from HDB; 5 years is the long-standing rule. EC becomes private after 10 years.",
+      "years": 5,
+      "privatisation_years": 10
+    },
+    "legal_valuation_fees": {
+      "label": "Conveyancing legal fees, valuation fee, and miscellaneous (resale and new launch)",
+      "authority": "none (market quotes)",
+      "as_of": "2026-10-19",
+      "source_url": "https://www.cpf.gov.sg/member/home-ownership/home-buying-guide-for-members-below-55",
+      "status": "unverified",
+      "unverified_reason": "Fees are quoted by lawyers and banks, not set by an authority. Figures are placeholders; get written quotes.",
+      "by_category": {
+        "resale_hdb": {"legal": "2500", "valuation": "0", "other": "300"},
+        "resale_condo": {"legal": "3000", "valuation": "300", "other": "500"},
+        "new_launch_condo": {"legal": "3500", "valuation": "0", "other": "500"},
+        "ec": {"legal": "3500", "valuation": "0", "other": "500"}
+      },
+      "cpf_pays_stamp_and_legal_fees": false,
+      "cpf_note": "Calculator conservatively treats stamp duties and legal fees as cash; set assumptions.cpf_pays_fees to override after confirming with CPF Board."
+    }
+  }
+}

@@ -1,11 +1,11 @@
 ---
 name: property-advisor-skill
-description: "Evaluate any Singapore property asking price — HDB resale, private condo resale, rental, executive condo, or any of the four with an investment-lens overlay (supply pipeline + unsold + vacancy). Compares against the cluster baseline, computes trend (last 8 quarters, QoQ + YoY, 8-char unicode sparkline), overlays URA future amenities within 1 km, and (HDB mode only) contextualises with NEA rainfall history. Optional --verify-salesperson flag embeds a CEA lookup. Outputs a uniform JSON verdict and recommendation. Use when the user asks 'is this asking price fair?', 'evaluate this condo / HDB / EC / rental', or 'should I invest in this property?'."
+description: "Evaluate any Singapore property asking price — HDB resale, private condo resale, rental, executive condo, or any of the four with an investment-lens overlay (supply pipeline + unsold + vacancy). Compares against the cluster baseline, computes trend (last 8 quarters, QoQ + YoY, 8-char unicode sparkline), overlays URA future amenities within 1 km, and (HDB mode only) contextualises with NEA rainfall history. Optional --verify-salesperson flag embeds a CEA lookup. Outputs a uniform JSON verdict and recommendation. A sixth `--mode agent` mimics a property agent: buyer-profile shortlists (DINK couple, first-home couple, family of five), due-diligence checklists, a dated cash/CPF purchase timeline with TDSR/MSR checks, and condo-vs-HDB comparison with lifestyle add-ons and break-even. Use when the user asks 'is this asking price fair?', 'evaluate this condo / HDB / EC / rental', 'should I invest in this property?', or 'what should we buy and how much cash and CPF do we need?'."
 ---
 
 # property-advisor-skill
 
-A Singapore property value advisor covering five modes. Every mode returns a
+A Singapore property value advisor covering five valuation modes plus an agent-style advisory layer (`--mode agent`). Every mode returns a
 uniform JSON shape with a `trend` block (last 8 quarters, QoQ + YoY deltas,
 8-char unicode sparkline), a `location` block, and optional overlays (URA
 future amenities, NEA rainfall, CEA salesperson verification, supply
@@ -36,6 +36,19 @@ python3 skills/property-advisor-skill/scripts/property_advisor.py \
 python3 skills/property-advisor-skill/scripts/property_advisor.py \
     --mode investment --property-mode private --town TIONG_BAHRU \
     --region whole_sg --since 2025-12-01 --asking 1500000
+
+# Agent mode (no network): buyer profile -> shortlist, questions, red flags, due diligence
+python3 skills/property-advisor-skill/scripts/property_advisor.py \
+    --mode agent --task profile --profile family_of_five --variant multigen
+
+# Agent mode: cash/CPF timeline, monthly commitments and TDSR/MSR check for one option
+python3 skills/property-advisor-skill/scripts/property_advisor.py \
+    --mode agent --task plan --scenario my-scenario.json
+
+# Agent mode: condo vs HDB (+ gym membership add-ons) with break-even, in plain language
+python3 skills/property-advisor-skill/scripts/property_advisor.py \
+    --mode agent --task advise --summary-only \
+    --scenario skills/property-advisor-skill/references/examples/dink-couple.json
 
 # With CEA salesperson verification
 python3 skills/property-advisor-skill/scripts/property_advisor.py \
@@ -76,9 +89,21 @@ Q1. Is the user buying a resale flat to live in themselves?
     |       +-- yes --> --mode ec
     |
     +-- Investment lens (any of the above + supply pipeline)?
+    |       |
+    |       +-- yes --> --mode investment --property-mode {hdb|private|rental|ec}
+    |
+    +-- "What should we buy / how much cash and CPF do we need?"
             |
-            +-- yes --> --mode investment --property-mode {hdb|private|rental|ec}
+            +-- which kind of property for this household? --> --mode agent --task profile
+            +-- cash + CPF per stage, monthly, stress test   --> --mode agent --task plan
+            +-- condo vs HDB (+ lifestyle add-ons)           --> --mode agent --task compare
+            +-- all of the above in agent language           --> --mode agent --task advise
 ```
+
+Typical agent flow: `profile` (what to look for) -> pick candidates -> price
+check each with `--mode hdb|private|ec` (is the asking price fair?) -> `compare`
+(can we afford it, and what does it cost to live there?) -> `advise` for the
+write-up.
 
 **Short form (load-bearing question first):**
 
@@ -89,7 +114,7 @@ Q1. Is the user buying a resale flat to live in themselves?
 > - **Buying an EC** --> `--mode ec`
 > - **Buying as an investment** --> `--mode investment --property-mode {hdb|private|rental|ec}` (overlays SINGSTAT supply + URA unsold)
 
-## The five modes
+## The five valuation modes (plus `--mode agent`, below)
 
 | Mode       | Primary dataset                                | Cluster metric       | Premium unit | Verdict basis        | NEA rainfall? | URA future amenities? | Investment overlay? | CEA verify?         |
 | ---------- | ---------------------------------------------- | -------------------- | ------------ | -------------------- | ------------- | --------------------- | ------------------- | ------------------- |
@@ -101,11 +126,53 @@ Q1. Is the user buying a resale flat to live in themselves?
 
 `--mode hdb` is the default. Existing v1 commands work unchanged.
 
+## Agent mode (`--mode agent`)
+
+An additive advisor layer (ADR-008). It never calls the network; it reads dated
+reference data and does Decimal arithmetic. Existing modes are unchanged.
+
+| `--task`  | Needs                              | Returns (in `agent.*`)                                                     |
+| --------- | ---------------------------------- | -------------------------------------------------------------------------- |
+| `profile` | `--profile dink\|first_home_couple\|family_of_five` [`--variant multigen`] | shortlist by category/segment, location checks, key questions, red flags, due-diligence checklists, valuation modes to run |
+| `plan`    | `--scenario FILE` (one `option`)    | dated cash/CPF timeline, monthly schedule, TDSR/MSR, upfront cash and CPF, affordability ceiling (largest stress-tested loan/price), year 1/5/10/15 cost split cash vs CPF, interest and appreciation scenarios |
+| `compare` | `--scenario FILE` (`options` list)  | side-by-side up-front, monthly, 5/10/15-year cost of occupancy, equity built, lifestyle add-ons, break-even |
+| `advise`  | `--scenario FILE` + `profile`       | profile + comparison (or plan) + one plain-language summary                |
+
+`--summary-only` prints the property-agent-style summary instead of JSON. The JSON keeps the
+uniform top-level keys (`mode`, `town`, `since`, `asking`, `verdict`, `premium_pct`, `trend`,
+`location`, `ura_context`, `cea_verification`; `null` when not applicable) and adds `task`,
+`agent`, `summary`, `disclaimer` and `policy_as_of`. Money values are decimal **strings**.
+Scenario format: [`references/agent-scenario.md`](references/agent-scenario.md); runnable
+examples for each profile: `references/examples/`.
+
+**Policy is data.** BSD, ABSD, SSD, property tax, LTV, TDSR/MSR, the stress-test rate, EHG, the
+OTP terms, the progressive payment schedule and CPF rules live in
+[`references/policy-tables.json`](references/policy-tables.json), each with `as_of`,
+`source_url` and `status` (`verified` = read from the official page; `unverified` = could not be
+confirmed, with `unverified_reason`). A rule change is an edit to that file. Unverified items
+the calculation touches are listed in the output (`unverified_assumptions`) and the summary.
+See [`references/policy-sources.md`](references/policy-sources.md).
+
+**Scenarios are assumptions.** Interest (2/3/4%), appreciation (0/2/4%), maintenance, renovation,
+opportunity cost and similar defaults come from
+[`references/default-assumptions.json`](references/default-assumptions.json) and are overridable
+in the scenario's `assumptions` block. They are never presented as facts.
+
+**Lifestyle add-ons** (HDB option): `lifestyle_addons: [{"id": "virgin_active_long_termer", "count": 2}]`
+or a custom `{"label": "...", "monthly": "120"}`. Defaults come from
+[`references/lifestyle-addons.json`](references/lifestyle-addons.json) with an `operating` status;
+Virgin Active is verified from its official page, ActiveSG prices are unverified (official page
+blocked), BBQ/function-room equivalents have no default price. `break_even` reports the monthly
+lifestyle spend that closes the gap to the costlier option (total commitment, cash outflow, and
+5/10/15-year cost).
+
+This is guidance, not financial or legal advice; confirm figures with HDB, the bank and a lawyer.
+
 ## CLI reference
 
 | Flag                       | Required for                | Default       | Notes                                                                  |
 | -------------------------- | --------------------------- | ------------- | ---------------------------------------------------------------------- |
-| `--mode`                   | always                      | `hdb`         | one of `hdb` / `private` / `rental` / `ec` / `investment`              |
+| `--mode`                   | always                      | `hdb`         | one of `hdb` / `private` / `rental` / `ec` / `investment` / `agent` (agent has its own flags: `--task`, `--profile`, `--variant`, `--scenario`, `--summary-only`) |
 | `--property-mode`          | `--mode investment`         | —             | one of `hdb` / `private` / `rental` / `ec`                             |
 | `--town`                   | always                      | —             | UPPERCASE; e.g. `BISHAN`, `TIONG_BAHRU`                                |
 | `--flat-type`              | `--mode hdb` / `--mode investment --property-mode hdb` | — | one of `1-ROOM` / `2-ROOM` / `3-ROOM` / `4-ROOM` / `5-ROOM` / `EXEC` / `MULTI-GEN` / `STUDIO` |
@@ -209,9 +276,12 @@ Namespaces used:
 
 - Chart rendering / images
 - Cross-town comparisons (only the requested town is summarised)
-- Property tax / ABSD / TDSR calculators
-- Mortgage rate lookups
+- Property tax / ABSD / TDSR calculators in the valuation modes (covered by `--mode agent`, which
+  reads dated policy tables instead of hard-coding numbers)
+- Mortgage rate lookups (agent mode uses explicit low/base/high rate assumptions)
 - EC MOP (5-year minimum occupation period) enforcement
+- Live listing scraping; cash-over-valuation, CPF pro-rating for short leases and the 120%
+  withdrawal limit are not modelled (flagged in the output)
 - CEA Salespersons' Property Transaction Records (coll 55) — reserved
   for the future `agent-match-skill`
 
@@ -224,6 +294,14 @@ Namespaces used:
   -> canonical [`docs/api/SINGSTAT.md`](../../docs/api/SINGSTAT.md)
 - CEA data sources: [`references/cea.md`](references/cea.md) -> canonical
   [`docs/api/CEA.md`](../../docs/api/CEA.md)
+- Agent mode: [`references/agent-scenario.md`](references/agent-scenario.md),
+  [`references/policy-sources.md`](references/policy-sources.md),
+  [`references/policy-tables.json`](references/policy-tables.json),
+  [`references/buyer-profiles.json`](references/buyer-profiles.json),
+  [`references/due-diligence.json`](references/due-diligence.json),
+  [`references/lifestyle-addons.json`](references/lifestyle-addons.json),
+  [`references/default-assumptions.json`](references/default-assumptions.json); decision record
+  [`docs/decisions/ADR-008-property-advisor-agent-mode.md`](../../docs/decisions/ADR-008-property-advisor-agent-mode.md)
 - NEA weather context (HDB mode only): [`references/nea-weather.md`](references/nea-weather.md)
   -> canonical [`docs/api/NEA.md`](../../docs/api/NEA.md)
 
@@ -233,7 +311,9 @@ Namespaces used:
 python3 -m unittest discover -s skills/property-advisor-skill/tests
 ```
 
-The suite covers (48 tests):
+The suite covers the 48 valuation-mode tests plus ~100 agent-mode tests (policy tables and
+stamp-duty tiers, TDSR/MSR boundaries, profiles, cash-flow engine, comparison, CLI); none use the network.
+Valuation-mode coverage (48 tests):
 
 - v1 preserved: premium math, HDB filter, URA amenities (centroid +
   geocode fallback), rainfall classification, verdict matrix, full

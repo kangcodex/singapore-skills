@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "note": "Buyer profiles as data. Guidance and rules of thumb, not advice. Policy numbers live in policy-tables.json, never here. 'heuristic' entries are agent rules of thumb, not regulations.",
+  "categories": {
+    "new_launch_condo": {
+      "label": "New-launch condominium",
+      "valuation_mode": {"mode": "private"},
+      "payment_model": "progressive",
+      "segments": {
+        "ccr": {"label": "Core Central Region (prime districts 9, 10, 11 and the downtown core)", "region_arg": "central", "fit": "Capital-preservation and expat/HNW demand; high entry price and ABSD exposure make it a poor first-home choice.", "tradeoff": "Highest psf and holding cost; resale depth tied to wealthy and foreign demand."},
+        "rcr": {"label": "Rest of Central Region (city-fringe)", "region_arg": "rest_central", "fit": "Short commutes and strong rental demand; smaller units common.", "tradeoff": "Pricey per sq ft; compact layouts; more en-bloc and investor churn."},
+        "ocr": {"label": "Outside Central Region (suburban)", "region_arg": "outside_central", "fit": "Best space per dollar for families; strong school/amenity catchments near regional hubs.", "tradeoff": "Longer commute; pick near an MRT interchange or a regional centre."}
+      },
+      "tradeoffs": [
+        "Progressive payments: only 5% booking + 15% at S&P up front, then stage payments, so cash needs are spread over the build; but you may pay rent or an existing mortgage during the 3-5 year wait.",
+        "Developer sale price carries a new-launch premium over comparable resale; check against nearby resale psf with --mode private.",
+        "Fringe vs suburban: fringe buys commute and rental depth; suburban buys space and school options. Match to the profile's priority."
+      ]
+    },
+    "resale_condo": {
+      "label": "Resale condominium",
+      "valuation_mode": {"mode": "private"},
+      "payment_model": "lump_sum",
+      "tradeoffs": [
+        "Lease: 99-year leasehold loses bank-loan and resale appeal as the remaining lease shortens; freehold or 999-year holds value better but costs more upfront.",
+        "Age: buildings over ~20-25 years may face major repairs, special levies and en-bloc speculation; check the sinking fund and MCST minutes.",
+        "Size and unit mix: a project of mostly small units skews to investor/tenant residents and quick resale turnover; larger units suit owner-occupiers.",
+        "Immediate possession and visible stock: you see the unit, view and neighbours before committing."
+      ]
+    },
+    "resale_hdb": {
+      "label": "Resale HDB flat",
+      "valuation_mode": {"mode": "hdb"},
+      "payment_model": "lump_sum",
+      "flat_types": ["3-ROOM", "4-ROOM", "5-ROOM", "EXEC", "MULTI-GEN"],
+      "estates": {
+        "mature": "Established amenities, MRT, schools and higher resale prices; older lease commencement dates are common.",
+        "non_mature": "Newer leases and larger flats, often lower prices; amenities and transport may still be maturing."
+      },
+      "tradeoffs": [
+        "Remaining lease: below the age-95 coverage threshold, CPF usage and HDB loan amount are pro-rated (see policy-tables cpf_usage); very short leases may limit financing and future resale.",
+        "MOP: a resale flat must be occupied for the minimum occupation period before it can be sold on the open market; plan the next move accordingly.",
+        "3Gen flats: designed for multi-generation families and only resalable to eligible multi-generation families.",
+        "Income ceilings and grants apply to resale purchases (see policy-tables ehg / income_ceilings); household income can disqualify or reduce grants."
+      ]
+    },
+    "ec": {
+      "label": "Executive Condominium",
+      "valuation_mode": {"mode": "ec"},
+      "payment_model": "progressive",
+      "tradeoffs": [
+        "Condo facilities at a price below comparable private launches, with a minimum occupation period and eligibility income ceiling at first purchase.",
+        "MSR applies to EC loans during the MOP, which can bind harder than TDSR for mid-income couples.",
+        "Becomes fully private after the privatisation period; resale pool widens then."
+      ]
+    }
+  },
+  "profiles": {
+    "dink": {
+      "label": "Dual-income couple, no kids (DINK)",
+      "household": {"adults": 2, "children": 0},
+      "priorities": [
+        "Commute time and MRT interchange access for two workplaces",
+        "Resale liquidity and rental demand (flexibility to upgrade, downsize or rent out)",
+        "Low maintenance cost and a manageable monthly commitment (keep savings rate high)",
+        "Lifestyle: nearby dining and recreation over school catchment",
+        "Optionality: keep the lease and location sellable to the broadest buyer pool"
+      ],
+      "shortlist": [
+        {"category": "resale_condo", "segments": ["rcr", "ocr"], "rank": 1, "why": "Compact 1-2 bedroom units near MRT with immediate possession; no wait and no progressive-interest overlap.", "watch_out": "Avoid short remaining leases and very small projects with weak resale pools."},
+        {"category": "new_launch_condo", "segments": ["rcr", "ocr"], "rank": 2, "why": "Fringe or suburban launches near MRT give a fresh lease and facilities; progressive payments spread cash.", "watch_out": "New-launch premium; carrying cost of rent during the build."},
+        {"category": "resale_hdb", "segments": [], "rank": 3, "why": "Lowest total cost of occupancy; 4-room in a mature, MRT-served estate is liquid and cheap to hold.", "watch_out": "Income ceiling for grants; MOP; consider lifestyle add-ons to approximate condo facilities."},
+        {"category": "ec", "segments": [], "rank": 4, "why": "Only relevant if eligible and happy to wait out the MOP; DINK incomes can exceed the EC ceiling.", "watch_out": "Income ceiling and MSR."}
+      ],
+      "location": {
+        "mrt": "Walk to a station within ~5-10 min (heuristic); interchanges preferred; test both commutes at peak hour.",
+        "jobs": "Weigh both workplaces; a city-fringe or interchange location usually wins.",
+        "amenities": "Dining, gym, supermarket, park within walking distance; school catchment is secondary (but matters for resale to families).",
+        "risk_checks": ["noise (MRT track, expressway, flight path)", "flood-prone spots", "dengue clusters", "air quality / haze"]
+      },
+      "key_questions": [
+        "How many years do we plan to stay, and when might we upgrade or start a family?",
+        "What monthly commitment keeps our savings rate at target after the stress-tested instalment?",
+        "Does the lease and unit size appeal to the next buyer pool (families, investors, expats)?"
+      ],
+      "red_flags": [
+        "Remaining lease under ~60 years on a private leasehold with weak resale evidence",
+        "Stress-tested TDSR/MSR above the limit or barely passing",
+        "Project dominated by sub-500 sq ft units with high rental churn"
+      ]
+    },
+    "first_home_couple": {
+      "label": "Couple buying their first home together",
+      "household": {"adults": 2, "children": 0, "planning_children": true},
+      "priorities": [
+        "Affordability: lowest upfront cash and a monthly instalment that survives a rate rise and one income dropping",
+        "Grants and subsidised financing (first-timer status)",
+        "A home that fits children later (3 bedrooms or a large 4-room) and school catchment",
+        "Liquidity: avoid a lease or location that is hard to resell",
+        "Preserve cash and CPF buffer for renovation, furnishing and emergencies"
+      ],
+      "shortlist": [
+        {"category": "resale_hdb", "segments": [], "rank": 1, "why": "Grants (EHG, family grant) and HDB loan lower cash needs; best value if within the income ceilings.", "watch_out": "Income ceiling for grants; lease remaining; MOP; price vs valuation (COV)."},
+        {"category": "ec", "segments": [], "rank": 2, "why": "Condo facilities at a lower price with a fresh lease; suited if eligible.", "watch_out": "EC income ceiling; MSR; MOP; progressive payment cash schedule."},
+        {"category": "resale_condo", "segments": ["ocr"], "rank": 3, "why": "Suburban resale condos can be cheaper than new launches and deliver immediate possession.", "watch_out": "Cash down payment of at least 5% under bank loans; ageing project costs."},
+        {"category": "new_launch_condo", "segments": ["ocr"], "rank": 4, "why": "Spread payments over the build; only if household income comfortably clears TDSR at the stress rate.", "watch_out": "Double-housing cost during the wait; completion delays."}
+      ],
+      "location": {
+        "mrt": "Within walking distance of a station on a line serving both workplaces.",
+        "jobs": "Balance both commutes; avoid a long commute for one at the other's expense.",
+        "amenities": "Supermarket, clinic, hawker/food, park; check the primary school catchment if kids are planned.",
+        "risk_checks": ["noise", "flood-prone spots", "dengue clusters", "air quality / haze"]
+      },
+      "key_questions": [
+        "Are we both first-timers and citizens/PRs, and what grants do we qualify for?",
+        "How much can we put in cash vs CPF, and what is the buffer after exercise and completion?",
+        "What happens to the instalment at the stress-test rate, and if one income stops for six months?"
+      ],
+      "red_flags": [
+        "Leaving less than a few months of expenses in cash after completion",
+        "Reliance on a grant the household income may not qualify for",
+        "Buying at an asking price well above the valuation without cash for the gap"
+      ]
+    },
+    "family_of_five": {
+      "label": "Family of five (two parents, three children)",
+      "household": {"adults": 2, "children": 3},
+      "priorities": [
+        "Space: enough bedrooms and bathrooms for five; 5-room HDB or a 3-4 bedroom condo",
+        "Primary-school access: distance bands to preferred schools",
+        "Total monthly commitment vs. income, including childcare, tuition and a car if needed",
+        "Safety and convenience: playground, park, clinic, childcare, supermarket within walking distance",
+        "Long-run lease: stay 15+ years without lease anxiety"
+      ],
+      "shortlist": [
+        {"category": "resale_hdb", "segments": [], "rank": 1, "why": "Large 5-room or executive flats in non-mature or mature estates give the most space per dollar; lowest cost of occupancy.", "watch_out": "Lease remaining, floor/level, noise, distance to preferred schools, MOP."},
+        {"category": "ec", "segments": [], "rank": 2, "why": "Three-bedroom EC with facilities if the household is eligible; good for growing families.", "watch_out": "Income ceiling, MSR, MOP."},
+        {"category": "resale_condo", "segments": ["ocr"], "rank": 3, "why": "3-4 bedroom suburban resale condo: facilities for children, immediate possession.", "watch_out": "Cash down payment, maintenance fees, ageing building, 99-year lease remaining."},
+        {"category": "new_launch_condo", "segments": ["ocr"], "rank": 4, "why": "Larger suburban launches with fresh lease and facilities; only if cash flow supports the wait.", "watch_out": "Wait of several years while paying existing housing cost; larger quantum is TDSR-sensitive."}
+      ],
+      "location": {
+        "mrt": "Within ~10 min (heuristic) of a station; a bus interchange or feeder is acceptable for a family.",
+        "schools": {
+          "distance_bands": {"within_1km": "Higher priority at primary-school registration for residents within 1 km", "between_1_and_2km": "Next band between 1 km and 2 km"},
+          "status": "unverified",
+          "unverified_reason": "MOE Primary 1 registration phases and distance bands were not fetched from moe.gov.sg in this review; confirm the current phase rules and the school's vacancies with MOE before buying.",
+          "source_url": "https://www.moe.gov.sg/primary/p1-registration"
+        },
+        "jobs": "Two workplaces plus school runs: favour mid-way or an interchange.",
+        "amenities": "Playground, park, childcare, clinic, supermarket, enrichment centres.",
+        "risk_checks": ["noise (lower floors facing roads)", "flood-prone spots", "dengue clusters (children outdoors)", "air quality / haze (children)"]
+      },
+      "key_questions": [
+        "Which primary school do we want, and what is the walk or drive distance from this unit?",
+        "Does the unit have enough bedrooms for five now and as children grow older?",
+        "What is the total monthly commitment including childcare, tuition and transport?"
+      ],
+      "red_flags": [
+        "A unit that forces a long school run or an unsafe route",
+        "Monthly commitment that leaves little slack for childcare or tuition",
+        "Short remaining lease on a flat meant to be a 15-year home"
+      ],
+      "variants": {
+        "multigen": {
+          "label": "Family of five with parents or grandparents in the household (multi-generation)",
+          "extra_priorities": [
+            "Grandparent-friendly access: lift to the unit, step-free routes, nearby clinic and polyclinic",
+            "Separate bedroom and bathroom for elders; space to give everyone privacy",
+            "Proximity to one set of parents (Proximity Housing Grant) versus living together"
+          ],
+          "shortlist_override": [
+            {"category": "resale_hdb", "segments": [], "rank": 1, "flat_types": ["MULTI-GEN", "5-ROOM", "EXEC"], "why": "3Gen flats and large resale flats are designed for extended families; lift/ramp access and clinics matter.", "watch_out": "3Gen flat resale restricted to eligible multi-generation families; extended-family income rules (see income_ceilings); check the HDB-eligibility of the parents."},
+            {"category": "resale_condo", "segments": ["ocr"], "rank": 2, "why": "Large condo with a dual-key or study that can host elders.", "watch_out": "Cost; MCST fees; ABSD if any household member already owns property."},
+            {"category": "ec", "segments": [], "rank": 3, "why": "Large 4-bedroom EC.", "watch_out": "Eligibility, MSR, MOP."}
+          ],
+          "red_flags": [
+            "Elders owning residential property that triggers ABSD or disqualifies grants",
+            "Stairs or long walks to MRT/bus for older family members"
+          ]
+        }
+      }
+    }
+  },
+  "related_skills": [
+    {"skill": "dengue-risk-advisor-skill", "use": "Check dengue cluster density and rainfall pressure for the town before committing."},
+    {"skill": "air-quality-advisor-skill", "use": "Check current PSI/PM2.5 and haze exposure for the area."},
+    {"skill": "smart-commuter-skill", "use": "Check commute and carpark options to workplaces."},
+    {"skill": "rental-yield-calculator-skill", "use": "Check rental yield if the unit may be rented out later."},
+    {"skill": "agent-match-skill", "use": "Verify the property agent's CEA registration."}
+  ]
+}
