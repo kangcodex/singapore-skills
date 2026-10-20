@@ -287,3 +287,5 @@ openspec/
 design/
 issue/
 prd/
+# Generated reports are local artifacts and are never committed
+reports/
