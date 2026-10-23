@@ -6,13 +6,15 @@ are withheld. These fetchers do not provide complete household decision support.
 
 Imports from the per-skill singapore_api copy. Stdlib only. No pip deps.
 
-Five modes (default = hdb, v1 behavior preserved):
-    hdb        — HDB resale cluster baseline + URA uplift + NEA rainfall (v1)
-    private    — URA Private Residential Property Transactions (by region)
-    rental     — URA Rentals of Non-Landed Residential Buildings
-    ec         — URA Executive Condominium sales + sale position
-    investment — overlay of SINGSTAT supply pipeline + URA unsold units
+Historical context modes (default = hdb; flags retained, value verdicts withheld):
+    hdb        — filtered town/type transaction context, not unit valuation
+    private    — regional transaction context, not a matched price baseline
+    rental     — unmatched rental context
+    ec         — EC sales-volume context
+    investment — dated national stock context, no unsupported supply signal
                  (used with --property-mode to pick the base series)
+
+The separate --mode agent route preserves offline cash/CPF scenario tools.
 
 Usage:
     # HDB resale (v1, default mode)
@@ -341,11 +343,10 @@ def _trailing_4q_demand(records, demand_key="sale_count"):
 
 
 def investment_overlay_for(private_records=None):
-    """Compute the supply-vs-demand overlay.
+    """Return latest stock context, withholding unsupported local supply signals.
 
-    Reads two sources (SINGSTAT supply pipeline + URA unsold private resi)
-    plus the trailing 4Q demand from the most recent private trans series.
-    Returns `supply_signal` in {tight, balanced, surplus} and the raw numbers.
+    Pipeline/unsold overlap, scope and calendar-quarter demand need independent
+    verification. Empty inputs cannot establish zero supply or balanced conditions.
     """
     pipeline = fetch_singstat_supply_pipeline()
     unsold = fetch_ura_unsold_private_resi()
@@ -470,8 +471,7 @@ def assess_hdb(town, flat_type, since, asking, cea_query=None):
 
 def _generic_quarters_assess(records, town, asking, value_key, mode,
                              price_unit, cea_query=None):
-    """Shared logic for private/rental/ec modes: median per series,
-    trend block, premium vs trailing median, CEA verify."""
+    """Summarize unmatched context without comparing total asks to PSF medians."""
     baseline = _median_value(records, value_key)
     trend = trend_block(records, value_key, "qtr", 8)
     as_of = trend["last_8_quarters"][-1]["qtr"] if trend["last_8_quarters"] else "unknown"

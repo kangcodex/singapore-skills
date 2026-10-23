@@ -4,6 +4,21 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed — 2026-10-23
+
+- **`property-advisor-skill` cross-category decision workflow** — household-led
+  research and discovery across HDB new/resale, EC, private flats/condos and landed,
+  with category-specific policy, liveability, matched evidence and conditional advice.
+- Added schema-3.0 case templates, readable reports, provenance/constraint audits,
+  Decimal cost/mortgage/price-unit helpers and completed-calendar-quarter trends.
+- Retired unsupported legacy fair-value and supply heuristics: unavailable evidence
+  remains null/insufficient, HDB filters are applied locally, and ambiguous CEA names
+  no longer verify the first result. Context-mode errors exit 2; agent-mode API and
+  scenario capabilities remain supported separately from researched decisions.
+- Added fixed behavioral eval definitions, synthetic evidence and regression/CLI
+  checks. Development research, personal casework and generated eval outputs are
+  Git-ignored; reusable skill sources, fixtures and tests remain version-controlled.
+
 ### Added — 2026-10-19
 
 - **`property-advisor-skill` agent mode** (`--mode agent`, ADR-008) — a property-agent style advisory layer on top of the five valuation modes, for new-launch condos, resale condos, resale HDB and ECs. No network, stdlib only, Decimal arithmetic.
