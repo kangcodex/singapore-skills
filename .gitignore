@@ -287,3 +287,13 @@ openspec/
 design/
 issue/
 prd/
+
+# Property advisor development workings (ship reusable skill assets and tests)
+/docs/property-advisor-prd.md
+/docs/property-advisor-cross-category-research.md
+/docs/property-advisor-requirements-spike.md
+/skills/property-advisor-skill-workspace/
+/skills/property-advisor-skill/workings/
+/skills/property-advisor-skill/cases/
+/skills/property-advisor-skill/evals/runs/
+/skills/property-advisor-skill/evals/benchmark*.json
