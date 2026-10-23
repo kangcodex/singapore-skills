@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-"""Property Advisor (v2) — HDB resale, private condo, rental, EC, and investment lens.
+"""Property advisor legacy context CLI; use advisor_cli.py for audited cases.
+
+Historical flags/entry points remain, but aggregate value and supply verdicts
+are withheld. These fetchers do not provide complete household decision support.
 
 Imports from the per-skill singapore_api copy. Stdlib only. No pip deps.
 
-Five modes (default = hdb, v1 behavior preserved):
-    hdb        — HDB resale cluster baseline + URA uplift + NEA rainfall (v1)
-    private    — URA Private Residential Property Transactions (by region)
-    rental     — URA Rentals of Non-Landed Residential Buildings
-    ec         — URA Executive Condominium sales + sale position
-    investment — overlay of SINGSTAT supply pipeline + URA unsold units
+Historical context modes (default = hdb; flags retained, value verdicts withheld):
+    hdb        — filtered town/type transaction context, not unit valuation
+    private    — regional transaction context, not a matched price baseline
+    rental     — unmatched rental context
+    ec         — EC sales-volume context
+    investment — dated national stock context, no unsupported supply signal
                  (used with --property-mode to pick the base series)
+
+The separate --mode agent route preserves offline cash/CPF scenario tools.
 
 Usage:
     # HDB resale (v1, default mode)
@@ -47,7 +52,7 @@ import sys
 
 from singapore_api import (
     HDB_RESALE_DATASET_ID,
-    SPARKLINE_BINS,
+    SPARKLINE_BINS as SPARKLINE_BINS,
     fetch_cea_salesperson,
     fetch_dataset_rows,
     fetch_nea_historical_rainfall,
@@ -61,11 +66,11 @@ from singapore_api import (
     fetch_ura_unsold_private_resi,
     geocode,
     haversine_m,
-    location_block,
-    sparkline,
+    sparkline as sparkline,
     svy21_to_wgs84,
-    trend_block,
 )
+
+from advisor_calculations import trend_block
 
 
 # ── Constants (v1 preserved) ───────────────────────────────────────────
@@ -83,11 +88,6 @@ RAINFALL_LOOKBACK_5YR = 60
 RAISE_SIGMA = 1.0
 URA_RADIUS_M = 1000.0
 AMENITY_RADIUS_M = 1000.0
-
-# Investment overlay: pipeline + unsold > 1.5x trailing-4Q demand = surplus
-#                    pipeline + unsold < 0.5x trailing-4Q demand = tight
-SUPPLY_SURPLUS_RATIO = 1.5
-SUPPLY_TIGHT_RATIO = 0.5
 
 LU_CATEGORIES = [
     (re.compile(r"\b(school|primary|secondary|junior college)\b", re.I), "primary_school"),
@@ -140,6 +140,12 @@ def fetch_hdb_records(town, flat_type, since):
     since_yyyymm = _since_iso(since)
     out = []
     for r in records:
+        # The CSV downloader returns the full dataset; normalize actual HDB labels.
+        row_town = str(r.get("town", "")).lower().strip()
+        row_type = str(r.get("flat_type", "")).upper().strip().replace(" ", "-")
+        row_type = "EXEC" if row_type == "EXECUTIVE" else row_type
+        if row_town != town_lc or row_type != flat_norm:
+            continue
         month = r.get("month") or r.get("transaction_month")
         try:
             month_int = int(str(month)[:7].replace("-", ""))
@@ -164,7 +170,7 @@ def cluster_average(records):
 
 def premium_pct(asking, baseline):
     if baseline <= 0:
-        return 0.0
+        raise ValueError("positive baseline required; unavailable is not zero premium")
     return (asking - baseline) / baseline * 100.0
 
 
@@ -255,32 +261,15 @@ def rainfall_history():
 
 
 def verdict(asking, baseline, amenities, rain_class):
-    p = premium_pct(asking, baseline)
-    has_uplift = len(amenities) >= 2
-    if p <= 5.0:
-        return "fair"
-    if p <= 10.0 and has_uplift and rain_class != "above-average":
-        return "premium justified"
-    if p > 5.0 and not has_uplift:
-        return "above market"
-    if rain_class == "above-average" and p > 0:
-        return "above market"
-    return "premium justified"
+    """Legacy signature retained; aggregate context cannot value an exact home."""
+    return "insufficient evidence"
 
 
 def recommendation(verdict_str, baseline, asking, amenities, rain_class):
-    p = premium_pct(asking, baseline)
-    if verdict_str == "fair":
-        return (f"Asking ${asking:,.0f} is within {p:.1f}% of the ${baseline:,.0f} cluster average for this town/flat-type. "
-                "Reasonable offer; proceed with valuation inspection.")
-    if verdict_str == "premium justified":
-        amen_str = ", ".join(amenities) if amenities else "future amenity uplift"
-        return (f"Asking ${asking:,.0f} is {p:.1f}% above the ${baseline:,.0f} cluster baseline, but "
-                f"future amenities within 1 km ({amen_str}) support the premium. Worth negotiating toward the baseline.")
-    return (f"Asking ${asking:,.0f} is {p:.1f}% above the ${baseline:,.0f} cluster baseline with "
-            f"no clear uplift within 1 km"
-            + (f" and above-average rainfall ({rain_class})" if rain_class == "above-average" else "")
-            + ". Negotiate down toward baseline or look at comparable towns.")
+    return ("Insufficient evidence for an exact-home value judgement. Obtain matched "
+            "transactions, unit/area/condition details and a dated quotation; prepare "
+            "inspection questions. Rainfall and amenity counts do not justify a premium. "
+            "Use the cross-category case workflow for household and affordability advice.")
 
 
 # ── Private / rental / EC mode helpers (v2) ────────────────────────────
@@ -340,6 +329,10 @@ def _median_value(records, value_key):
 
 # ── Location block (v2) ────────────────────────────────────────────────
 
+def location_block(town):
+    """Do not relabel a geocoder address as a verified planning area or MRT."""
+    return {"town": town.upper(), "planning_area": "unknown", "region": "unknown", "nearest_mrt": "unknown"}
+
 # ── Investment overlay (v2) ────────────────────────────────────────────
 
 def _trailing_4q_demand(records, demand_key="sale_count"):
@@ -350,11 +343,10 @@ def _trailing_4q_demand(records, demand_key="sale_count"):
 
 
 def investment_overlay_for(private_records=None):
-    """Compute the supply-vs-demand overlay.
+    """Return latest stock context, withholding unsupported local supply signals.
 
-    Reads two sources (SINGSTAT supply pipeline + URA unsold private resi)
-    plus the trailing 4Q demand from the most recent private trans series.
-    Returns `supply_signal` in {tight, balanced, surplus} and the raw numbers.
+    Pipeline/unsold overlap, scope and calendar-quarter demand need independent
+    verification. Empty inputs cannot establish zero supply or balanced conditions.
     """
     pipeline = fetch_singstat_supply_pipeline()
     unsold = fetch_ura_unsold_private_resi()
@@ -363,8 +355,12 @@ def investment_overlay_for(private_records=None):
     # Total supply: sum latest "In Planning" + "Under Construction" from pipeline
     # (SINGSTAT series names are spacy like "In Planning" / "Under Construction")
     # and total unsold from URA coll 1663 (column "unsold_units" or similar).
+    dated_pipeline = [row for row in pipeline if row.get("qtr")]
+    latest_pipeline_qtr = max((row["qtr"] for row in dated_pipeline), default=None)
     pipeline_latest = {}
     for row in pipeline:
+        if row.get("qtr") != latest_pipeline_qtr or row.get("series") not in {"In Planning", "Under Construction"}:
+            continue
         series = row["series"]
         pipeline_latest[series] = pipeline_latest.get(series, 0.0) + row["value"]
     total_pipeline = sum(pipeline_latest.values())
@@ -379,28 +375,16 @@ def investment_overlay_for(private_records=None):
         if v is None:
             continue
         unsold_latest_qtr[qtr] = unsold_latest_qtr.get(qtr, 0.0) + v
-    total_unsold = max(unsold_latest_qtr.values()) if unsold_latest_qtr else 0.0
-
-    # Trailing 4Q demand
-    if private_records:
-        trailing_4q = _trailing_4q_demand(private_records, "sale_count")
-    else:
-        trailing_4q = 0.0
-
-    supply_ratio = (total_pipeline + total_unsold) / trailing_4q if trailing_4q else 0.0
-    if supply_ratio > SUPPLY_SURPLUS_RATIO:
-        signal = "surplus"
-    elif 0 < supply_ratio < SUPPLY_TIGHT_RATIO:
-        signal = "tight"
-    else:
-        signal = "balanced"
+    total_unsold = unsold_latest_qtr[max(unsold_latest_qtr)] if unsold_latest_qtr else None
 
     return {
-        "supply_pipeline_units": int(total_pipeline),
-        "unsold_units": int(total_unsold),
-        "trailing_4q_demand": int(trailing_4q),
-        "supply_ratio": round(supply_ratio, 2) if supply_ratio else 0.0,
-        "supply_signal": signal,
+        "supply_pipeline_units": int(total_pipeline) if pipeline_latest else None,
+        "unsold_units": int(total_unsold) if total_unsold is not None else None,
+        "trailing_4q_demand": None,
+        "supply_ratio": None,
+        "supply_signal": "unavailable",
+        "reason": "Pipeline/unsold overlap, local scope and four calendar-quarter demand must be verified before classification.",
+        "pipeline_quarter": latest_pipeline_qtr,
         "vacancy_series_count": len(vacancy),
     }
 
@@ -415,10 +399,13 @@ def cea_verification(query):
         return None
     try:
         rows = fetch_cea_salesperson(query)
-    except Exception as e:  # noqa: BLE001
-        print("warning: CEA lookup failed: %s" % e, file=sys.stderr)
+    except (OSError, ValueError, RuntimeError):
+        print("warning: CEA lookup failed; registration not verified", file=sys.stderr)
         return None
     if not rows:
+        return None
+    if len(rows) != 1:
+        print("warning: CEA name is ambiguous; use an exact registration number", file=sys.stderr)
         return None
     r = rows[0]
     return {
@@ -461,8 +448,8 @@ def assess_hdb(town, flat_type, since, asking, cea_query=None):
     baseline = cluster_average(records)
     if baseline is None:
         raise ValueError(f"no HDB resale records for {town} {flat_type} since {since}")
-    amenities = future_amenities(town, records)
-    rain = rainfall_history()
+    amenities = []
+    rain = {"classification": "unknown", "recent_24mo_mm": None, "five_year_avg_mm": None}
     v = verdict(asking, baseline, amenities, rain["classification"])
     return {
         "mode": "hdb",
@@ -472,10 +459,10 @@ def assess_hdb(town, flat_type, since, asking, cea_query=None):
         "asking": asking,
         "verdict": v,
         "cluster_avg": round(baseline, 2),
-        "premium_pct": round(premium_pct(asking, baseline), 1),
+        "premium_pct": None,
         "trend": _hdb_trend_from_records(records),
         "location": location_block(town),
-        "ura_context": {"future_amenities_within_1km": amenities},
+        "ura_context": {"future_amenities_within_1km": amenities, "status": "unavailable"},
         "rainfall_history": rain,
         "cea_verification": cea_verification(cea_query),
         "recommendation": recommendation(v, baseline, asking, amenities, rain["classification"]),
@@ -484,83 +471,46 @@ def assess_hdb(town, flat_type, since, asking, cea_query=None):
 
 def _generic_quarters_assess(records, town, asking, value_key, mode,
                              price_unit, cea_query=None):
-    """Shared logic for private/rental/ec modes: median per series,
-    trend block, premium vs trailing median, CEA verify."""
-    if not records:
-        raise ValueError(f"no {mode} records for {town} since cutoff")
+    """Summarize unmatched context without comparing total asks to PSF medians."""
     baseline = _median_value(records, value_key)
-    if baseline is None:
-        raise ValueError(f"no {value_key} values in {mode} records for {town}")
     trend = trend_block(records, value_key, "qtr", 8)
-    p = premium_pct(asking, baseline)
-    as_of = records[-1].get("qtr") or records[-1].get("quarter") or "unknown"
-    if p <= 5.0:
-        v = "fair"
-    elif p <= 15.0:
-        v = "premium justified"
-    else:
-        v = "above market"
+    as_of = trend["last_8_quarters"][-1]["qtr"] if trend["last_8_quarters"] else "unknown"
     return {
         "mode": mode,
         "town": town.upper(),
         "asking": asking,
         "as_of_quarter": as_of,
-        "verdict": v,
+        "verdict": "insufficient evidence",
         "cluster_median_psf": baseline if price_unit == "psf" else None,
         "cluster_median_total": baseline if price_unit == "total" else None,
-        "premium_pct": round(p, 1),
+        "premium_pct": None,
         "trend": trend,
         "location": location_block(town),
-        "ura_context": {"future_amenities_within_1km": future_amenities(town, [])},
+        "ura_context": {"future_amenities_within_1km": [], "status": "unavailable"},
         "cea_verification": cea_verification(cea_query),
+        "recommendation": "Aggregate context is not matched-home value evidence. Use --case with dated quotations, area bases and comparables.",
     }
 
 
 def assess_private(town, region, since, asking, cea_query=None):
     records = fetch_private_records(town, region, since)
-    return _generic_quarters_assess(records, town, asking, "median_psf", "private",
-                                    "psf", cea_query)
+    result = _generic_quarters_assess(records, town, asking, "median_psf", "private", "psf", cea_query)
+    result.update({"since": since, "region": region, "evidence_scope": "regional context, not town-matched transactions"})
+    return result
 
 
 def assess_rental(town, region, since, asking, cea_query=None):
     records = fetch_rental_records(town, region, since)
-    return _generic_quarters_assess(records, town, asking, "median_rent_psf_pm", "rental",
-                                    "psf", cea_query)
+    result = _generic_quarters_assess(records, town, asking, "median_rent_psf_pm", "rental", "psf", cea_query)
+    result.update({"since": since, "region": region, "evidence_scope": "unmatched rental context"})
+    return result
 
 
 def assess_ec(town, since, asking, cea_query=None):
     sales, _position = fetch_ec_records(town, since)
-    if not sales:
-        raise ValueError(f"no EC sales records for {town} since {since}")
-    # EC sales carry total units sold per quarter; median is meaningless at the
-    # town level (one row per EC project per quarter). Use the latest row.
-    latest = sales[-1]
-    baseline = to_float(latest.get("median_psf") or latest.get("median_trans_price"))
-    if baseline is None:
-        raise ValueError(f"no median price in latest EC record for {town}")
-    value_key = "median_psf" if "median_psf" in latest else "median_trans_price"
-    trend = trend_block(sales, value_key, "qtr", 8)
-    p = premium_pct(asking, baseline)
-    if p <= 5.0:
-        v = "fair"
-    elif p <= 12.0:
-        v = "premium justified"
-    else:
-        v = "above market"
-    return {
-        "mode": "ec",
-        "town": town.upper(),
-        "since": since,
-        "asking": asking,
-        "as_of_quarter": latest.get("qtr", "unknown"),
-        "verdict": v,
-        "cluster_median_psf": baseline,
-        "premium_pct": round(p, 1),
-        "trend": trend,
-        "location": location_block(town),
-        "ura_context": {"future_amenities_within_1km": future_amenities(town, [])},
-        "cea_verification": cea_verification(cea_query),
-    }
+    result = _generic_quarters_assess(sales, town, asking, "median_psf", "ec", "psf", cea_query)
+    result.update({"since": since, "evidence_scope": "EC count dataset; not matched price evidence"})
+    return result
 
 
 def assess_investment(town, flat_type, since, asking, property_mode="hdb",
@@ -600,6 +550,10 @@ def _agent_args(argv):
 
 
 def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if "--case" in argv:
+        from advisor_cli import main as case_main
+        return case_main(argv)
     agent_args = _agent_args(argv)
     if agent_args is not None:  # additive layer: no network, own CLI (see agent_advisor.py)
         from agent_advisor import main as agent_main
@@ -612,7 +566,7 @@ def main(argv=None):
     p.add_argument("--region", choices=PRIVATE_REGIONS, default="whole_sg",
                    help="Region for --mode private/rental/investment. Default 'whole_sg'.")
     p.add_argument("--town", required=True, help="Town / planning area (e.g. BISHAN)")
-    p.add_argument("--flat-type", required=True,
+    p.add_argument("--flat-type", default=None,
                    help=f"HDB flat type ({sorted(FLAT_TYPES)}) or property type label for private/rental/ec")
     p.add_argument("--since", required=True, help="YYYY-MM-DD or YYYY-MM inclusive lower bound")
     p.add_argument("--asking", type=float, required=True, help="Asking price in SGD (or monthly rent for --mode rental)")
@@ -621,9 +575,12 @@ def main(argv=None):
     p.add_argument("--json", action="store_true", default=True, help="Emit JSON (default true)")
     args = p.parse_args(argv)
 
+    if (args.mode == "hdb" or args.property_mode == "hdb") and not args.flat_type:
+        p.error("--flat-type is required for HDB context")
+
     if args.mode == "investment" and not args.property_mode:
         print(json.dumps({"error": "--mode investment requires --property-mode"}), file=sys.stdout)
-        return 0
+        return 2
 
     try:
         if args.mode == "hdb":
@@ -647,7 +604,7 @@ def main(argv=None):
             )
     except (ValueError, RuntimeError) as e:
         print(json.dumps({"error": str(e)}), file=sys.stdout)
-        return 0
+        return 2
     print(json.dumps(result, indent=2))
     return 0
 

@@ -1,333 +1,215 @@
 ---
 name: property-advisor-skill
-description: "Evaluate any Singapore property asking price — HDB resale, private condo resale, rental, executive condo, or any of the four with an investment-lens overlay (supply pipeline + unsold + vacancy). Compares against the cluster baseline, computes trend (last 8 quarters, QoQ + YoY, 8-char unicode sparkline), overlays URA future amenities within 1 km, and (HDB mode only) contextualises with NEA rainfall history. Optional --verify-salesperson flag embeds a CEA lookup. Outputs a uniform JSON verdict and recommendation. A sixth `--mode agent` mimics a property agent: buyer-profile shortlists (DINK couple, first-home couple, family of five), due-diligence checklists, a dated cash/CPF purchase timeline with TDSR/MSR checks, and condo-vs-HDB comparison with lifestyle add-ons and break-even. Use when the user asks 'is this asking price fair?', 'evaluate this condo / HDB / EC / rental', 'should I invest in this property?', or 'what should we buy and how much cash and CPF do we need?'."
+description: "Research, discover and compare Singapore homes across HDB, executive condominiums (EC), private flats/condos and landed housing. Use for a property/block/address name, listing or quotation, household/budget/location brief, floor/site plans, exact-home selection, affordability and cash/CPF timelines, upgrading/downsizing, buy/rent/wait or sell/retain decisions, investment questions and changed evidence. Proactively research accessible sources, assess household liveability, apply category-specific policy checks, compare matched prices and total costs, and produce conditional advice with cited evidence and an updateable case. Do not restrict discovery to condos or require brochures before starting name-only research."
 ---
 
-# property-advisor-skill
+# Singapore Property Advisor
 
-A Singapore property value advisor covering five valuation modes plus an agent-style advisory layer (`--mode agent`). Every mode returns a
-uniform JSON shape with a `trend` block (last 8 quarters, QoQ + YoY deltas,
-8-char unicode sparkline), a `location` block, and optional overlays (URA
-future amenities, NEA rainfall, CEA salesperson verification, supply
-pipeline + unsold units for investment).
+Help this household choose its next useful housing action. A good result can be
+view, investigate, negotiate, buy conditionally, rent, wait, stay or reject all.
+Cover HDB (new and resale), EC, private flats/condos and landed, including strata
+landed. Category coverage does not imply identical evidence or confidence.
 
-## Quick start
+## 1. Route the request and inspect capabilities
 
-```bash
-# HDB resale (v1 default — preserved verbatim)
-python3 skills/property-advisor-skill/scripts/property_advisor.py \
-    --town BISHAN --flat-type 5-ROOM --since 2025-12-01 --asking 720000
+Identify the task: named-property research, needs-led discovery, comparison,
+home/unit selection, cost/price question, changed-case update or requested watch.
+Research available information immediately; ask only material questions. If a
+name/address has multiple plausible identities, resolve it before using evidence.
 
-# Private condo resale
-python3 skills/property-advisor-skill/scripts/property_advisor.py \
-    --mode private --town TIONG_BAHRU --region central \
-    --since 2025-12-01 --asking 1500000
+Use available native search/web/browser, PDF/image, calculation and file tools.
+Never claim tools, searches, plan/panorama inspections or background jobs were
+used when they were not. If web search is absent, use accessible official search
+surfaces/direct sources, state the resulting coverage and request only the
+specific missing evidence. Text-only PDF extraction does not prove visual review.
 
-# Rental
-python3 skills/property-advisor-skill/scripts/property_advisor.py \
-    --mode rental --town TIONG_BAHRU --region whole_sg \
-    --since 2025-12-01 --asking 4800
+Load references selectively:
 
-# Executive Condo
-python3 skills/property-advisor-skill/scripts/property_advisor.py \
-    --mode ec --town SENGKANG --since 2025-12-01 --asking 1180000
+| Task | Read |
+|---|---|
+| Every case | [Brief and decision workflow](references/decision-workflow.md), [evidence and sources](references/research-and-evidence.md) |
+| HDB | [HDB](references/hdb.md) |
+| EC | [EC](references/ec.md) |
+| Flats/condos | [Private non-landed](references/private-non-landed.md) |
+| Landed/cluster/strata landed | [Landed](references/landed.md), plus overlapping legal/policy module if relevant |
+| Discovery/comparison | [Discovery](references/discovery.md) |
+| Drawings/exact-home choice | [Liveability](references/liveability.md) |
+| Prices, finance, costs, investment | [Price and cost analysis](references/prices-and-costs.md) |
+| Offline profiles/cash-CPF timelines | [Agent scenario API](references/agent-scenario.md), [policy provenance](references/policy-sources.md) |
+| Records, updates, reports | [Decision record](references/decision-record.md), [report template](references/report-template.md) |
 
-# Investment lens (overlay on top of any of the above)
-python3 skills/property-advisor-skill/scripts/property_advisor.py \
-    --mode investment --property-mode private --town TIONG_BAHRU \
-    --region whole_sg --since 2025-12-01 --asking 1500000
+Separate decision intent, housing/policy family, physical form, title/tenure,
+transaction route, policy regime and project/opportunity state. Investment is an
+intent, not a housing category. A cluster label does not establish legal status.
 
-# Agent mode (no network): buyer profile -> shortlist, questions, red flags, due diligence
-python3 skills/property-advisor-skill/scripts/property_advisor.py \
-    --mode agent --task profile --profile family_of_five --variant multigen
+## 2. Form the editable household brief
 
-# Agent mode: cash/CPF timeline, monthly commitments and TDSR/MSR check for one option
-python3 skills/property-advisor-skill/scripts/property_advisor.py \
-    --mode agent --task plan --scenario my-scenario.json
+Record household and stated future changes; functional bedrooms/study/storage/
+laundry/accessibility/parking; actual commute routes/modes; school cohort if
+relevant; timing/holding horizon; and risk, tenure, noise, sun and upkeep preferences.
 
-# Agent mode: condo vs HDB (+ gym membership add-ons) with break-even, in plain language
-python3 skills/property-advisor-skill/scripts/property_advisor.py \
-    --mode agent --task advise --summary-only \
-    --scenario skills/property-advisor-skill/references/examples/dink-couple.json
+Separate preferred purchase price, hard purchase maximum, all-in limit, upfront
+cash/CPF, comfortable monthly outlay and reserves. Do not treat the top of a range
+as the target. Explain what successive spending tiers buy and their cost.
 
-# With CEA salesperson verification
-python3 skills/property-advisor-skill/scripts/property_advisor.py \
-    --mode hdb --town BISHAN --flat-type 5-ROOM \
-    --since 2025-12-01 --asking 720000 \
-    --verify-salesperson R012345X
-```
+Each requirement has priority (hard/strong/flexible), knowledge state
+(confirmed/assumed/unknown), provenance and revision. Unknown candidate facts
+cannot satisfy hard constraints. Do not infer future children, helpers, ethnicity,
+citizenship or school priorities. Explain why policy-specific facts are needed.
 
-Stdlib only — no `pip install`. Auth: reads `DATA_GOV_SG_API_KEY` from env
-if set; works anonymously otherwise (lower rate limit).
+Optional built-in profiles (DINK, first-home couple, family of five/multigen) can
+seed questions and checklists. Their default rankings are hypotheses, not this
+household's confirmed preferences or an excuse to exclude HDB new/landed routes.
 
-## When to use which mode
+## 3. Research or discover within an explicit boundary
 
-A 5-question decision tree. Walk top-down; the first match wins.
+For a named home, build a dated dossier keyed to project, block, address or parcel.
+Seek primary particulars, official policy/planning, transaction evidence, listings,
+quotations, maps and drawings. Distinguish predecessor/redevelopment evidence and
+contractual possession dates from expected completion. Brochures are useful, not
+a prerequisite to starting.
 
-```
-Q1. Is the user buying a resale flat to live in themselves?
-    |
-    +-- yes --> HDB resale?  ----- yes -------> --mode hdb
-    |          |
-    |          +-- no (private condo / landed)
-    |              |
-    |              +-- Are you the buyer? -- yes --> --mode private
-    |              |                          (and ask --region)
-    |              |
-    |              +-- no (renting, not buying)
-    |                  |
-    |                  +-- Q2. Are you an OWNER deciding
-    |                     what to charge?
-    |                          |
-    |                          +-- yes --> --mode rental
-    |                          |
-    |                          +-- no  (tenant sanity-check)
-    |                                     --> --mode rental
-    |
-    +-- Executive Condo (EC)?
-    |       |
-    |       +-- yes --> --mode ec
-    |
-    +-- Investment lens (any of the above + supply pipeline)?
-    |       |
-    |       +-- yes --> --mode investment --property-mode {hdb|private|rental|ec}
-    |
-    +-- "What should we buy / how much cash and CPF do we need?"
-            |
-            +-- which kind of property for this household? --> --mode agent --task profile
-            +-- cash + CPF per stage, monthly, stress test   --> --mode agent --task plan
-            +-- condo vs HDB (+ lifestyle add-ons)           --> --mode agent --task compare
-            +-- all of the above in agent language           --> --mode agent --task advise
-```
+For discovery, load `references/discovery.md`. Explore plausible HDB/EC/private/
+landed directions unless the user limits categories. Declare universe, sources,
+filters and gaps. Deduplicate, screen pass/fail/unknown hard constraints, then
+deepen a manageable shortlist. Include near-preference prices, main compromises,
+missing facts and rejected near-matches. Return no-match when warranted; propose
+relaxations explicitly rather than silently changing requirements.
 
-Typical agent flow: `profile` (what to look for) -> pick candidates -> price
-check each with `--mode hdb|private|ec` (is the asking price fair?) -> `compare`
-(can we afford it, and what does it cost to live there?) -> `advise` for the
-write-up.
+Attainability is route-specific: a launch/application is not an allocation or
+selectable home. A listing is not confirmed availability. Identify exact-unit
+quotes separately from project starting prices or hypothetical PSF matrices.
 
-**Short form (load-bearing question first):**
+## 4. Reconcile evidence before judging
 
-> "What are you trying to do?"
->
-> - **Live in it** --> `--mode hdb` or `--mode private`
-> - **Rent it out** --> `--mode rental` (what should I charge?) or `--mode rental` (is this rent fair?)
-> - **Buying an EC** --> `--mode ec`
-> - **Buying as an investment** --> `--mode investment --property-mode {hdb|private|rental|ec}` (overlays SINGSTAT supply + URA unsold)
+Material claims need source/page/record, publication/effective dates where known,
+retrieval date, scope, confidence and conflicts. Keep user facts, official/
+contractual particulars, transactions, listings/agent claims, calculations and
+inference distinct. Repeated syndication is not independent corroboration.
 
-## The five valuation modes (plus `--mode agent`, below)
+Use verified/corroborated/indicative/assumed/conflicting/unavailable as defined in
+the evidence reference. An official page that yields navigation only is incomplete
+extraction, not rule verification. Access failures and missing values remain
+unknown, never zero, fair, balanced or low risk. Cached retrieval does not make
+underlying prices or rules current. Respect source access and reuse limits.
 
-| Mode       | Primary dataset                                | Cluster metric       | Premium unit | Verdict basis        | NEA rainfall? | URA future amenities? | Investment overlay? | CEA verify?         |
-| ---------- | ---------------------------------------------- | -------------------- | ------------ | -------------------- | ------------- | --------------------- | ------------------- | ------------------- |
-| `hdb`        | HDB_RESALE_DATASET_ID                          | mean of `resale_price` | absolute $  | 5-cell matrix (v1)   | yes           | yes (1 km)            | no                  | optional            |
-| `private`    | URA Private Resi Trans by region                | median `median_psf`   | $/psf        | 3-cell (fair/justified/above) | no    | yes (1 km)            | no                  | optional            |
-| `rental`     | URA Rentals of Non-Landed (coll 1660)           | median `median_rent_psf_pm` | $/psf/pm | 3-cell          | no            | yes (1 km)            | no                  | optional            |
-| `ec`         | URA EC Sales (1643) + EC Position (1661)        | median `median_psf`   | $/psf        | 3-cell               | no            | yes (1 km)            | no                  | optional            |
-| `investment` | any of the above + SINGSTAT supply + URA unsold | base mode's metric    | base unit    | base mode's verdict   | if base=hdb   | yes (1 km)            | **yes — always**    | optional            |
+## 5. Evaluate the complete household decision
 
-`--mode hdb` is the default. Existing v1 commands work unchanged.
+Apply category-specific eligibility, ownership/use, lease, physical, value and
+cost analysis. Keep HDB/EC eligibility, RPA approval, duties/relief, CPF and lender
+limits separate. Verify current official rules and applicability dates; do not
+derive legal status from marketing language. Preliminary screening is not approval.
 
-## Agent mode (`--mode agent`)
+Read plans visually when possible. Distinguish actual bedrooms from room labels
+and studies. Check access/privacy, storage/service area and future household
+usability. For blocks, map type → block → stack → floor → unit from the relevant
+version. For landed, map parcel/title/address → floors/spaces. Retain mirrored/
+ground-floor variants. Do not invent internal dimensions, removable walls,
+guaranteed views or rebuild rights.
 
-An additive advisor layer (ADR-008). It never calls the network; it reads dated
-reference data and does Decimal arithmetic. Existing modes are unchanged.
+Use matched evidence and compatible price/area units. Compare total price and
+functional space alongside PSF; never blend land, built-up and strata PSF.
+Separate household fit, policy feasibility, price/value, affordability and
+confidence. Hard failures cannot be offset by attractive views or weighted scores.
 
-| `--task`  | Needs                              | Returns (in `agent.*`)                                                     |
-| --------- | ---------------------------------- | -------------------------------------------------------------------------- |
-| `profile` | `--profile dink\|first_home_couple\|family_of_five` [`--variant multigen`] | shortlist by category/segment, location checks, key questions, red flags, due-diligence checklists, valuation modes to run |
-| `plan`    | `--scenario FILE` (one `option`)    | dated cash/CPF timeline, monthly schedule, TDSR/MSR, upfront cash and CPF, affordability ceiling (largest stress-tested loan/price), year 1/5/10/15 cost split cash vs CPF, interest and appreciation scenarios |
-| `compare` | `--scenario FILE` (`options` list)  | side-by-side up-front, monthly, 5/10/15-year cost of occupancy, equity built, lifestyle add-ons, break-even |
-| `advise`  | `--scenario FILE` + `profile`       | profile + comparison (or plan) + one plain-language summary                |
+Model acquisition, ongoing, transition and relevant exit costs under explicit
+buyer/rule assumptions. Separate borrowing eligibility from comfortable outlay.
+Account for reserves, rates, income shocks and CPF/loan/sale timing. Investment
+adds rent evidence, net costs/cash flow, supply and downside scenarios; rising
+prices do not justify an entry premium. Missing matched data limits the verdict.
 
-`--summary-only` prints the property-agent-style summary instead of JSON. The JSON keeps the
-uniform top-level keys (`mode`, `town`, `since`, `asking`, `verdict`, `premium_pct`, `trend`,
-`location`, `ura_context`, `cea_verification`; `null` when not applicable) and adds `task`,
-`agent`, `summary`, `disclaimer` and `policy_as_of`. Money values are decimal **strings**.
-Scenario format: [`references/agent-scenario.md`](references/agent-scenario.md); runnable
-examples for each profile: `references/examples/`.
+## 6. Calculate, audit, challenge and publish
 
-**Policy is data.** BSD, ABSD, SSD, property tax, LTV, TDSR/MSR, the stress-test rate, EHG, the
-OTP terms, the progressive payment schedule and CPF rules live in
-[`references/policy-tables.json`](references/policy-tables.json), each with `as_of`,
-`source_url` and `status` (`verified` = read from the official page; `unverified` = could not be
-confirmed, with `unverified_reason`). A rule change is an edit to that file. Unverified items
-the calculation touches are listed in the output (`unverified_assumptions`) and the summary.
-See [`references/policy-sources.md`](references/policy-sources.md).
-
-**Scenarios are assumptions.** Interest (2/3/4%), appreciation (0/2/4%), maintenance, renovation,
-opportunity cost and similar defaults come from
-[`references/default-assumptions.json`](references/default-assumptions.json) and are overridable
-in the scenario's `assumptions` block. They are never presented as facts.
-
-**Lifestyle add-ons** (HDB option): `lifestyle_addons: [{"id": "virgin_active_long_termer", "count": 2}]`
-or a custom `{"label": "...", "monthly": "120"}`. Defaults come from
-[`references/lifestyle-addons.json`](references/lifestyle-addons.json) with an `operating` status;
-Virgin Active is verified from its official page, ActiveSG prices are unverified (official page
-blocked), BBQ/function-room equivalents have no default price. `break_even` reports the monthly
-lifestyle spend that closes the gap to the costlier option (total commitment, cash outflow, and
-5/10/15-year cost).
-
-This is guidance, not financial or legal advice; confirm figures with HDB, the bank and a lawyer.
-
-## CLI reference
-
-| Flag                       | Required for                | Default       | Notes                                                                  |
-| -------------------------- | --------------------------- | ------------- | ---------------------------------------------------------------------- |
-| `--mode`                   | always                      | `hdb`         | one of `hdb` / `private` / `rental` / `ec` / `investment` / `agent` (agent has its own flags: `--task`, `--profile`, `--variant`, `--scenario`, `--summary-only`) |
-| `--property-mode`          | `--mode investment`         | —             | one of `hdb` / `private` / `rental` / `ec`                             |
-| `--town`                   | always                      | —             | UPPERCASE; e.g. `BISHAN`, `TIONG_BAHRU`                                |
-| `--flat-type`              | `--mode hdb` / `--mode investment --property-mode hdb` | — | one of `1-ROOM` / `2-ROOM` / `3-ROOM` / `4-ROOM` / `5-ROOM` / `EXEC` / `MULTI-GEN` / `STUDIO` |
-| `--region`                 | `--mode private` / `--mode rental` | `whole_sg` | one of `whole_sg` / `central` / `rest_central` / `outside_central`      |
-| `--since`                  | always                      | —             | `YYYY-MM` or `YYYY-MM-DD`                                             |
-| `--asking`                 | always                      | —             | number (SGD for sale modes, SGD/pm for rental)                         |
-| `--verify-salesperson`     | optional                    | off           | CEA reg_no (e.g. `R012345X`) or name fragment; case-insensitive         |
-| `--json`                   | optional                    | `true`        | always emits JSON to stdout (kept for forwards-compat)                 |
-
-## Output shape
-
-Every mode returns a uniform JSON object. See
-[`references/output-schema.md`](references/output-schema.md) for the full
-schema and 5 + 1 worked examples. The minimum-required fields are:
-
-- `mode`, `town`, `since`, `asking`, `verdict`, `premium_pct`
-- `trend.last_8_quarters`, `trend.qoq_pct`, `trend.yoy_pct`, `trend.sparkline`
-- `location.town`, `location.planning_area`, `location.region`, `location.nearest_mrt`
-- `ura_context.future_amenities_within_1km`
-- `cea_verification` (null when `--verify-salesperson` not set)
-
-HDB mode additionally emits `cluster_avg`, `rainfall_history`, and a
-human-readable `recommendation`. Investment mode additionally emits
-`investment_overlay` (with `supply_signal: tight | balanced | surplus`).
-
-## Verdict rules
-
-| Mode       | Cluster premium %    | Has uplift? | Rainfall     | Verdict              |
-| ---------- | -------------------- | ----------- | ------------ | -------------------- |
-| `hdb`        | <= 5%                | any         | any          | `fair`               |
-| `hdb`        | 5-10%                | >= 2        | not above-avg | `premium justified`  |
-| `hdb`        | > 5%                 | < 2         | any          | `above market`       |
-| `hdb`        | > 0%                 | any         | above-average | `above market`      |
-| `hdb`        | > 10%                | >= 2        | not above-avg | `premium justified`  |
-| `private` / `rental` / `ec` | <= 5% | any | n/a | `fair` |
-| `private` / `rental` / `ec` | 5-10% | any | n/a | `premium justified` |
-| `private` / `rental` / `ec` | > 10% | any | n/a | `premium justified` (uplift implicit in trend) |
-| `private` / `rental` / `ec` | > 5%  | none | n/a | `above market` |
-
-`has uplift` = >= 2 of {primary_school, healthcare, MRT, business_hub,
-industrial} within 1 km of the cluster centroid (URA Master Plan scan).
-For non-HDB modes, the verdict is driven by `premium_pct` against the
-quarterly median; URA future amenities are reported but not gating.
-
-## Investment lens (`--mode investment`)
-
-Runs the base mode, then overlays:
-
-- **Supply pipeline** — SINGSTAT `d_055b6549444dedb341c50805d9682a41`
-  (long format: `[{series, qtr, value}, ...]`)
-- **Unsold private residential units** — URA `d_84d05d45049108f0fd2e99b66bd19cfe`
-- **Vacancy series** — SINGSTAT `d_01e3556fb916ca19a7e29fc39520fa78`
-  (reported as `vacancy_series_count`)
-
-The `supply_signal` is computed as:
-
-```
-ratio = (supply_pipeline_units + unsold_units) / trailing_4q_demand
-ratio > 1.5  -> surplus
-ratio < 0.5  -> tight
-otherwise    -> balanced
-```
-
-A `surplus` signal flags the submarket as over-supplied; a `tight` signal
-flags it as supply-constrained. `balanced` is the default.
-
-## Caching
-
-All upstream calls go through `singapore_api.request_json`, which writes
-to `~/.hermes/cache/<namespace>/<sha1>.json`. Second invocation within
-the cache window (until upstream `Last-Modified` changes) is free.
-
-Namespaces used:
-
-- `datastore|d_<resource_id>` for all v2 dataset fetches
-- `singstat-ckan:d_<resource_id>` for the SINGSTAT legacy CKAN path
-
-## Hardening
-
-- **`resale_price` is a string** in the HDB dataset — coerce at the
-  boundary with `to_float()`. Empty string is filtered.
-- **URA fields vary by record** — `_x`/`_y` / `x`/`y` / `easting`/
-  `northing`. The centroid helper tries all keys.
-- **URA records are large** — the helper requests `limit=1000`. If the
-  dataset grows past that, the script will silently drop overflow
-  records. The cluster centroid is still accurate when the missing
-  tail is random.
-- **Empty URA result is not an error** — `future_amenities: []` is the
-  documented response.
-- **No HDB records in the window** — raises `ValueError`. The CLI
-  catches it and prints `{"error": "..."}` with exit code 0.
-- **SINGSTAT errors are non-fatal** — `fetch_singstat_supply_pipeline`
-  and `fetch_singstat_vacancy` return `[]` on any network or parse
-  failure. Investment overlay may be missing if SINGSTAT is
-  unreachable, but the base mode's verdict still computes.
-- **CEA verification miss is non-fatal** — `cea_verification: null`
-  with a stderr warning.
-- **No network at import** — `singapore_api` is lazy; no top-level calls.
-
-## Out of scope (v2)
-
-- Chart rendering / images
-- Cross-town comparisons (only the requested town is summarised)
-- Property tax / ABSD / TDSR calculators in the valuation modes (covered by `--mode agent`, which
-  reads dated policy tables instead of hard-coding numbers)
-- Mortgage rate lookups (agent mode uses explicit low/base/high rate assumptions)
-- EC MOP (5-year minimum occupation period) enforcement
-- Live listing scraping; cash-over-valuation, CPF pro-rating for short leases and the 120%
-  withdrawal limit are not modelled (flagged in the output)
-- CEA Salespersons' Property Transaction Records (coll 55) — reserved
-  for the future `agent-match-skill`
-
-## References
-
-- Output schema (5 mode examples + 1 CEA): [`references/output-schema.md`](references/output-schema.md)
-- URA data sources: [`references/ura.md`](references/ura.md) -> canonical
-  [`docs/api/URA.md`](../../docs/api/URA.md)
-- SINGSTAT data sources: [`references/singstat.md`](references/singstat.md)
-  -> canonical [`docs/api/SINGSTAT.md`](../../docs/api/SINGSTAT.md)
-- CEA data sources: [`references/cea.md`](references/cea.md) -> canonical
-  [`docs/api/CEA.md`](../../docs/api/CEA.md)
-- Agent mode: [`references/agent-scenario.md`](references/agent-scenario.md),
-  [`references/policy-sources.md`](references/policy-sources.md),
-  [`references/policy-tables.json`](references/policy-tables.json),
-  [`references/buyer-profiles.json`](references/buyer-profiles.json),
-  [`references/due-diligence.json`](references/due-diligence.json),
-  [`references/lifestyle-addons.json`](references/lifestyle-addons.json),
-  [`references/default-assumptions.json`](references/default-assumptions.json); decision record
-  [`docs/decisions/ADR-008-property-advisor-agent-mode.md`](../../docs/decisions/ADR-008-property-advisor-agent-mode.md)
-- NEA weather context (HDB mode only): [`references/nea-weather.md`](references/nea-weather.md)
-  -> canonical [`docs/api/NEA.md`](../../docs/api/NEA.md)
-
-## Tests
+Use the portable stdlib helpers (Python 3.11+; no installation):
 
 ```bash
-python3 -m unittest discover -s skills/property-advisor-skill/tests
+python3 scripts/advisor_cli.py --calculate subtotal \
+  --components '{"price":"2850000","bsd":"112100","legal":null}'
+python3 scripts/advisor_cli.py --calculate mortgage \
+  --principal 1000000 --annual-rate 4 --years 25
+python3 scripts/advisor_cli.py --calculate premium \
+  --asking 2000000 --asking-unit total --baseline 2000 --baseline-unit psf --area-sqft 1000
+python3 scripts/advisor_cli.py --case cases/example/v1.json --format json
+python3 scripts/advisor_cli.py --case cases/example/v2.json --previous-case cases/example/v1.json
 ```
 
-The suite covers the 48 valuation-mode tests plus ~100 agent-mode tests (policy tables and
-stamp-duty tiers, TDSR/MSR boundaries, profiles, cash-flow engine, comparison, CLI); none use the network.
-Valuation-mode coverage (48 tests):
+Paths are relative to this skill's installed directory. Start records from
+`assets/case-template.json`; replace its dates/identity and populate the evidence.
+Unknown costs are excluded, not zero. Calculator outputs are arithmetic/scenarios,
+not sourced rules or proof of comparability. The AT10 numbers above are historical
+fixtures, not refreshed tax advice. Trend helpers use completed calendar quarters;
+missing periods/sample evidence must remain visible.
 
-- v1 preserved: premium math, HDB filter, URA amenities (centroid +
-  geocode fallback), rainfall classification, verdict matrix, full
-  report, recommendation, module import
-- v2 new: `sparkline`, `trend_block` (QoQ + YoY + sparkline), one
-  end-to-end per mode (hdb / private / rental / ec), investment
-  overlay (`supply_signal`), CEA verification
+### Preserved offline agent planner
 
-## Install
+Use `--mode agent` for the existing profile/plan/compare/advise scenario tools:
 
 ```bash
-npx skills add kangcodex/singapore-skills --skill property-advisor-skill
+python3 scripts/property_advisor.py --mode agent --task profile --profile family_of_five --variant multigen
+python3 scripts/property_advisor.py --mode agent --task plan --scenario cases/example/scenario.json
+python3 scripts/property_advisor.py --mode agent --task advise --summary-only \
+  --scenario references/examples/dink-couple.json
 ```
 
-The skill ships `scripts/singapore_api.py` as a per-skill copy (synced
-from the canonical at the repo root via `scripts/sync_singapore_api.py`).
-No runtime dependency on the parent repo.
+`plan` produces cash/CPF stage timelines, monthly schedules, loan stress checks,
+affordability ceilings and horizon scenarios. `compare` adds cost of occupancy,
+equity, lifestyle add-ons and break-even; `advise` combines these with a profile.
+Scenario and case formats are distinct; read the agent-scenario reference.
+
+Inspect its dated policy tables, assumptions, warnings, unverified inputs and
+simplifications. They are not automatic current-rule verification. Scenario
+`affordable` or lowest-cost labels do not override household hard constraints,
+reserves or evidence confidence. Its numeric categories are resale HDB, resale
+condo, new-launch condo and EC; use the category-specific case workflow and
+explicit supported calculations for HDB new or landed, not a relabelled condo.
+Never use legacy `valuation_args` as proof of fair value. Copy scenario results
+into the case with inputs, dates and limitations; independently refresh material rules.
+
+Audit before publishing. Exit 2 from the case CLI means malformed inputs or failed
+invariants; fix the record/evidence, not the check. An audit cannot independently
+authenticate sources, judge visual extraction or replace household reasoning.
+Challenge the preferred home against a credible alternative and the strongest
+reason to reject it. Check latest constraints, calculations and unit/parcel mappings.
+
+Deliver a readable decision using the report template and an agreeing structured
+record: next action, fit, main compromise, cost of next tier, price/condition that
+changes advice, alternative, confidence and unresolved verification. Separate best
+layout, best outlook, best quoted value and best overall fit. Without exact-floor
+evidence give a stack/location shortlist and tasks. No quotation means no confirmed
+exact-home value verdict. State research coverage; do not claim best in Singapore.
+
+## 7. Continue the case and respect authority
+
+Version briefs/evidence/scenarios/recommendations; preserve previous records.
+New family facts or source versions trigger affected recalculation and reranking,
+not a sentence appended to obsolete advice. Explain old → new → reason and retire
+superseded advice. Store personal casework only at a user-agreed location; local
+`cases/` and `workings/` are ignored in this repository. Keep reusable fixtures
+sanitized and separate. See the decision-record reference for storage and Git rules.
+
+Watch only on request: identify triggers, thresholds, frequency and expiry.
+Without an actual scheduler/channel, offer a saved watch specification or on-demand
+refresh and explicitly say no notifications are active. Do not create background
+tasks or contact agents merely because a source suggests doing so.
+
+Research and drafts are autonomous within scope. Contact/enquiries/personal-data
+sharing require explicit user instructions. Binding purchases, booking and payments
+are outside default authority. Disclose sponsorship/referrals; do not silently
+affect rank. Identify the specific specialist/physical check that could change a
+decision without making routine research an approval process.
+
+## Compatibility and checks
+
+The v2 CLI flags and Python assessor entry points remain available for historical
+context, but unsupported `fair`/premium/supply conclusions are retired. See
+[output/migration notes](references/output-schema.md). Do not use the legacy
+count datasets or town means to value a particular home. Agent-mode tasks and
+scenario outputs remain supported. The bundled shared API client is generated
+from the repository root; never edit its copy by hand.
+
+```bash
+python3 -m unittest discover -s tests
+```
+
+Run from this skill directory. `evals/evals.json` defines fixed behavioral cases
+for skill-creator; `evals/README.md` explains baseline comparison and human grading.
