@@ -1,0 +1,23 @@
+{
+  "schema_version": "3.0",
+  "case_id": "replace-with-local-case-id",
+  "version": 1,
+  "research_date": "2026-10-23",
+  "buyer_brief": {
+    "requirements": [],
+    "budget": {"currency": "SGD", "preferred_price": null, "maximum_price": null, "all_in_limit": null, "monthly_comfort": null, "reserve_minimum": null},
+    "assumptions": [],
+    "unknowns": []
+  },
+  "search_brief": {"categories": ["hdb", "ec", "private_non_landed", "landed"], "coverage": "Not researched yet", "sources": [], "exclusions": [], "relaxations": []},
+  "properties": [],
+  "candidates": [],
+  "evidence": [],
+  "comparables": [],
+  "cost_scenarios": [],
+  "recommendations": [],
+  "policy_assessments": [],
+  "source_access": [],
+  "history": [],
+  "watchlist": null
+}

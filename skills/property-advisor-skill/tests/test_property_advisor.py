@@ -10,6 +10,7 @@ Pattern follows tests/test_singapore_api.py:
 Run: python3 -m unittest discover -s skills/property-advisor-skill/tests
 """
 import importlib.util
+import io
 import json
 import sys
 import unittest
@@ -65,21 +66,21 @@ def _rainfall_records():
 
 def _private_records():
     return [
-        {"qtr": f"202{i}-Q1", "median_psf": 1400 + i * 50, "sale_count": 100 - i * 5}
+        {"qtr": f"{2024 + i // 4}-Q{i % 4 + 1}", "median_psf": 1400 + i * 50, "sale_count": 100 - i * 5}
         for i in range(8)
     ]
 
 
 def _rental_records():
     return [
-        {"qtr": f"202{i}-Q1", "median_rent_psf_pm": 4.5 + i * 0.1, "sale_count": 50}
+        {"qtr": f"{2024 + i // 4}-Q{i % 4 + 1}", "median_rent_psf_pm": 4.5 + i * 0.1, "sale_count": 50}
         for i in range(8)
     ]
 
 
 def _ec_sales_records():
     return [
-        {"qtr": f"202{i}-Q1", "median_psf": 1100 + i * 30, "sale_count": 80}
+        {"qtr": f"{2024 + i // 4}-Q{i % 4 + 1}", "median_psf": 1100 + i * 30, "sale_count": 80}
         for i in range(8)
     ]
 
@@ -127,7 +128,8 @@ class TestPremiumMath(unittest.TestCase):
 
     def test_premium_pct_zero_baseline(self):
         m = _load_module()
-        self.assertEqual(m.premium_pct(720000, 0), 0.0)
+        with self.assertRaises(ValueError):
+            m.premium_pct(720000, 0)
 
     def test_premium_pct_asking_below_baseline(self):
         m = _load_module()
@@ -182,9 +184,9 @@ class TestHdbFilter(unittest.TestCase):
     def test_hdb_records_filters_by_month(self):
         m = _load_module()
         rows = [
-            {"month": "2025-12", "resale_price": "700000"},
-            {"month": "2025-11", "resale_price": "690000"},
-            {"month": "2025-06", "resale_price": "650000"},
+            {"month": "2025-12", "town": "BISHAN", "flat_type": "5 ROOM", "resale_price": "700000"},
+            {"month": "2025-11", "town": "BISHAN", "flat_type": "5 ROOM", "resale_price": "690000"},
+            {"month": "2025-06", "town": "BISHAN", "flat_type": "5 ROOM", "resale_price": "650000"},
         ]
         with patch.object(m, "fetch_dataset_rows", return_value=rows), \
              patch.object(m, "HDB_RESALE_DATASET_ID", "fake-id"):
@@ -263,25 +265,25 @@ class TestVerdictMatrix(unittest.TestCase):
         self.m = _load_module()
 
     def test_fair(self):
-        self.assertEqual(self.m.verdict(710000, 700000, ["MRT"], "typical"), "fair")
+        self.assertEqual(self.m.verdict(710000, 700000, ["MRT"], "typical"), "insufficient evidence")
 
     def test_premium_justified_with_uplift(self):
         # 7% premium + 2 amenities + typical -> premium justified
         self.assertEqual(self.m.verdict(750000, 700000, ["MRT", "primary_school"], "typical"),
-                         "premium justified")
+                         "insufficient evidence")
 
     def test_above_market_no_uplift(self):
         # 7% premium + 0 amenities -> above market
-        self.assertEqual(self.m.verdict(750000, 700000, [], "typical"), "above market")
+        self.assertEqual(self.m.verdict(750000, 700000, [], "typical"), "insufficient evidence")
 
     def test_above_market_rain_above_avg(self):
         self.assertEqual(self.m.verdict(750000, 700000, ["MRT", "primary_school"], "above-average"),
-                         "above market")
+                          "insufficient evidence")
 
     def test_premium_justified_high_premium_strong_uplift(self):
         # 12% premium + 2 amenities + typical -> premium justified
         self.assertEqual(self.m.verdict(784000, 700000, ["MRT", "primary_school"], "typical"),
-                         "premium justified")
+                          "insufficient evidence")
 
 
 class TestAssess(unittest.TestCase):
@@ -300,7 +302,7 @@ class TestAssess(unittest.TestCase):
              patch.object(self.m, "HDB_RESALE_DATASET_ID", "fake-id"):
             out = self.m.assess_hdb("BISHAN", "5-ROOM", "2025-10", 720000)
         self.assertEqual(out["town"], "BISHAN")
-        self.assertEqual(out["verdict"], "fair")
+        self.assertEqual(out["verdict"], "insufficient evidence")
         self.assertEqual(out["cluster_avg"], 700000.0)
         self.assertIn("trend", out)
         self.assertIn("location", out)
@@ -331,11 +333,11 @@ class TestRecommendation(unittest.TestCase):
 
     def test_above_market_mentions_negotiate(self):
         out = self.m.recommendation("above market", 700000, 800000, [], "typical")
-        self.assertIn("negotiate", out.lower())
+        self.assertIn("matched transactions", out.lower())
 
     def test_premium_justified_mentions_amenities(self):
         out = self.m.recommendation("premium justified", 700000, 750000, ["MRT", "school"], "typical")
-        self.assertIn("amenities", out.lower())
+        self.assertIn("do not justify", out.lower())
 
 
 class TestModuleImport(unittest.TestCase):
@@ -382,7 +384,8 @@ class TestTrendBlock(unittest.TestCase):
 
     def test_trend_block_qoq_yoy_computed(self):
         m = _load_module()
-        records = [{"qtr": "2024-Q%d" % i, "value": float(100 + i * 5)} for i in range(1, 9)]
+        quarters = [f"{year}-Q{quarter}" for year in (2024, 2025) for quarter in range(1, 5)]
+        records = [{"qtr": qtr, "value": float(105 + i * 5)} for i, qtr in enumerate(quarters)]
         out = m.trend_block(records, "value", "qtr", 8)
         self.assertEqual(len(out["last_8_quarters"]), 8)
         self.assertEqual(len(out["sparkline"]), 8)
@@ -395,8 +398,8 @@ class TestTrendBlock(unittest.TestCase):
         m = _load_module()
         out = m.trend_block([], "value", "qtr", 8)
         self.assertEqual(out["last_8_quarters"], [])
-        self.assertEqual(out["qoq_pct"], 0.0)
-        self.assertEqual(out["yoy_pct"], 0.0)
+        self.assertIsNone(out["qoq_pct"])
+        self.assertIsNone(out["yoy_pct"])
         self.assertEqual(out["sparkline"], "")
 
 
@@ -442,7 +445,7 @@ class TestPrivateMode(unittest.TestCase):
              patch.object(self.m, "fetch_ura_master_plan", return_value={"result": {"records": []}}):
             out = self.m.assess_private("BISHAN", "whole_sg", "2024-01-01", 1800)
         self.assertEqual(out["mode"], "private")
-        self.assertEqual(out["as_of_quarter"], "2027-Q1")
+        self.assertEqual(out["as_of_quarter"], "2025-Q4")
         self.assertIn("cluster_median_psf", out)
         self.assertIn("trend", out)
         self.assertIn("location", out)
@@ -470,7 +473,7 @@ class TestRentalMode(unittest.TestCase):
              patch.object(self.m, "fetch_ura_master_plan", return_value={"result": {"records": []}}):
             out = self.m.assess_rental("BISHAN", "outside_central", "2024-01-01", 6.0)
         self.assertEqual(out["mode"], "rental")
-        self.assertEqual(out["as_of_quarter"], "2027-Q1")
+        self.assertEqual(out["as_of_quarter"], "2025-Q4")
         self.assertIn("cluster_median_psf", out)
         self.assertIn("trend", out)
         self.assertIn("location", out)
@@ -518,7 +521,7 @@ class TestInvestmentOverlay(unittest.TestCase):
         self.assertIn("investment_overlay", out)
         ovl = out["investment_overlay"]
         self.assertIn("supply_signal", ovl)
-        self.assertIn(ovl["supply_signal"], ("tight", "balanced", "surplus"))
+        self.assertEqual(ovl["supply_signal"], "unavailable")
         self.assertIn("supply_pipeline_units", ovl)
         self.assertIn("unsold_units", ovl)
         self.assertIn("trailing_4q_demand", ovl)
@@ -526,7 +529,8 @@ class TestInvestmentOverlay(unittest.TestCase):
         # With pipeline (13000) + unsold (4200) = 17200, trailing 4Q demand from
         # _private_records: 100, 95, 90, 85, 80, 75, 70, 65 -> last 4 = 70,75,80,85 = 310
         # ratio = 17200/310 ~= 55.5 -> surplus
-        self.assertEqual(ovl["supply_signal"], "surplus")
+        self.assertIsNone(ovl["supply_ratio"])
+        self.assertEqual(ovl["supply_pipeline_units"], 13000)
 
 
 class TestCeaVerification(unittest.TestCase):
@@ -557,6 +561,56 @@ class TestCeaVerification(unittest.TestCase):
         with patch.object(self.m, "fetch_cea_salesperson", side_effect=RuntimeError("network down")):
             out = self.m.cea_verification("R012345X")
         self.assertIsNone(out)
+
+    def test_ambiguous_name_does_not_verify_first_person(self):
+        rows = _cea_records() + [{"registration_no": "R999999A", "name": "Alice Tan", "status": "active", "agency": "Other"}]
+        with patch.object(self.m, "fetch_cea_salesperson", return_value=rows):
+            result = self.m.cea_verification("Alice")
+        self.assertIsNone(result)
+
+
+class TestEvidenceSafety(unittest.TestCase):
+    def test_missing_investment_base_exits_nonzero(self):
+        m = _load_module()
+        output = io.StringIO()
+        with patch("sys.stdout", output):
+            status = m.main(["--mode", "investment", "--town", "BISHAN", "--since", "2025-01", "--asking", "1000000"])
+        self.assertEqual(status, 2)
+        self.assertIn("property-mode", json.loads(output.getvalue())["error"])
+
+    def test_hdb_filter_is_applied_even_when_downloader_returns_all_rows(self):
+        m = _load_module()
+        rows = [
+            {"month": "2026-01", "town": "BISHAN", "flat_type": "5 ROOM"},
+            {"month": "2026-01", "town": "TAMPINES", "flat_type": "3 ROOM"},
+        ]
+        with patch.object(m, "fetch_dataset_rows", return_value=rows):
+            result = m.fetch_hdb_records("BISHAN", "5-ROOM", "2025-01")
+        self.assertEqual(len(result), 1)
+
+    def test_aggregate_psf_never_verdicts_on_total_asking_price(self):
+        m = _load_module()
+        with patch.object(m, "location_block", return_value={}), patch.object(m, "future_amenities", return_value=[]):
+            result = m._generic_quarters_assess(
+                [{"qtr": "2026-Q2", "median_psf": 2000}], "BISHAN", 2000000,
+                "median_psf", "private", "psf",
+            )
+        self.assertEqual(result["verdict"], "insufficient evidence")
+        self.assertIsNone(result["premium_pct"])
+
+    def test_empty_supply_is_unavailable_not_balanced(self):
+        m = _load_module()
+        with patch.object(m, "fetch_singstat_supply_pipeline", return_value=[]), patch.object(m, "fetch_ura_unsold_private_resi", return_value=[]), patch.object(m, "fetch_singstat_vacancy", return_value=[]):
+            result = m.investment_overlay_for()
+        self.assertEqual(result["supply_signal"], "unavailable")
+        self.assertIsNone(result["supply_ratio"])
+
+    def test_supply_uses_latest_not_historical_sum_or_maximum(self):
+        m = _load_module()
+        with patch.object(m, "fetch_singstat_supply_pipeline", return_value=_pipeline_records()), patch.object(m, "fetch_ura_unsold_private_resi", return_value=[{"quarter": "2025-Q4", "unsold_units": 9000}, {"quarter": "2026-Q1", "unsold_units": 4200}]), patch.object(m, "fetch_singstat_vacancy", return_value=[]):
+            result = m.investment_overlay_for()
+        self.assertEqual(result["supply_pipeline_units"], 13000)
+        self.assertEqual(result["unsold_units"], 4200)
 
 
 if __name__ == "__main__":
