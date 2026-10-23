@@ -1,6 +1,6 @@
 ---
 name: property-advisor-skill
-description: "Research, discover and compare Singapore homes across HDB, executive condominiums (EC), private flats/condos and landed housing. Use for a property/block/address name, listing or quotation, household/budget/location brief, floor/site plans, exact-home selection, affordability, upgrading/downsizing, buy/rent/wait or sell/retain decisions, investment questions and changed evidence. Proactively research accessible sources, assess household liveability, apply category-specific policy checks, compare matched prices and total costs, and produce conditional advice with cited evidence and an updateable case. Do not restrict discovery to condos or require brochures before starting name-only research."
+description: "Research, discover and compare Singapore homes across HDB, executive condominiums (EC), private flats/condos and landed housing. Use for a property/block/address name, listing or quotation, household/budget/location brief, floor/site plans, exact-home selection, affordability and cash/CPF timelines, upgrading/downsizing, buy/rent/wait or sell/retain decisions, investment questions and changed evidence. Proactively research accessible sources, assess household liveability, apply category-specific policy checks, compare matched prices and total costs, and produce conditional advice with cited evidence and an updateable case. Do not restrict discovery to condos or require brochures before starting name-only research."
 ---
 
 # Singapore Property Advisor
@@ -35,6 +35,7 @@ Load references selectively:
 | Discovery/comparison | [Discovery](references/discovery.md) |
 | Drawings/exact-home choice | [Liveability](references/liveability.md) |
 | Prices, finance, costs, investment | [Price and cost analysis](references/prices-and-costs.md) |
+| Offline profiles/cash-CPF timelines | [Agent scenario API](references/agent-scenario.md), [policy provenance](references/policy-sources.md) |
 | Records, updates, reports | [Decision record](references/decision-record.md), [report template](references/report-template.md) |
 
 Separate decision intent, housing/policy family, physical form, title/tenure,
@@ -55,6 +56,10 @@ Each requirement has priority (hard/strong/flexible), knowledge state
 (confirmed/assumed/unknown), provenance and revision. Unknown candidate facts
 cannot satisfy hard constraints. Do not infer future children, helpers, ethnicity,
 citizenship or school priorities. Explain why policy-specific facts are needed.
+
+Optional built-in profiles (DINK, first-home couple, family of five/multigen) can
+seed questions and checklists. Their default rankings are hypotheses, not this
+household's confirmed preferences or an excuse to exclude HDB new/landed routes.
 
 ## 3. Research or discover within an explicit boundary
 
@@ -135,11 +140,36 @@ not sourced rules or proof of comparability. The AT10 numbers above are historic
 fixtures, not refreshed tax advice. Trend helpers use completed calendar quarters;
 missing periods/sample evidence must remain visible.
 
-Audit before publishing. Exit 2 means malformed inputs or failed invariants; fix
-the record/evidence, not the check. An audit cannot independently authenticate
-sources, judge visual extraction or replace household reasoning. Challenge the
-preferred home against a credible alternative and the strongest reason to reject it.
-Check latest requirements, hard constraints, calculations and unit/parcel mappings.
+### Preserved offline agent planner
+
+Use `--mode agent` for the existing profile/plan/compare/advise scenario tools:
+
+```bash
+python3 scripts/property_advisor.py --mode agent --task profile --profile family_of_five --variant multigen
+python3 scripts/property_advisor.py --mode agent --task plan --scenario cases/example/scenario.json
+python3 scripts/property_advisor.py --mode agent --task advise --summary-only \
+  --scenario references/examples/dink-couple.json
+```
+
+`plan` produces cash/CPF stage timelines, monthly schedules, loan stress checks,
+affordability ceilings and horizon scenarios. `compare` adds cost of occupancy,
+equity, lifestyle add-ons and break-even; `advise` combines these with a profile.
+Scenario and case formats are distinct; read the agent-scenario reference.
+
+Inspect its dated policy tables, assumptions, warnings, unverified inputs and
+simplifications. They are not automatic current-rule verification. Scenario
+`affordable` or lowest-cost labels do not override household hard constraints,
+reserves or evidence confidence. Its numeric categories are resale HDB, resale
+condo, new-launch condo and EC; use the category-specific case workflow and
+explicit supported calculations for HDB new or landed, not a relabelled condo.
+Never use legacy `valuation_args` as proof of fair value. Copy scenario results
+into the case with inputs, dates and limitations; independently refresh material rules.
+
+Audit before publishing. Exit 2 from the case CLI means malformed inputs or failed
+invariants; fix the record/evidence, not the check. An audit cannot independently
+authenticate sources, judge visual extraction or replace household reasoning.
+Challenge the preferred home against a credible alternative and the strongest
+reason to reject it. Check latest constraints, calculations and unit/parcel mappings.
 
 Deliver a readable decision using the report template and an agreeing structured
 record: next action, fit, main compromise, cost of next tier, price/condition that
@@ -173,8 +203,9 @@ decision without making routine research an approval process.
 The v2 CLI flags and Python assessor entry points remain available for historical
 context, but unsupported `fair`/premium/supply conclusions are retired. See
 [output/migration notes](references/output-schema.md). Do not use the legacy
-count datasets or town means to value a particular home. The bundled shared API
-client is generated from the repository root; never edit its copy by hand.
+count datasets or town means to value a particular home. Agent-mode tasks and
+scenario outputs remain supported. The bundled shared API client is generated
+from the repository root; never edit its copy by hand.
 
 ```bash
 python3 -m unittest discover -s tests

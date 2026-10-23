@@ -297,3 +297,6 @@ prd/
 /skills/property-advisor-skill/cases/
 /skills/property-advisor-skill/evals/runs/
 /skills/property-advisor-skill/evals/benchmark*.json
+
+# Generated reports are local artifacts and are never committed
+reports/

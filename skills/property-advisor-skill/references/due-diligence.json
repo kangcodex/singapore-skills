@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "note": "Due-diligence checklists as data. Questions to ask and documents to see; guidance only. Policy figures live in policy-tables.json.",
+  "common_property": [
+    {"item": "Title and tenure", "check": "Search the title: freehold, 999-year, or 99-year with start date; encumbrances, caveats, and mortgages to be discharged."},
+    {"item": "Seller/owner checks", "check": "Confirm the registered owner's identity and authority to sell; tenancy in place; reason for sale."},
+    {"item": "Valuation vs asking", "check": "Compare asking with recent transactions using the existing --mode hdb/private/ec before offering; get the bank/HDB valuation and plan cash for any gap."},
+    {"item": "Unit-level factors", "check": "Floor, facing, view, noise, ventilation, layout efficiency, water seepage, renovation quality and permits."},
+    {"item": "Location risk", "check": "Flood-prone areas, dengue clusters, air quality, noise sources, upcoming URA developments (ura_context)."}
+  ],
+  "common_financial": [
+    {"item": "Affordability", "check": "Stress-tested TDSR (and MSR where it applies) passes with margin; run plan mode with low/base/high interest scenarios."},
+    {"item": "Cash and CPF at each stage", "check": "Know the minimum cash and CPF needed at option, exercise, stamp duty, legal fees and completion."},
+    {"item": "Loan approval", "check": "In-principle approval or HDB Flat Eligibility letter before exercising the option."},
+    {"item": "Buffer", "check": "Emergency fund and renovation budget remain after completion."},
+    {"item": "Exit costs", "check": "Seller's stamp duty exposure if sold early; CPF refund with accrued interest on sale."}
+  ],
+  "by_category": {
+    "new_launch_condo": [
+      {"item": "Developer track record", "check": "Past completed projects, on-time TOP delivery, defects handling, financial standing."},
+      {"item": "TOP and CSC dates", "check": "Expected TOP and CSC dates in the S&P; compensation for late vacant possession; progressive payment schedule."},
+      {"item": "Show-flat vs actual", "check": "Compare show-flat finishes and facilities with the written specifications; check the unit's stack, view and layout in the plans."},
+      {"item": "Project profile", "check": "Land tenure, unit count, unit-mix, nearby supply and unsold units; use --mode investment for the supply signal."},
+      {"item": "Total cost", "check": "Stamp duties, legal fees, interest during construction, maintenance fees once TOP is issued."}
+    ],
+    "resale_condo": [
+      {"item": "Lease remaining", "check": "Years left on a 99-year lease; bank loan and CPF limits may tighten for shorter leases; freehold vs leasehold pricing gap."},
+      {"item": "MCST fees and sinking fund", "check": "Monthly maintenance, sinking fund balance, planned major works, special levies, arrears."},
+      {"item": "Project age and condition", "check": "Facilities condition, lift upgrades, past defects, en-bloc history and rumours."},
+      {"item": "Unit mix and size", "check": "Share of small units and rented units; owner-occupier ratio; unit size vs price per sq ft."},
+      {"item": "Option terms", "check": "Option fee, exercise period, completion date, and fixtures included in the sale."}
+    ],
+    "resale_hdb": [
+      {"item": "Remaining lease and financing limits", "check": "Remaining lease against the youngest buyer's age 95 coverage; CPF usage and HDB loan pro-rating; EHG minimum lease."},
+      {"item": "Valuation and COV", "check": "HDB/bank valuation vs agreed price; cash-over-valuation payable in cash."},
+      {"item": "Eligibility", "check": "HDB Flat Eligibility letter, income ceilings, first-timer status, citizenship, ethnic quota and any cooling-off."},
+      {"item": "MOP and conditions", "check": "Seller has completed the MOP; any resale levy or conditions attached; 3Gen resale restrictions."},
+      {"item": "Unit and block", "check": "Upgrading status (lifts, HIP), floor, facing, noise, nearby construction and conservancy charges."}
+    ],
+    "ec": [
+      {"item": "Eligibility and income ceiling", "check": "Household income vs the EC ceiling at purchase; first-timer or second-timer status."},
+      {"item": "MOP and privatisation", "check": "Occupation period, restrictions on selling to non-eligible buyers, privatisation timeline."},
+      {"item": "MSR and financing", "check": "MSR applies during the MOP; progressive payments and developer track record as for a new launch."},
+      {"item": "Project risk", "check": "Developer, TOP date, nearby supply and amenities."}
+    ]
+  }
+}

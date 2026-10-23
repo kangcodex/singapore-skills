@@ -11,11 +11,11 @@ input or failed invariants. Markdown is the default for a valid case; audit erro
 are emitted as JSON even if Markdown was requested. Empty research-stage cases
 remain visibly incomplete, not successful purchase advice.
 
-## Legacy CLI / Python callers
+## Legacy context CLI / Python callers
 
 Existing v2 flags and assessor function signatures remain available. HDB context
 requires `--flat-type`; private/rental/EC examples no longer require that unused
-flag. Errors now exit 2 instead of reporting success.
+flag. Errors in these context modes now exit 2 instead of reporting success.
 
 Unsupported valuation heuristics have deliberately changed:
 
@@ -42,3 +42,33 @@ The legacy shared API cache has no reliable freshness guarantee. The case
 workflow uses native research or dated supplied evidence, not cached legacy
 responses as proof of current inventory/rules. The shared generated client is
 not modified by this skill release; other skills keep their existing behavior.
+
+## Preserved agent scenario API — `--mode agent`
+
+The separately implemented agent layer from ADR-008 remains available, including
+its profiles, dated policy data, plan/compare/advise tasks and runnable examples.
+It is a different input/output format from the schema-3 case record; do not pass
+one format to the other or silently treat scenario output as researched evidence.
+
+Uniform agent keys: `mode: "agent"`, `task`, `town`, `since` (start date), `asking`
+(price string for single-option plan/advise), `verdict`, `premium_pct: null`,
+`trend: null`, `location: null`, `ura_context: null`, `cea_verification: null`.
+Additional keys: `agent`, `summary`, `disclaimer`, `policy_as_of`.
+
+The scenario `verdict` is `affordable|stretch|not affordable` for a plan, or
+`lowest 10-year cost of occupancy: <option>` for a multi-option comparison.
+These are results under supplied/default assumptions, NOT a final household
+recommendation or current official eligibility. Inspect warnings, simplifications,
+assumptions and unverified policy items before use. `policy_as_of` is a table-date
+summary, not proof that all rules are equally current or applicable.
+
+Money/ratios/rates are decimal strings. `agent.plan.checks[].ratio` is null for
+missing positive income. `agent.profile`, `agent.plan` and `agent.comparison` are
+documented in [agent-scenario.md](agent-scenario.md). `--summary-only` prints text.
+The preserved agent CLI reports some failures as an `error` object with exit 0;
+callers must inspect that object rather than treating exit 0 as successful analysis.
+
+Its numeric categories are `resale_hdb`, `resale_condo`, `new_launch_condo`, `ec`.
+Use the shared cross-category case workflow for new-HDB opportunities and landed
+instead of relabelling them as condo scenarios. Reconcile scenario inputs/results
+into the case with dates, assumptions, applicable rules and excluded costs.
