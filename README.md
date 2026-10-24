@@ -20,6 +20,14 @@ A collection of agent skills for Singapore-specific lookups. Each skill bundles 
 | `sg-fruit-price-tracker-skill` | [`skills/sg-fruit-price-tracker-skill/`](skills/sg-fruit-price-tracker-skill/) | Cron-driven weekly fruit price tracker — Cold Storage via stdlib urllib + aria-label regex, FairPrice via web_search, Sheng Siong flagged unavailable. CSV / JSON output, rolling 7-day retention, 70+ keyword blocklist. |
 | `sg-home-chef-skill` | [`skills/sg-home-chef-skill/`](skills/sg-home-chef-skill/) | Singapore home chef — turns any dish request into a 3-tier recipe brief (beginner one-pan, intermediate tumis, advanced wok hei) calibrated to HDB-cookout-kitchen reality. Bilingual SG ingredient dictionary (Malay + Chinese), 2 sourcing tracks (supermarket vs wet market), dietary filters (halal/vegetarian/vegan/gluten-free), culinary milestones (visual + aroma, not timers). |
 
+## Property advisor: proposed next-iteration design
+
+The [question-led property-advisor design](docs/property-advisor/README.md) covers
+70 business questions, adaptable requirements, daily transport and document/family
+analysis, dated cash/CPF funding, evidence-backed scenarios and case continuity.
+It includes feasibility findings, a planned acceptance matrix and an implementation
+roadmap. This is a design package; proposed capabilities are not a new runtime release.
+
 ## Install
 
 This repo follows the [vercel-labs/skills](https://github.com/vercel-labs/skills) install pattern. The `skills` CLI works with **OpenCode, Claude Code, Codex, Cursor**, and [68 other agents](https://github.com/vercel-labs/skills#supported-agents).

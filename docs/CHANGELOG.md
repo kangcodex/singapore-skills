@@ -4,6 +4,18 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added — 2026-10-24
+
+- **Property advisor next-iteration design package** at `docs/property-advisor/`:
+  70 business questions, 18 functional requirements, decision/evidence contracts,
+  curated capability/spike findings, 35 planned acceptance cases and a staged
+  implementation roadmap. Scope includes flexible age/future-TOP requirements,
+  focused questions, daily routines, brochures/family function, dated cash/CPF
+  liquidity, comparable evidence, scenarios and updates across housing categories.
+- Raw prototypes, generated synthetic PDFs and probe outputs stay Git-ignored.
+  This delivery changes documentation and acceptance planning, not executable
+  skill behavior or policy data. Identified finance/provider gaps remain open.
+
 ### Changed — 2026-10-23
 
 - **`property-advisor-skill` cross-category decision workflow** — household-led
