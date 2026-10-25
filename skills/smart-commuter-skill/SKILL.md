@@ -17,9 +17,10 @@ The agent extracts the destination (a place name, postal code, or address) and r
 ## Quick Start
 
 ```bash
-python3 skills/smart-commuter-skill/scripts/smart_commuter.py "Toa Payoh Central"
-python3 skills/smart-commuter-skill/scripts/smart_commuter.py "310080"          # postal
-python3 skills/smart-commuter-skill/scripts/smart_commuter.py "Marina Bay" "HE12"  # with hint
+# Run from the installed skill directory.
+python3 scripts/smart_commuter.py "Toa Payoh Central"
+python3 scripts/smart_commuter.py "310080"          # postal
+python3 scripts/smart_commuter.py "Marina Bay" "HE12"  # with hint
 ```
 
 `smart_commuter.py` is **stdlib-only** (urllib, json, math, pathlib). It imports
@@ -108,22 +109,6 @@ skills/smart-commuter-skill/
 ├── SKILL.md                          # this file
 ├── scripts/
 │   ├── smart_commuter.py             # stdlib-only helper
-│   └── singapore_api.py              # per-skill copy (synced from ../../singapore_api.py)
-└── tests/
-    └── test_smart_commuter.py        # smoke tests (pure fns + mocked network)
+│   └── singapore_api.py              # bundled standalone API client
+└── references/                      # operating knowledge
 ```
-
-## Tests
-
-```bash
-python3 -m unittest discover -s tests
-```
-
-Tests cover:
-- Pure helpers: `haversine_m`, `find_primary_carpark`, `find_alternates`, `build_traffic_advisory`, `build_weather_advisory`, `decide_recommendation`
-- The 3 swap / no-swap / boundary cases
-- Empty LTA fallback (no crash)
-- Hint code miss fallback
-- OneMap geocode quirk (covered in `tests/test_singapore_api.py`; the skill re-exercises the seam)
-
-All network paths are mocked via `unittest.mock.patch` — the suite passes offline.

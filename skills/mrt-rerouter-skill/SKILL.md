@@ -23,7 +23,8 @@ specific origin-destination pair.
 
 ```bash
 # Geocodes both endpoints, fetches live LTA + NEA data, returns ranked JSON.
-python3 skills/mrt-rerouter-skill/scripts/mrt_rerouter.py \
+# Run from the installed skill directory.
+python3 scripts/mrt_rerouter.py \
   --origin "Bishan MRT" --destination "Changi Airport"
 ```
 
@@ -103,12 +104,3 @@ All `singapore_api` fetchers cache to `~/.hermes/cache/<namespace>/`. A
 re-run of the same route within 15 minutes is instant. The cache key
 includes the LTA API path + station code, so different stations are
 isolated.
-
-## Tests
-
-```bash
-python3 -m unittest discover -s skills/mrt-rerouter-skill/tests
-```
-
-All five fetchers are mocked via `unittest.mock.patch`. The downgrade
-table is tested as a pure function (no I/O).

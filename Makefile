@@ -2,7 +2,7 @@ PYTHON ?= python3
 PYTEST ?= pytest
 SYNC_SCRIPT ?= scripts/sync_singapore_api.py
 
-.PHONY: help test test-skills test-top test-sg-home-chef evals-sg-home-chef package-property-advisor sync clean lint verify
+.PHONY: help test test-skills test-top test-sg-home-chef package-skills package-property-advisor sync clean lint verify
 
 help:
 	@echo "Targets:"
@@ -10,7 +10,7 @@ help:
 	@echo "  make test-skills         - run pytest on per-skill tests only"
 	@echo "  make test-top            - run pytest on the top-level tests only"
 	@echo "  make test-sg-home-chef   - run sg-home-chef-skill unit tests"
-	@echo "  make evals-sg-home-chef  - run sg-home-chef-skill evals (3 prompts, 70 expectations)"
+	@echo "  make package-skills      - export all runtime-only skill folders and .skill ZIPs"
 	@echo "  make package-property-advisor - export a runtime-only folder and .skill ZIP"
 	@echo "  make sync                - copy canonical singapore_api.py to all 10 per-skill copies"
 	@echo "  make clean               - remove __pycache__/ and .pytest_cache/ (gitignored)"
@@ -21,16 +21,16 @@ test:
 	cd .. && $(PYTEST) singapore-skills/ -q
 
 test-skills:
-	$(PYTEST) skills/ development/property-advisor/tests/ -q
+	$(PYTEST) development/ tests/test_skill_distribution.py -q
 
 test-top:
 	$(PYTEST) tests/ -q
 
 test-sg-home-chef:
-	cd skills/sg-home-chef-skill && $(PYTHON) -m unittest tests.test_sg_home_chef -v
+	$(PYTHON) -m unittest discover -s development/sg-home-chef/tests -v
 
-evals-sg-home-chef:
-	$(PYTHON) skills/sg-home-chef-skill/evals/grade.py
+package-skills:
+	$(PYTHON) scripts/package_skills.py
 
 package-property-advisor:
 	$(PYTHON) scripts/package_property_advisor.py

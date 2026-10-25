@@ -20,7 +20,8 @@ Trigger phrases:
 ## Quick start
 
 ```bash
-python3 skills/hawker-discover-skill/scripts/hawker_discover.py "Ang Mo Kio Hub" B 500
+# Run from the installed skill directory; co-install cdc-voucher-locator-skill.
+python3 scripts/hawker_discover.py "Ang Mo Kio Hub" B 500
 ```
 
 Modes: `A` (generic), `B` (food), `D` (budget meal). **Mode C is not
@@ -138,24 +139,6 @@ that record). This is honest "unknown" — not silently open.
   `~/.hermes/cache/<sha1>.json` (1-day TTL by default). The
   `fetch_hawker_closures()` helper returns the cached envelope
   on the second call within 24 h.
-
-## Testing
-
-```bash
-python3 -m unittest discover -s skills/hawker-discover-skill/tests -v
-```
-
-25 tests across 6 classes:
-- `TestPureHelpers` (7): `_haversine_m`, `is_food`, `categorize`
-- `TestInvokeCdc` (4): subprocess call, JSON parse, exit code, bad JSON
-- `TestAttachClosure` (5): open, closed, no-match, missing-coords, no-closure-record
-- `TestAssess` (6): mode C error, mode A/B/D full reports, CDC error propagation, empty NEA
-- `TestHelperParityWithCdc` (2): `is_food` and `categorize` agree on sample merchants
-- `TestModuleImport` (1): public surface check
-
-All network paths are mocked. The CDC subprocess is mocked via
-`subprocess.run`; `singapore_api.fetch_hawker_closures` is mocked
-via the test's `with patch(...)` block.
 
 ## See also
 

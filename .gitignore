@@ -304,5 +304,17 @@ prd/
 /development/property-advisor/evals/benchmark*.json
 *.skill
 
+# Retired local graders/verifier; keep real tests and behavioral prompts tracked
+/skills/overseas-trip-planner-skill/evals/grade.py
+/skills/sg-fruit-price-tracker-skill/evals/grade.py
+/skills/sg-home-chef-skill/evals/grade.py
+/development/overseas-trip-planner/evals/grade.py
+/development/sg-fruit-price-tracker/evals/grade.py
+/development/sg-home-chef/evals/grade.py
+/scripts/verify_all_skills.sh
+/development/**/evals/runs/
+/development/**/evals/benchmark*.json
+/development/**/evals/coverage.md
+
 # Generated reports are local artifacts and are never committed
 reports/
