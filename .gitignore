@@ -286,7 +286,7 @@ design/
 issue/
 prd/
 
-# Property advisor local workings (runtime and developer definitions stay tracked)
+# Property advisor local workings
 /docs/property-advisor/
 /docs/property-advisor-prd.md
 /docs/property-advisor-cross-category-research.md
@@ -298,23 +298,15 @@ prd/
 /skills/property-advisor-skill/evals/coverage.md
 /skills/property-advisor-skill/evals/benchmark*.json
 
-# Property advisor developer artifacts (definitions/fixtures/tests remain tracked)
-/development/property-advisor/evals/runs/
-/development/property-advisor/evals/coverage.md
-/development/property-advisor/evals/benchmark*.json
+# Developer workspaces are local-only, including tests, fixtures and eval prompts
+/development/
 *.skill
 
-# Retired local graders/verifier; keep real tests and behavioral prompts tracked
+# Retired local graders/verifier
 /skills/overseas-trip-planner-skill/evals/grade.py
 /skills/sg-fruit-price-tracker-skill/evals/grade.py
 /skills/sg-home-chef-skill/evals/grade.py
-/development/overseas-trip-planner/evals/grade.py
-/development/sg-fruit-price-tracker/evals/grade.py
-/development/sg-home-chef/evals/grade.py
 /scripts/verify_all_skills.sh
-/development/**/evals/runs/
-/development/**/evals/benchmark*.json
-/development/**/evals/coverage.md
 
 # Generated reports are local artifacts and are never committed
 reports/

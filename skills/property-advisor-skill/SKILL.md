@@ -266,6 +266,6 @@ python3 scripts/advisor_cli.py --case assets/case-template.json --format json
 ```
 
 Run from this skill directory for an import/empty-template smoke check. An empty
-case is valid but establishes no matching home or advisory conclusion. Development
-tests, eval definitions and demo fixtures live outside the installed package in
-the source repository's `development/property-advisor/` directory.
+case is valid but establishes no matching home or advisory conclusion. Additional
+developer tests, eval definitions and demo fixtures are local-only under ignored
+`development/property-advisor/`; they are not required by these published checks.

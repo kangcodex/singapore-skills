@@ -1,14 +1,16 @@
 # Skill shipping audit
 
 The installable `skills/` tree holds runtime instructions, executable dependencies,
-agent knowledge and reusable output assets. Developer tests, eval prompts and
-synthetic inputs belong in `development/`. Generated results and retired local
-tools are ignored. Moving tests does not reduce committed code; retiring duplicate
-graders and dead scaffolding does. Both changes have distinct purposes here.
+agent knowledge and reusable output assets. The entire `development/` directory is
+local-only, untracked and ignored, including reusable tests, eval prompts and
+synthetic inputs. Existing local files are retained. This is an explicit version-
+control policy choice; the reusable verification assets are not classified as dead.
+Fresh clones retain self-contained package checks, not the individual-skill corpus.
 
 The 2026-10-25 audit against `556c072` reduced tracked skill-folder files from 147
 to 129 and removed a net 781 Python/shell source lines across the repository.
-Verification passed 731 tests and 161 subtests; all 13 skill manifests validated.
+That historical verification used the local corpus: 731 tests and 161 subtests;
+all 13 skill manifests validated. It is not the published-only test count.
 
 ## All 13 skills
 
@@ -16,7 +18,7 @@ Every skill retains `SKILL.md`. Environment templates are kept where present.
 References are agent knowledge even when Python never opens them; a missing Python
 caller is not evidence that a reference is dead.
 
-| Skill | Runtime code/data decision | Development material |
+| Skill | Runtime code/data decision | Local-only development material |
 |---|---|---|
 | agent-match | Keep agent lookup, bundled API client and CEA guides | Tests moved |
 | air-quality-advisor | Keep classification CLI, bundled client and health/NEA guides | Tests moved |
@@ -57,8 +59,8 @@ and fruit checks graded canned prose and sorted an already-sorted list. Unique
 useful checks now live in tests: elderly lodging, emitted localization/metadata,
 usable strategy content, offline retailer CLI results, pitaya aliases and failure
 diagnostics. Test caches use temporary HOME directories. Behavioral eval prompts
-remain tracked and should grade actual native outputs, not script metadata flags.
-See [evaluation guidance](../development/evaluations.md).
+remain locally and should grade actual native outputs, not script metadata flags.
+The local `development/evaluations.md` notes are not distributed in Git.
 
 The home-chef expectations now distinguish actual ingredient suitability from an
 echoed dietary label, and dish-appropriate prata technique from a generic wok/
@@ -83,11 +85,13 @@ casework are excluded. `.gitignore` alone is not a folder-importer package polic
 
 ## Verification boundary
 
-`make test-skills` runs retained contracts and isolated distribution tests. The
+`make test-skills` runs published, self-contained distribution tests. The
 distribution test exports every skill, examines each archive and imports its entry
 point from the extracted package with no repository cwd, PYTHONPATH, site packages
-or user credentials. Property-advisor additionally executes all14 focused engines
-and case/advice workflows from its extracted archive.
+or user credentials. The public property smoke check executes its bundled empty
+case template. `make test-local` additionally runs the private local corpus,
+including all 14 focused engines and richer case/advice workflows when that
+workspace exists. It fails explicitly if the local workspace is absent.
 
 Import success does not establish live-provider access, correct current data-source
 schemas, advisory accuracy, recipe suitability or actual agent quality. Those need

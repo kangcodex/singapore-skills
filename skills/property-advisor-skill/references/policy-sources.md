@@ -11,8 +11,8 @@ item carries `as_of` (the date it was checked), `source_url` (the official page 
 
 Singapore rules change. To update: edit the value, set `as_of` to the date you re-checked the
 source, and (if you could not read the official page) leave or set `status: "unverified"` with a
-reason. Repository tests check that every item is dated, sourced and, if unverified,
-explained.
+reason. Local developer checks validate that each item is dated, sourced and,
+if unverified, explained; those checks are not included in a fresh checkout.
 
 ## Items
 

@@ -89,10 +89,11 @@ For other agents, the destination paths differ — see the [vercel-labs/skills s
 ### Runtime-only distribution
 
 All 13 skill folders contain installed instructions, runtime scripts, reference
-knowledge/data and output assets. Tests, synthetic fixtures and reusable eval
-prompts stay in [`development/`](development/README.md). Retired graders, working
-design notes and generated outputs are untracked and ignored; local copies are
-preserved. See the [per-skill audit](docs/skill-distribution.md).
+knowledge/data and output assets. The entire `development/` workspace, including
+individual-skill tests, synthetic fixtures and eval prompts, is local-only,
+untracked and ignored. Existing local files are preserved; fresh clones do not
+contain them. Published package checks remain self-contained under `tests/`.
+See the [per-skill audit](docs/skill-distribution.md).
 
 ```bash
 python3 scripts/package_skills.py --output-dir dist/all-skills
@@ -116,24 +117,20 @@ dated cash/CPF funding/scenarios. See the
 
 ```bash
 python3 skills/property-advisor-skill/scripts/advisor_cli.py \
-  --assess requirements --input development/property-advisor/fixtures/assessments/requirements.json
-python3 skills/property-advisor-skill/scripts/advisor_cli.py \
-  --assess funding --input development/property-advisor/fixtures/assessments/funding.json
-python3 skills/property-advisor-skill/scripts/advisor_cli.py \
-  --case development/property-advisor/fixtures/cases/question-led-case.json --format json
+  --case skills/property-advisor-skill/assets/case-template.json --format json
 ```
 
-Run those synthetic examples from a repository checkout. Installed agents create
-their own inputs from the bundled input reference and case template. Source/route/
-OCR access and official eligibility/approval are not implied by a passed calculation.
+The empty template is an import/record smoke check, not completed advice. Create
+actual inputs from the bundled input reference and case template. Source/route/OCR
+access and official eligibility/approval are not implied by a passed calculation.
 
 ### Property advisor distribution
 
 `skills/property-advisor-skill/` contains only the runtime: `SKILL.md`, `scripts/`,
 `references/` (including loaded policy/profile JSON), `assets/case-template.json`,
-`.env.example` and `LICENSE`. Tests, eval definitions and demo scenarios stay tracked
-under [`development/property-advisor/`](development/property-advisor/README.md).
-Generated outputs, private casework and design workings remain Git-ignored.
+`.env.example` and `LICENSE`. Tests, eval definitions and demo scenarios under
+`development/property-advisor/` are local-only and excluded from Git. The runtime
+and published package smoke check do not depend on that workspace.
 
 For a clean local folder or importable `.skill` ZIP:
 
@@ -241,7 +238,7 @@ singapore-skills/
 │   ├── scripts/                    # entry point and required bundled dependencies
 │   ├── references/                 # optional agent knowledge and runtime JSON
 │   └── assets/                     # optional reusable output templates
-├── development/<short-name>/       # tracked tests, fixtures and eval prompts
+├── development/<short-name>/       # ignored local workspace, absent in fresh clones
 ├── tests/                          # shared-client, distribution and API integration checks
 ├── docs/                           # maintained project documentation
 └── dist/                           # ignored clean folders and .skill archives
@@ -254,23 +251,28 @@ below.
 
 ## Testing
 
-Smoke tests use stdlib `unittest` and live outside installed skills under
-`development/<short-name>/tests/`. Root tests cover the shared client, clean
-distribution and optional API integrations.
+Published checks under `tests/` cover the shared client, clean distribution and
+optional API integrations. Package checks do not require a local developer
+workspace. Individual-skill regression suites and evals under `development/`
+are deliberately local-only and cannot be reproduced from a fresh clone alone.
 
 ```bash
-# Run all skill contracts and isolated package imports
+# Run published package checks, including isolated imports
 make test-skills
 
-# Run individual suites from a repository checkout
+# Run the broader local suite only when development/ is present
+make test-local
+
+# Individual local suites (not included in Git)
 python3 -m unittest discover -s development/property-advisor/tests
 python3 -m unittest discover -s development/sg-home-chef/tests
 python3 -m pytest tests/test_skill_distribution.py
 ```
 
-Behavioral eval prompts remain tracked under `development/<short-name>/evals/`.
-Use actual native outputs for grading; the retired bespoke graders are not a
-benchmark of agent behavior. See [evaluation guidance](development/evaluations.md).
+Behavioral eval prompts are local-only under `development/<short-name>/evals/`.
+Use actual native outputs for grading. `make test-local` fails explicitly if the
+workspace is absent; the smaller published package suite is not a substitute for
+the full local regression/evaluation corpus.
 
 ## Chaining skills together
 
@@ -332,7 +334,7 @@ calls when unset, so the skill works without a key for trial runs.
 
 Then `npx skills add kangcodex/singapore-skills` will pick it up.
 
-Keep tests/evals outside the runtime folder in `development/<short-name>/`.
+Keep local tests/evals outside the runtime folder in ignored `development/<short-name>/`.
 Add the skill's entry point to the distribution test and verify its clean export
 without repository-side imports. Declare any sibling-skill dependency in the
 exporter and documentation.

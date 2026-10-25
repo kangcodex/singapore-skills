@@ -1,7 +1,6 @@
 """Check the actual distributable folders, independent of the repository cwd."""
 from __future__ import annotations
 
-import json
 import subprocess
 import sys
 import tempfile
@@ -44,23 +43,6 @@ class TestSkillDistribution(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertTrue((Path(directory) / "property-advisor-skill" / "SKILL.md").is_file())
             self.assertTrue((Path(directory) / "property-advisor-skill.skill").is_file())
-
-    def test_retained_behavioral_packets_have_real_prompts_and_inputs(self) -> None:
-        # Given
-        for name in ("overseas-trip-planner", "sg-fruit-price-tracker", "sg-home-chef"):
-            directory = ROOT / "development" / name / "evals"
-            # When
-            packet = json.loads((directory / "evals.json").read_text(encoding="utf-8"))
-            # Then
-            with self.subTest(skill=name):
-                self.assertEqual(packet["skill_name"], name + "-skill")
-                self.assertTrue(packet["evals"])
-                ids = [case["id"] for case in packet["evals"]]
-                self.assertEqual(len(ids), len(set(ids)))
-                for case in packet["evals"]:
-                    self.assertTrue(case["prompt"] and case["expected_output"] and case["expectations"])
-                    for path in case["files"]:
-                        self.assertTrue((directory / path).is_file(), path)
 
     def test_all_archives_contain_runtime_only_and_import_in_isolation(self) -> None:
         # Given
