@@ -266,7 +266,7 @@ make test-local
 # Individual local suites (not included in Git)
 python3 -m unittest discover -s development/property-advisor/tests
 python3 -m unittest discover -s development/sg-home-chef/tests
-python3 -m pytest tests/test_skill_distribution.py
+python3 -m pytest tests/test_skill_distribution.py tests/test_property_distribution.py
 ```
 
 Behavioral eval prompts are local-only under `development/<short-name>/evals/`.
