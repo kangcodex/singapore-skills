@@ -100,9 +100,10 @@ In a repository checkout, `reports/` is ignored. Evaluation outputs/transcripts/
 grades belong in ignored `development/property-advisor/evals/runs/` or `reports/`.
 
 Track SKILL.md, category/source references, scripts and the case template in the
-skill. Track tests, fixed eval prompts and synthetic evidence fixtures separately
-under `development/property-advisor/`. Do not ignore all JSON,
-PDFs/images, tests or references: those patterns hide required deliverables.
+skill. The developer tests, fixed eval prompts and synthetic fixtures under
+`development/property-advisor/` are local-only and ignored. Keep published package
+checks under `tests/` self-contained. Do not blanket-ignore runtime JSON, PDFs/images
+or references: those patterns hide required deliverables.
 The root `.gitignore` also excludes `docs/property-advisor/` design workings,
 the local PRD/research/spike documents and
 already covers Python caches, coverage, environments, logs and OS junk.

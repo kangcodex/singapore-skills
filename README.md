@@ -94,24 +94,20 @@ dated cash/CPF funding/scenarios. See the
 
 ```bash
 python3 skills/property-advisor-skill/scripts/advisor_cli.py \
-  --assess requirements --input development/property-advisor/fixtures/assessments/requirements.json
-python3 skills/property-advisor-skill/scripts/advisor_cli.py \
-  --assess funding --input development/property-advisor/fixtures/assessments/funding.json
-python3 skills/property-advisor-skill/scripts/advisor_cli.py \
-  --case development/property-advisor/fixtures/cases/question-led-case.json --format json
+  --case skills/property-advisor-skill/assets/case-template.json --format json
 ```
 
-Run those synthetic examples from a repository checkout. Installed agents create
-their own inputs from the bundled input reference and case template. Source/route/
-OCR access and official eligibility/approval are not implied by a passed calculation.
+The empty template is an import/record smoke check, not completed advice. Create
+actual inputs from the bundled input reference and case template. Source/route/OCR
+access and official eligibility/approval are not implied by a passed calculation.
 
 ### Property advisor distribution
 
 `skills/property-advisor-skill/` contains only the runtime: `SKILL.md`, `scripts/`,
 `references/` (including loaded policy/profile JSON), `assets/case-template.json`,
-`.env.example` and `LICENSE`. Tests, eval definitions and demo scenarios stay tracked
-under [`development/property-advisor/`](development/property-advisor/README.md).
-Generated outputs, private casework and design workings remain Git-ignored.
+`.env.example` and `LICENSE`. Tests, eval definitions and demo scenarios under
+`development/property-advisor/` are local-only and excluded from Git. The runtime
+and published package smoke check do not depend on that workspace.
 
 For a clean local folder or importable `.skill` ZIP:
 
@@ -250,15 +246,19 @@ below.
 
 Smoke tests use stdlib `unittest` — no extra dependencies. Most skills keep a
 `tests/` directory beside their runtime. Property advisor keeps its developer suite
-outside the installed folder at `development/property-advisor/tests/`. The
+in ignored, local-only `development/property-advisor/tests/`; fresh clones do not
+include that corpus. `make test-local` runs it when present. The
 repo-root `tests/` covers the canonical shared client and API integrations.
 
 ```bash
 # Run the shared-client suite
 python3 -m unittest discover -s tests
 
-# Run a per-skill suite
+# Local-only property suite (requires an existing development/ workspace)
 python3 -m unittest discover -s development/property-advisor/tests
+
+# Published package smoke check and other per-skill suites
+python3 -m pytest tests/test_property_distribution.py
 python3 -m unittest discover -s skills/cdc-voucher-locator-skill/tests
 python3 -m unittest discover -s skills/smart-commuter-skill/tests
 python3 -m unittest discover -s skills/resale-property-advisor-skill/tests

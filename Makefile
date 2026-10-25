@@ -2,12 +2,13 @@ PYTHON ?= python3
 PYTEST ?= pytest
 SYNC_SCRIPT ?= scripts/sync_singapore_api.py
 
-.PHONY: help test test-skills test-top test-sg-home-chef evals-sg-home-chef package-property-advisor sync clean lint verify
+.PHONY: help test test-skills test-local test-top test-sg-home-chef evals-sg-home-chef package-property-advisor sync clean lint verify
 
 help:
 	@echo "Targets:"
 	@echo "  make test                - run pytest on the whole repo (skills + top-level)"
 	@echo "  make test-skills         - run pytest on per-skill tests only"
+	@echo "  make test-local          - run local-only property developer checks"
 	@echo "  make test-top            - run pytest on the top-level tests only"
 	@echo "  make test-sg-home-chef   - run sg-home-chef-skill unit tests"
 	@echo "  make evals-sg-home-chef  - run sg-home-chef-skill evals (3 prompts, 70 expectations)"
@@ -21,7 +22,11 @@ test:
 	cd .. && $(PYTEST) singapore-skills/ -q
 
 test-skills:
-	$(PYTEST) skills/ development/property-advisor/tests/ -q
+	$(PYTEST) skills/ tests/test_property_distribution.py -q
+
+test-local:
+	@test -d development || (echo "Local development/ workspace is absent; it is not distributed in Git."; exit 1)
+	$(PYTEST) development/ tests/test_property_distribution.py -q
 
 test-top:
 	$(PYTEST) tests/ -q

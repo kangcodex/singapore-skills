@@ -1,9 +1,0 @@
-{
-  "example_notice": "A requested watch specification, not an active job.",
-  "explicit_request": true,
-  "targets": ["fictional-home"],
-  "triggers": [{"price_below": "1800000", "currency": "SGD"}],
-  "expiry": "2026-12-31",
-  "frequency": "user-requested refresh",
-  "channel": "not configured"
-}

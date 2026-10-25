@@ -286,7 +286,7 @@ design/
 issue/
 prd/
 
-# Property advisor local workings (runtime and developer definitions stay tracked)
+# Property advisor local workings
 /docs/property-advisor/
 /docs/property-advisor-prd.md
 /docs/property-advisor-cross-category-research.md
@@ -298,10 +298,8 @@ prd/
 /skills/property-advisor-skill/evals/coverage.md
 /skills/property-advisor-skill/evals/benchmark*.json
 
-# Property advisor developer artifacts (definitions/fixtures/tests remain tracked)
-/development/property-advisor/evals/runs/
-/development/property-advisor/evals/coverage.md
-/development/property-advisor/evals/benchmark*.json
+# Developer workspaces are local-only, including tests, fixtures and eval prompts
+/development/
 *.skill
 
 # Generated reports are local artifacts and are never committed

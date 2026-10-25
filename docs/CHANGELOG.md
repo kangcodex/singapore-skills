@@ -6,6 +6,10 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
 
 ### Changed — 2026-10-25
 
+- **Local-only developer workspaces**: `development/` is ignored and untracked,
+  with existing files retained locally. Published package checks are independent;
+  the broader regression/evaluation corpus is opt-in local material and is not
+  included in fresh clones.
 - **Lean property-advisor distribution**: moved developer tests, eval definitions
   and synthetic assessment/case/scenario fixtures to `development/property-advisor/`.
   Installed skills retain runtime scripts, reference docs/data, the case template,
@@ -32,7 +36,7 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
   basis and infeasible lowest-cost selection. Legacy scenarios remain illustrations.
 - Added synthetic runnable examples and regression/CLI coverage. Working design
   files in `docs/property-advisor/` are ignored and untracked while retained locally;
-  maintained runtime guides ship with the skill and sanitized fixtures stay in Git. Live
+  maintained runtime guides ship with the skill and verification fixtures stay local. Live
   provider/complex visual/institutional outcomes require actual native evidence.
 
 ### Changed — 2026-10-23
@@ -48,7 +52,7 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
   scenario capabilities remain supported separately from researched decisions.
 - Added fixed behavioral eval definitions, synthetic evidence and regression/CLI
   checks. Development research, personal casework and generated eval outputs are
-  Git-ignored; reusable skill sources, fixtures and tests remain version-controlled.
+  Git-ignored; runtime skill sources and self-contained public checks remain version-controlled.
 
 ### Added — 2026-10-19
 
