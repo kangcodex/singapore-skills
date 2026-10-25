@@ -6,14 +6,15 @@ import sys
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+SKILL = Path(__file__).resolve().parents[3] / "skills" / "property-advisor-skill"
+sys.path.insert(0, str(SKILL / "scripts"))
 
 
 class TestWorkflow(unittest.TestCase):
     def test_case_references_use_current_facts_and_recompute_on_update(self) -> None:
         from advisor_records import read_case
         from advisor_workflow import evaluate_case
-        previous = read_case(Path(__file__).resolve().parent.parent / "assets" / "case-template.json")
+        previous = read_case(SKILL / "assets" / "case-template.json")
         previous["research_date"] = "2026-10-24"
         previous["buyer_brief"]["requirements"] = [{"id": "price", "priority": "hard", "state": "confirmed", "condition": {"kind": "number", "field": "price", "op": "max", "value": "2000000", "unit": "SGD"}}]
         previous["properties"] = [{"id": "p", "category": "private_non_landed"}]
@@ -49,7 +50,7 @@ class TestWorkflow(unittest.TestCase):
     def test_computed_case_metadata_is_not_a_material_input_change(self) -> None:
         from advisor_records import read_case
         from advisor_workflow import evaluate_case
-        case = read_case(Path(__file__).resolve().parent.parent / "assets" / "case-template.json")
+        case = read_case(SKILL / "assets" / "case-template.json")
         case["buyer_brief"]["requirements"] = [{"id": "r", "priority": "hard", "state": "confirmed", "condition": {"kind": "number", "field": "bedrooms", "op": "min", "value": "3", "unit": "count"}}]
         case["properties"] = [{"id": "p", "category": "hdb"}]
         case["candidates"] = [{"id": "c", "property_id": "p", "fit": "conditional", "availability": "listed", "checks": [], "facts": {}}]
@@ -60,7 +61,7 @@ class TestWorkflow(unittest.TestCase):
     def test_unchanged_advice_is_retired_after_material_facts_change(self) -> None:
         from advisor_records import read_case
         from advisor_workflow import evaluate_case
-        previous = read_case(Path(__file__).resolve().parent.parent / "assets" / "case-template.json")
+        previous = read_case(SKILL / "assets" / "case-template.json")
         previous["summary"] = "Old advice based on old facts"
         previous["recommendations"] = [{"id": "rec", "candidate_id": None, "action": "Continue old route", "claims": []}]
         current = copy.deepcopy(previous)
@@ -72,7 +73,7 @@ class TestWorkflow(unittest.TestCase):
     def test_nested_input_reference_links_exit_proceeds_to_a_funding_event(self) -> None:
         from advisor_records import read_case
         from advisor_workflow import evaluate_case
-        case = read_case(Path(__file__).resolve().parent.parent / "assets" / "case-template.json")
+        case = read_case(SKILL / "assets" / "case-template.json")
         case["exit_inputs"] = {"sale_price": "2000000", "loan_redemption": "1200000", "selling_costs": "50000", "cpf_principal_refund": "350000", "cpf_accrued_refund": "30000"}
         case["analysis_requests"] = [{"id": "exit", "kind": "exit", "input_refs": {key: f"/exit_inputs/{key}" for key in case["exit_inputs"]}}, {"id": "funding", "kind": "funding", "input": {"funds": [{"id": "cash", "kind": "cash", "balance": "0", "reserve": "0"}], "events": [{"id": "proceeds", "date": "2026-11-01", "kind": "receipt", "amount": None, "fund": "cash", "status": "confirmed"}, {"id": "bill", "date": "2026-11-02", "kind": "payment", "amount": "100000", "allowed_funds": ["cash"]}]}, "input_refs": {"/events/0/amount": "/assessment_results/exit/assessment/cash_after_supplied_refunds"}}]
         result = evaluate_case(case)

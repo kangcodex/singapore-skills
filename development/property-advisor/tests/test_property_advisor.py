@@ -7,7 +7,7 @@ Pattern follows tests/test_singapore_api.py:
   - All 5 modes (hdb / private / rental / ec / investment) tested end-to-end
   - No top-level network call allowed
 
-Run: python3 -m unittest discover -s skills/property-advisor-skill/tests
+Run: python3 -m unittest discover -s development/property-advisor/tests
 """
 import importlib.util
 import io
@@ -18,7 +18,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 
-SKILL_DIR = Path(__file__).resolve().parent.parent
+SKILL_DIR = Path(__file__).resolve().parents[3] / "skills" / "property-advisor-skill"
 SCRIPT_PATH = SKILL_DIR / "scripts" / "property_advisor.py"
 SCRIPTS_DIR = SKILL_DIR / "scripts"
 

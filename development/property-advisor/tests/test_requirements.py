@@ -6,7 +6,8 @@ import unittest
 from datetime import date
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+SKILL = Path(__file__).resolve().parents[3] / "skills" / "property-advisor-skill"
+sys.path.insert(0, str(SKILL / "scripts"))
 
 
 class TestRequirements(unittest.TestCase):
@@ -93,7 +94,7 @@ class TestSemanticCaseAudit(unittest.TestCase):
     def test_declared_age_pass_cannot_hide_a_2010_top(self) -> None:
         from advisor_case import audit_case
         from advisor_records import read_case
-        case = read_case(Path(__file__).resolve().parent.parent / "assets" / "case-template.json")
+        case = read_case(SKILL / "assets" / "case-template.json")
         case["research_date"] = "2026-10-24"
         case["buyer_brief"] = {"requirements": [{"id": "age", "priority": "hard", "state": "confirmed", "condition": {"kind": "age", "max_years": 5}}]}
         case["properties"] = [{"id": "p1", "category": "private_non_landed", "facts": {"completion_status": {"state": "known", "value": "completed", "evidence_ids": ["e1"]}, "actual_top": {"state": "known", "value": "2010-01-01", "evidence_ids": ["e1"]}}}]

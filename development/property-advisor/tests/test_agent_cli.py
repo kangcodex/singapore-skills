@@ -9,7 +9,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-SKILL_DIR = Path(__file__).resolve().parent.parent
+SKILL_DIR = Path(__file__).resolve().parents[3] / "skills" / "property-advisor-skill"
+FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 SCRIPTS_DIR = SKILL_DIR / "scripts"
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
@@ -127,10 +128,10 @@ class TestAgentCli(unittest.TestCase):
             run(["--task", "compare", "--scenario", scenario_file(options=[OPT_CONDO, OPT_HDB])])
 
 
-class TestShippedExamples(unittest.TestCase):
+class TestScenarioFixtures(unittest.TestCase):
     def test_each_profile_example_runs_end_to_end(self):
         for name in ("dink-couple", "first-home-couple", "family-of-five"):
-            path = SKILL_DIR / "references" / "examples" / f"{name}.json"
+            path = FIXTURES / "legacy-scenarios" / f"{name}.json"
             res = json.loads(run(["--task", "advise", "--scenario", str(path)])[1])
             self.assertNotIn("error", res, name)
             self.assertEqual(res["agent"]["profile"]["profile_id"], json.loads(path.read_text())["profile"])

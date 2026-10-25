@@ -1,13 +1,14 @@
 """Policy tables + calculators for the agent mode (no network, Decimal only).
 
-Run: python3 -m unittest discover -s skills/property-advisor-skill/tests
+Run: python3 -m unittest discover -s development/property-advisor/tests
 """
 import sys
 import unittest
 from decimal import Decimal as D
 from pathlib import Path
 
-SCRIPTS_DIR = Path(__file__).resolve().parent.parent / "scripts"
+SKILL_DIR = Path(__file__).resolve().parents[3] / "skills" / "property-advisor-skill"
+SCRIPTS_DIR = SKILL_DIR / "scripts"
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
@@ -66,7 +67,7 @@ class TestPolicyFile(unittest.TestCase):
 
 class TestPolicySourcesDoc(unittest.TestCase):
     def test_every_policy_item_is_documented(self):
-        doc = (Path(__file__).resolve().parent.parent / "references" / "policy-sources.md").read_text()
+        doc = (SKILL_DIR / "references" / "policy-sources.md").read_text()
         for name in POLICY["items"]:
             self.assertIn(f"`{name}`", doc, name)
 

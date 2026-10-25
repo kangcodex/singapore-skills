@@ -4,6 +4,17 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed — 2026-10-25
+
+- **Lean property-advisor distribution**: moved developer tests, eval definitions
+  and synthetic assessment/case/scenario fixtures to `development/property-advisor/`.
+  Installed skills retain runtime scripts, reference docs/data, the case template,
+  environment template and MIT license. Updated resource paths and test commands.
+- Added a tracked-runtime-only folder/`.skill` exporter and extracted-archive
+  regression checks, so local casework, eval outputs and caches are not packaged.
+  Removed the unused private demand helper and unused radius constant; supported
+  CLI/Python interfaces remain covered by compatibility tests.
+
 ### Changed — 2026-10-24
 
 - **Question-led property advisor implementation**: focused plans and executable
@@ -21,7 +32,7 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
   basis and infeasible lowest-cost selection. Legacy scenarios remain illustrations.
 - Added synthetic runnable examples and regression/CLI coverage. Working design
   files in `docs/property-advisor/` are ignored and untracked while retained locally;
-  maintained runtime guides and sanitized fixtures remain distributable. Live
+  maintained runtime guides ship with the skill and sanitized fixtures stay in Git. Live
   provider/complex visual/institutional outcomes require actual native evidence.
 
 ### Changed — 2026-10-23

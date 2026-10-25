@@ -86,7 +86,6 @@ PRIVATE_REGIONS = ("whole_sg", "central", "rest_central", "outside_central")
 RAINFALL_LOOKBACK_24MO = 24
 RAINFALL_LOOKBACK_5YR = 60
 RAISE_SIGMA = 1.0
-URA_RADIUS_M = 1000.0
 AMENITY_RADIUS_M = 1000.0
 
 LU_CATEGORIES = [
@@ -334,13 +333,6 @@ def location_block(town):
     return {"town": town.upper(), "planning_area": "unknown", "region": "unknown", "nearest_mrt": "unknown"}
 
 # ── Investment overlay (v2) ────────────────────────────────────────────
-
-def _trailing_4q_demand(records, demand_key="sale_count"):
-    """Sum the last 4 periods of `demand_key` from records (chronological)."""
-    vals = [to_float(r.get(demand_key)) for r in records[-4:]]
-    vals = [v for v in vals if v is not None]
-    return sum(vals)
-
 
 def investment_overlay_for(private_records=None):
     """Return latest stock context, withholding unsupported local supply signals.

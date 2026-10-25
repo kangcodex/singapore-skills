@@ -11,8 +11,8 @@ item carries `as_of` (the date it was checked), `source_url` (the official page 
 
 Singapore rules change. To update: edit the value, set `as_of` to the date you re-checked the
 source, and (if you could not read the official page) leave or set `status: "unverified"` with a
-reason. `python3 -m unittest discover -s skills/property-advisor-skill/tests` checks that every
-item is dated, sourced and, if unverified, explained.
+reason. Repository tests check that every item is dated, sourced and, if unverified,
+explained.
 
 ## Items
 

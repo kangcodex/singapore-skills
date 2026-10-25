@@ -94,17 +94,38 @@ dated cash/CPF funding/scenarios. See the
 
 ```bash
 python3 skills/property-advisor-skill/scripts/advisor_cli.py \
-  --assess requirements --input skills/property-advisor-skill/assets/examples/requirements.json
+  --assess requirements --input development/property-advisor/fixtures/assessments/requirements.json
 python3 skills/property-advisor-skill/scripts/advisor_cli.py \
-  --assess funding --input skills/property-advisor-skill/assets/examples/funding.json
+  --assess funding --input development/property-advisor/fixtures/assessments/funding.json
 python3 skills/property-advisor-skill/scripts/advisor_cli.py \
-  --case skills/property-advisor-skill/assets/question-led-case.json --format json
+  --case development/property-advisor/fixtures/cases/question-led-case.json --format json
 ```
 
-Examples are synthetic. Source/route/OCR access and official eligibility/approval
-are not implied by a passed calculation. Design workings in `docs/property-advisor/`
-and raw reports remain local/Git-ignored; reusable implementation references,
-scripts, examples, tests and eval definitions are version-controlled.
+Run those synthetic examples from a repository checkout. Installed agents create
+their own inputs from the bundled input reference and case template. Source/route/
+OCR access and official eligibility/approval are not implied by a passed calculation.
+
+### Property advisor distribution
+
+`skills/property-advisor-skill/` contains only the runtime: `SKILL.md`, `scripts/`,
+`references/` (including loaded policy/profile JSON), `assets/case-template.json`,
+`.env.example` and `LICENSE`. Tests, eval definitions and demo scenarios stay tracked
+under [`development/property-advisor/`](development/property-advisor/README.md).
+Generated outputs, private casework and design workings remain Git-ignored.
+
+For a clean local folder or importable `.skill` ZIP:
+
+```bash
+python3 scripts/package_property_advisor.py
+# dist/property-advisor-skill/       — copy or install this folder
+# dist/property-advisor-skill.skill  — import this ZIP-format skill
+```
+
+Use a fresh `--output-dir PATH` for another build. The exporter includes tracked
+runtime files only, excluding untracked/local workings even when they are inside
+the checkout. The `npx skills` installer copies subdirectories rather than using
+`.gitignore` as a package filter; use the clean export for local imports. GitHub
+installs select the runtime-only skill folder directly.
 
 ## Usage: `cdc-voucher-locator-skill`
 
@@ -227,16 +248,17 @@ below.
 
 ## Testing
 
-Smoke tests use stdlib `unittest` — no extra dependencies. **Each skill has its
-own `tests/` directory** (so the suite stays self-contained when a single skill
-is installed via `npx skills add --skill <name>`). The repo-root `tests/`
-covers only the **canonical shared client** (`singapore_api.py`).
+Smoke tests use stdlib `unittest` — no extra dependencies. Most skills keep a
+`tests/` directory beside their runtime. Property advisor keeps its developer suite
+outside the installed folder at `development/property-advisor/tests/`. The
+repo-root `tests/` covers the canonical shared client and API integrations.
 
 ```bash
 # Run the shared-client suite
 python3 -m unittest discover -s tests
 
 # Run a per-skill suite
+python3 -m unittest discover -s development/property-advisor/tests
 python3 -m unittest discover -s skills/cdc-voucher-locator-skill/tests
 python3 -m unittest discover -s skills/smart-commuter-skill/tests
 python3 -m unittest discover -s skills/resale-property-advisor-skill/tests

@@ -7,35 +7,35 @@
       "id": 101,
       "prompt": "I want a home no more than five years old, and future new launches are okay. Use the requirements fixture. Does its future home fit, and what should I do next?",
       "expected_output": "Future launch passes the age permission but fails the separate supplied move deadline; no hidden current-year cutoff or unrelated finance intake.",
-      "files": ["../assets/examples/requirements.json"],
+      "files": ["../fixtures/assessments/requirements.json"],
       "expectations": ["Recent completed OR permitted future launch explicit", "Age branch does not override move-in failure", "No invented legal approval or unrelated income/CPF intake"]
     },
     {
       "id": 102,
       "prompt": "Use the location fixture: is MRT close enough, and can I reach the office within35 minutes? Answer concisely, without turning this into a buying questionnaire.",
       "expected_output": "Compare the supplied550m routed-walk observation to600m; the25–40minute journey interval cannot prove a35minute maximum. Preserve fixture/tool limits.",
-      "files": ["../assets/examples/location.json"],
+      "files": ["../fixtures/assessments/location.json"],
       "expectations": ["Walk source/basis and target explicit", "Journey range leaves the hard maximum unconfirmed", "No invented walking time, live-provider or performed-search claim"]
     },
     {
       "id": 103,
       "prompt": "Find/read the available brochure revisions and explain price, completion and family-bedroom implications for two adults and two children needing separate rooms. Use actual native PDF/image tools where available; otherwise label the limit.",
       "expected_output": "Page/version-linked extraction, scenario matrix not quotation, TOP/type reconciliation and no study/WC/clearance promotion. Actual PDFs required for native-ingestion claims.",
-      "files": ["../assets/examples/documents.json", "../assets/examples/comfort.json"],
+      "files": ["../fixtures/assessments/documents.json", "../fixtures/assessments/comfort.json"],
       "expectations": ["Version/page scope and changed TOP retained", "Matrix remains scenarios, not unit quotes", "Study/access/approval/clearance and full baths versus WC distinct", "Text extraction is not visual certification", "Actual artifact/tool trace before native document performance claim"]
     },
     {
       "id": 104,
       "prompt": "Use the funding fixture. Can later sale proceeds fund the earlier completion payment? How do cash/CPF reserves and strategies affect the answer?",
       "expected_output": "Explain the30k timing shortfall under supplied eligibility/reserves; neither strategy makes future money available earlier. Distinguish illustrative funds from actual approval.",
-      "files": ["../assets/examples/funding.json"],
+      "files": ["../fixtures/assessments/funding.json"],
       "expectations": ["Shortfall and due/receipt ordering explicit", "Later funds do not erase historical failure", "CPF cannot fund cash-only or zero-permitted-use items", "No bank/HFE/grant approval, transaction or outreach claim"]
     },
     {
       "id": 105,
       "prompt": "Use the scenario fixture and controller changed-case output. Nearby prices are rising, but our ask moved from1.9m to2.2m against a hard2m cap. Update the recommendation and discuss appreciation.",
       "expected_output": "Changed quote fails the hard cap and supersedes old advice. Growth inputs stay assumptions; nearby transactions do not establish a prediction, fair value or maximum bid.",
-      "files": ["../assets/examples/scenarios.json", "../assets/question-led-case.json"],
+      "files": ["../fixtures/assessments/scenarios.json", "../fixtures/cases/question-led-case.json"],
       "expectations": ["Downside/flat/growth assumptions, no unsupported forecast/probability", "New quote fails hard cap; unchanged advice retired", "Comparable evidence, exact identity and exit/cash treatment separate", "No invented current fair value or maximum bid"]
     }
   ]

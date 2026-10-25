@@ -286,7 +286,7 @@ design/
 issue/
 prd/
 
-# Property advisor development workings (ship reusable skill assets and tests)
+# Property advisor local workings (runtime and developer definitions stay tracked)
 /docs/property-advisor/
 /docs/property-advisor-prd.md
 /docs/property-advisor-cross-category-research.md
@@ -297,6 +297,12 @@ prd/
 /skills/property-advisor-skill/evals/runs/
 /skills/property-advisor-skill/evals/coverage.md
 /skills/property-advisor-skill/evals/benchmark*.json
+
+# Property advisor developer artifacts (definitions/fixtures/tests remain tracked)
+/development/property-advisor/evals/runs/
+/development/property-advisor/evals/coverage.md
+/development/property-advisor/evals/benchmark*.json
+*.skill
 
 # Generated reports are local artifacts and are never committed
 reports/

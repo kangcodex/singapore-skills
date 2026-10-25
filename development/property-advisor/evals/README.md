@@ -27,7 +27,7 @@ report real research/access limits; it has no pre-filled identity answer.
    claiming comprehensive production advisory quality.
 
 Unit tests are independently runnable with:
-`python3 -m unittest discover -s skills/property-advisor-skill/tests` from repo root.
+`python3 -m unittest discover -s development/property-advisor/tests` from repo root.
 They prove calculations/record/CLI invariants, not all natural-language expectations.
 Do not equate a green scripted fixture with validated real-world recommendations.
 
@@ -40,10 +40,10 @@ Keep run-specific coverage/status notes under ignored `runs/` or `reports/`.
 Executable contract tests, native interpretation/document reading and independent
 real-source/human qualification are separate forms of evidence.
 
-All14 `--assess` kinds have runnable synthetic files at `assets/examples/KIND.json`
-and are driven through the real CLI by `tests/test_advisor_cli.py`. This is
+All14 `--assess` kinds have runnable synthetic files at `../fixtures/assessments/KIND.json`
+and are driven through the real CLI by `../tests/test_advisor_cli.py`. This is
 deterministic interface/behavior evidence, not proof of actual provider access.
-The full bound-case example is `assets/question-led-case.json`.
+The full bound-case example is `../fixtures/cases/question-led-case.json`.
 
 For native evaluation, retain exact prompts, fixture source, actual outputs and
 tool-use notes. A read-only evaluator interpreting controller-computed outputs is

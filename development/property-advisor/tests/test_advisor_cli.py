@@ -7,14 +7,15 @@ import sys
 import unittest
 from pathlib import Path
 
-SKILL = Path(__file__).resolve().parent.parent
+SKILL = Path(__file__).resolve().parents[3] / "skills" / "property-advisor-skill"
+FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 CLI = SKILL / "scripts" / "advisor_cli.py"
 
 
 class TestAdvisorCLI(unittest.TestCase):
     def test_cross_category_record_is_audited_and_returned(self) -> None:
         # Given / When
-        result = subprocess.run([sys.executable, str(CLI), "--case", str(SKILL / "assets" / "example-case.json"), "--format", "json"], capture_output=True, text=True, check=False)
+        result = subprocess.run([sys.executable, str(CLI), "--case", str(FIXTURES / "cases" / "example-case.json"), "--format", "json"], capture_output=True, text=True, check=False)
         # Then
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         report = json.loads(result.stdout)
@@ -24,7 +25,7 @@ class TestAdvisorCLI(unittest.TestCase):
 
     def test_markdown_renders_recommendation_and_unknown_costs(self) -> None:
         # Given / When
-        result = subprocess.run([sys.executable, str(CLI), "--case", str(SKILL / "assets" / "example-case.json")], capture_output=True, text=True, check=False)
+        result = subprocess.run([sys.executable, str(CLI), "--case", str(FIXTURES / "cases" / "example-case.json")], capture_output=True, text=True, check=False)
         # Then
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Investigate H1", result.stdout)
@@ -57,21 +58,21 @@ class TestAdvisorCLI(unittest.TestCase):
     def test_legacy_entry_point_routes_the_new_case_workflow(self) -> None:
         # Given / When
         legacy = SKILL / "scripts" / "property_advisor.py"
-        result = subprocess.run([sys.executable, str(legacy), "--case", str(SKILL / "assets" / "example-case.json"), "--format", "json"], capture_output=True, text=True, check=False)
+        result = subprocess.run([sys.executable, str(legacy), "--case", str(FIXTURES / "cases" / "example-case.json"), "--format", "json"], capture_output=True, text=True, check=False)
         # Then
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout)["case"]["schema_version"], "3.0")
 
-    def test_shipped_focused_examples_execute_through_the_real_cli(self) -> None:
+    def test_focused_fixtures_execute_through_the_real_cli(self) -> None:
         examples = {"question": "questions", "requirements": "checks", "location": "assessments", "amenities": "items", "documents": "effective_claims", "comfort": "rooms", "funding": "strategies", "loan_plan": "timeline", "cost_comparison": "options", "exit": "equity_before_costs", "comparables": "selected", "scenarios": "scenarios", "search": "rejected", "watch": "specification"}
         for kind, output_key in examples.items():
             with self.subTest(kind=kind):
-                result = subprocess.run([sys.executable, str(CLI), "--assess", kind, "--input", str(SKILL / "assets" / "examples" / f"{kind}.json"), "--format", "json"], capture_output=True, text=True, check=False)
+                result = subprocess.run([sys.executable, str(CLI), "--assess", kind, "--input", str(FIXTURES / "assessments" / f"{kind}.json"), "--format", "json"], capture_output=True, text=True, check=False)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertTrue(json.loads(result.stdout)[output_key])
 
     def test_question_led_case_executes_bound_assessments(self) -> None:
-        result = subprocess.run([sys.executable, str(CLI), "--case", str(SKILL / "assets" / "question-led-case.json"), "--format", "json"], capture_output=True, text=True, check=False)
+        result = subprocess.run([sys.executable, str(CLI), "--case", str(FIXTURES / "cases" / "question-led-case.json"), "--format", "json"], capture_output=True, text=True, check=False)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         payload = json.loads(result.stdout)
         self.assertEqual(payload["audit"]["errors"], [])

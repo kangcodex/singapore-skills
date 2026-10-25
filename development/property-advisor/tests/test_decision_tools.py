@@ -7,7 +7,8 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
-SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
+SKILL = Path(__file__).resolve().parents[3] / "skills" / "property-advisor-skill"
+SCRIPTS = SKILL / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 
@@ -93,7 +94,7 @@ class TestCaseAudit(unittest.TestCase):
     def setUp(self) -> None:
         import advisor_case
         self.case = advisor_case
-        self.template = Path(__file__).resolve().parent.parent / "assets" / "case-template.json"
+        self.template = SKILL / "assets" / "case-template.json"
 
     def test_empty_case_remains_valid_but_no_match(self) -> None:
         # Given

@@ -137,33 +137,37 @@ prices do not justify an entry premium. Missing matched data limits the verdict.
 
 Use the portable stdlib helpers (Python 3.11+; no installation):
 
+Set `CASE_DIR` to a user-agreed casework directory outside the installed skill.
+Create the assessment JSON inputs there using the [input contracts](references/assessment-inputs.md).
+
 ```bash
-python3 scripts/advisor_cli.py --assess question --input assets/examples/question.json --format json
-python3 scripts/advisor_cli.py --assess requirements --input assets/examples/requirements.json
-python3 scripts/advisor_cli.py --assess documents --input assets/examples/documents.json
-python3 scripts/advisor_cli.py --assess comfort --input assets/examples/comfort.json
-python3 scripts/advisor_cli.py --assess location --input assets/examples/location.json
-python3 scripts/advisor_cli.py --assess funding --input assets/examples/funding.json
-python3 scripts/advisor_cli.py --assess scenarios --input assets/examples/scenarios.json
+CASE_DIR=/path/to/your/project/reports/property-advisor
+python3 scripts/advisor_cli.py --assess question --input "$CASE_DIR/question.json" --format json
+python3 scripts/advisor_cli.py --assess requirements --input "$CASE_DIR/requirements.json"
+python3 scripts/advisor_cli.py --assess documents --input "$CASE_DIR/documents.json"
+python3 scripts/advisor_cli.py --assess comfort --input "$CASE_DIR/comfort.json"
+python3 scripts/advisor_cli.py --assess location --input "$CASE_DIR/location.json"
+python3 scripts/advisor_cli.py --assess funding --input "$CASE_DIR/funding.json"
+python3 scripts/advisor_cli.py --assess scenarios --input "$CASE_DIR/scenarios.json"
 python3 scripts/advisor_cli.py --calculate subtotal \
   --components '{"price":"2850000","bsd":"112100","legal":null}'
 python3 scripts/advisor_cli.py --calculate mortgage \
   --principal 1000000 --annual-rate 4 --years 25
 python3 scripts/advisor_cli.py --calculate premium \
   --asking 2000000 --asking-unit total --baseline 2000 --baseline-unit psf --area-sqft 1000
-python3 scripts/advisor_cli.py --case cases/example/v1.json --format json
-python3 scripts/advisor_cli.py --case cases/example/v2.json --previous-case cases/example/v1.json
-python3 scripts/advisor_cli.py --case assets/question-led-case.json --format json
+python3 scripts/advisor_cli.py --case "$CASE_DIR/v1.json" --format json
+python3 scripts/advisor_cli.py --case "$CASE_DIR/v2.json" --previous-case "$CASE_DIR/v1.json"
 ```
 
-Paths are relative to this skill's installed directory. Start records from
-`assets/case-template.json`; replace its dates/identity and populate the evidence.
+Script/template paths are relative to this skill's installed directory. Copy
+`assets/case-template.json` into the casework directory; replace its dates/identity
+and populate the evidence. Treat installed skill files as runtime resources.
 Unknown costs are excluded, not zero. Calculator outputs are arithmetic/scenarios,
 not sourced rules or proof of comparability. The AT10 numbers above are historical
 fixtures, not refreshed tax advice. Trend helpers use completed calendar quarters;
 missing periods/sample evidence must remain visible.
 
-All bundled examples are synthetic. Focused helpers validate **supplied evidence
+The numeric examples in this guide are synthetic. Focused helpers validate **supplied evidence
 contracts**; they do not perform a web search, route request, OCR or institutional
 approval. First obtain evidence with actual available native tools, then use the
 appropriate assessment. Do not reuse sibling arrival-ETA/haversine or fixed-net-yield
@@ -181,9 +185,9 @@ Use `--mode agent` for the existing profile/plan/compare/advise scenario tools:
 
 ```bash
 python3 scripts/property_advisor.py --mode agent --task profile --profile family_of_five --variant multigen
-python3 scripts/property_advisor.py --mode agent --task plan --scenario cases/example/scenario.json
+python3 scripts/property_advisor.py --mode agent --task plan --scenario "$CASE_DIR/scenario.json"
 python3 scripts/property_advisor.py --mode agent --task advise --summary-only \
-  --scenario references/examples/dink-couple.json
+  --scenario "$CASE_DIR/scenario.json"
 ```
 
 `plan` produces cash/CPF stage timelines, monthly schedules, loan stress checks,
@@ -227,9 +231,9 @@ exact-home value verdict. State research coverage; do not claim best in Singapor
 Version briefs/evidence/scenarios/recommendations; preserve previous records.
 New family facts or source versions trigger affected recalculation and reranking,
 not a sentence appended to obsolete advice. Explain old → new → reason and retire
-superseded advice. Store personal casework only at a user-agreed location; local
-`cases/` and `workings/` are ignored in this repository. Keep reusable fixtures
-sanitized and separate. See the decision-record reference for storage and Git rules.
+superseded advice. Store personal casework only at a user-agreed location outside
+the installed skill. Keep reusable fixtures sanitized and separate. See the
+decision-record reference for storage and Git rules.
 
 On revision, update the normalized rule as well as its wording, cite user change
 history for confirmed requirement changes/removals, and rerun bound assessments.
@@ -257,8 +261,11 @@ scenario outputs remain supported. The bundled shared API client is generated
 from the repository root; never edit its copy by hand.
 
 ```bash
-python3 -m unittest discover -s tests
+python3 scripts/advisor_cli.py --help
+python3 scripts/advisor_cli.py --case assets/case-template.json --format json
 ```
 
-Run from this skill directory. `evals/evals.json` defines fixed behavioral cases
-for skill-creator; `evals/README.md` explains baseline comparison and human grading.
+Run from this skill directory for an import/empty-template smoke check. An empty
+case is valid but establishes no matching home or advisory conclusion. Development
+tests, eval definitions and demo fixtures live outside the installed package in
+the source repository's `development/property-advisor/` directory.

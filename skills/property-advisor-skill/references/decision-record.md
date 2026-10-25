@@ -1,7 +1,7 @@
 # Decision record, audit and continuity (schema 3.0)
 
 Copy `assets/case-template.json` to a user-agreed local case directory. Use ISO
-dates and a stable case id. Version each revision; never overwrite previous advice
+dates and a stable case id outside the installed skill. Version each revision; never overwrite previous advice
 silently. This is a structured research record, not a mandatory database.
 
 ## Entities and fields
@@ -33,7 +33,7 @@ Price fields need kind/currency/unit/area basis/date/terms and availability. A
 
 Schema3 has additive `facts`, requirement `condition` and `analysis_requests`
 fields. See [assessment inputs](assessment-inputs.md) for exact operators and
-[the runnable question-led case](../assets/question-led-case.json).
+[bound execution](assessment-inputs.md#bound-case-execution-and-revision) for JSON Pointers.
 
 Property/candidate facts use state/value/unit/basis/evidence_ids records. Conflicting
 known overrides remain conflicting. A verified hard pass now requires an actual
@@ -70,7 +70,7 @@ an unsupported exact-value/view/legal claim. Describe missing evidence openly.
 
 ## Verification and reports
 
-Run `python3 scripts/advisor_cli.py --case cases/id/v1.json --format json`.
+Run `python3 scripts/advisor_cli.py --case /path/to/cases/id/v1.json --format json`.
 Exit 2 blocks publication of inconsistent records; zero indicates the checked
 invariants passed, NOT independent source truth, legal approval or complete advice.
 Human/agent review must still verify calculations, source accuracy, household
@@ -95,12 +95,13 @@ changes; the Markdown renderer does not show that old summary as current advice.
 
 User chooses local persistence/retention; do not silently upload household data.
 Store raw uploads, source snapshots, case versions, report exports, screenshots,
-viewing notes, logs and watch state under local `cases/` or `workings/`. Both are
-ignored in this repository. Evaluation outputs/transcripts/grades belong in
-`evals/runs/` or sibling `property-advisor-skill-workspace/`, also ignored.
+viewing notes, logs and watch state in a user-agreed workspace outside the skill.
+In a repository checkout, `reports/` is ignored. Evaluation outputs/transcripts/
+grades belong in ignored `development/property-advisor/evals/runs/` or `reports/`.
 
-Track SKILL.md, category/source references, scripts, sanitized reusable assets,
-tests, fixed eval prompts and synthetic evidence fixtures. Do not ignore all JSON,
+Track SKILL.md, category/source references, scripts and the case template in the
+skill. Track tests, fixed eval prompts and synthetic evidence fixtures separately
+under `development/property-advisor/`. Do not ignore all JSON,
 PDFs/images, tests or references: those patterns hide required deliverables.
 The root `.gitignore` also excludes `docs/property-advisor/` design workings,
 the local PRD/research/spike documents and
@@ -110,4 +111,6 @@ Ignoring does not untrack existing Git files or establish permission to delete
 them. Before committing check actual `git status`, intended staged files and
 `git check-ignore --no-index` for representative workings AND retained assets.
 Installed skills outside this repo may not inherit these ignore rules; check the
-chosen case repository before storing personal or licensed data there.
+chosen case repository before storing personal or licensed data there. Importers
+may copy ignored local files; distribute the clean runtime export, not a working
+directory containing personal data.

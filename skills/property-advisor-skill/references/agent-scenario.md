@@ -1,10 +1,9 @@
 # Agent-mode scenario format
 
 `--task plan|compare|advise` read a JSON scenario (`--scenario FILE`). Money and rates are strings
-(or integers); floats are parsed as Decimal. Runnable examples:
-[`examples/dink-couple.json`](examples/dink-couple.json),
-[`examples/first-home-couple.json`](examples/first-home-couple.json),
-[`examples/family-of-five.json`](examples/family-of-five.json).
+(or integers); floats are parsed as Decimal. Create the household's scenario outside
+the installed skill using the fields below. Synthetic regression scenarios belong
+to the source repository's development fixtures and are not runtime defaults.
 
 ```json
 {

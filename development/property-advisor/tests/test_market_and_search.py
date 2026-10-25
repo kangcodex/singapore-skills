@@ -5,7 +5,7 @@ import sys
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "skills" / "property-advisor-skill" / "scripts"))
 
 
 class TestMarket(unittest.TestCase):

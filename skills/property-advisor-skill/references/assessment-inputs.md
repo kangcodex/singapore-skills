@@ -4,7 +4,7 @@ Python 3.11+, stdlib only. Paths below are relative to the installed skill folde
 
 ```bash
 python3 scripts/advisor_cli.py --assess KIND --input FILE.json --format json
-python3 scripts/advisor_cli.py --case assets/question-led-case.json --format json
+python3 scripts/advisor_cli.py --case /path/to/your/case.json --format json
 ```
 
 Default output is readable Markdown; JSON is explicit. The existing
@@ -15,7 +15,10 @@ bank approval or active notification. Obtain native/source evidence first.
 
 Top-level calculation fields are checked: unknown names are errors rather than
 silently ignored. `example_notice`, `metadata` and `notes` are informational.
-Fixtures under `assets/examples/` are synthetic and independently labelled.
+Keep input files outside the installed skill. For example, a focused question
+input can be `{"kinds":["proximity"],"known_inputs":{"location":"resolved address"}}`;
+replace that placeholder with the researched identity. The case starter is
+`assets/case-template.json`; synthetic developer fixtures are not installed.
 
 ## Question plan
 
@@ -25,7 +28,7 @@ Fixtures under `assets/examples/` are synthetic and independently labelled.
 `update`, `watch`. The native model supplies the intent. `known_inputs.location`
 may be a resolved property/address; `property`/`address` aliases are accepted.
 Missing material inputs and precision inputs are returned without claiming work
-was performed. See `assets/examples/question.json`.
+was performed.
 
 ## Requirements and facts
 
@@ -95,7 +98,7 @@ price_matrix_is_scenario prevents quotation promotion. Metadata/file paths are
 never followed by this helper. Current identified-quote support also needs as_of,
 matching candidate_id where requested, quoted_at and either an unexpired valid_until
 or same-day quote. Layout/candidate/stack IDs keep distinct variants separate;
-one assessment is one resolved property dossier. See `assets/examples/documents.json`.
+one assessment is one resolved property dossier.
 
 `comfort`: household, layout, optional explicit future_scenarios. Household needs
 sleeping_groups (agreed grouping, not headcount), optional min_full_bathrooms and
@@ -110,7 +113,7 @@ fit requires actual dimensions_m and source-backed verification, not drawn beds;
 functional_review_complete is not a substitute for missing facts. Features use
 known/value/source records. Future scenarios have id, household and optional hard
 status. Net internal area must be supplied with its real basis; never inferred by
-an efficiency percentage. See `assets/examples/comfort.json`.
+an efficiency percentage.
 
 ## Funding, loan scenarios and exit
 
@@ -129,7 +132,7 @@ Same-day events require unique integer sequence values. Every payment reconciles
 allocations plus unfunded amount; caps/reserves apply at every stage/month.
 Later receipts do not erase earlier shortfalls. Output includes first_shortfall,
 total_unfunded, balances, funds_used and limitations—not lender approval or an
-optimized bridge loan. See `assets/examples/funding.json`.
+optimized bridge loan.
 
 Monthly `recurring` rules have id/start/months (1–600), kind and event fields;
 optional changes use unique one-based from_month and changed amount/status.
@@ -189,7 +192,7 @@ trend are cross-checks; fair_value remains null until actual judgement is suppor
 evidence_ids. Explicit decline/flat/base/upside values are assumptions, not forecasts.
 Optional nonrecoverable_costs/fixed_selling_costs/selling_cost_rate_decimal produce
 break-even on that stated cost basis; do not double-count principal or refunds.
-Reconcile net exit separately. See `assets/examples/scenarios.json`.
+Reconcile net exit separately.
 
 `search`: as_of/coverage/requirements/candidates, optional evidence ledger.
 Candidates carry facts and opportunity state. Confirmed unit_key deduplicates;

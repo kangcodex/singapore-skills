@@ -7,7 +7,7 @@ import unittest
 from decimal import Decimal
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "skills" / "property-advisor-skill" / "scripts"))
 import agent_cashflow as cf  # noqa: E402
 import agent_policy as ap  # noqa: E402
 from advisor_records import Record  # noqa: E402
