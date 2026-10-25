@@ -16,7 +16,7 @@ def _m(x) -> str:
 def profile_summary(p: dict) -> str:
     lines = [f"Buyer profile: {p['label']}", "", "What to prioritise:"]
     lines += [f"  - {x}" for x in p["priorities"]]
-    lines += ["", "Shortlist (best fit first):"]
+    lines += ["", "Profile shortlist hypotheses (not searched inventory; adapt to the actual brief):"]
     for s in p["shortlist"]:
         seg = ""
         if s["segments"]:
@@ -42,7 +42,7 @@ def profile_summary(p: dict) -> str:
     for cat, notes in p["category_notes"].items():
         lines.append(f"  {cat.replace('_', ' ').title()}:")
         lines += [f"    - {n}" for n in notes]
-    lines += ["", "Sibling skills to run for this area:"] + [f"  - {r['skill']}: {r['use']}" for r in p["related_skills"]]
+    lines += ["", "Related helpers (validate provider coverage and price/area units before reuse):"] + [f"  - {r['skill']}: {r['use']}" for r in p["related_skills"]]
     return "\n".join(lines)
 
 
@@ -59,7 +59,7 @@ def plan_summary(plan: dict) -> str:
             lines.append(f"  {e['date']}  {e['label']}: cash {_m(e['cash'])}, CPF {_m(e['cpf'])}"
                          + (f", loan drawn {_m(e['loan_drawn'])}" if Decimal(e["loan_drawn"]) > 0 else ""))
     up = plan["upfront"]
-    lines += ["", f"Minimum up front ({up['through']}): cash {_m(up['cash'])}, CPF {_m(up['cpf'])}.",
+    lines += ["", f"Modelled up-front subtotal ({up['through']}): cash {_m(up['cash'])}, CPF {_m(up['cpf'])}.",
               f"Renovation and furnishing (cash): {_m(plan['move_in_costs']['cash'])}.",
               f"Household cash {_m(plan['cash_check']['household_cash'])}; needed to move in {_m(plan['cash_check']['cash_needed_to_move_in'])}; "
               f"left {_m(plan['cash_check']['cash_left_after_move_in'])}."]
@@ -87,6 +87,7 @@ def plan_summary(plan: dict) -> str:
     lines.append("  Instalment at interest low/base/high: " + " / ".join(f"{_m(sc[k]['monthly_instalment'])}" for k in ("low", "base", "high")))
     lines += [f"WARNING: {w}" for w in plan["warnings"]]
     lines += _unverified(plan["unverified_assumptions"])
+    lines.append("Scenario only: verify payment deadlines and use the dated funding ledger for household balances, reserve strategy and sale-proceeds timing.")
     return "\n".join(lines)
 
 

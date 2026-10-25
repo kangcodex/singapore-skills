@@ -83,6 +83,29 @@ cp -r skills/cdc-voucher-locator-skill ~/.claude/skills/cdc-voucher-locator-skil
 
 For other agents, the destination paths differ — see the [vercel-labs/skills supported agents list](https://github.com/vercel-labs/skills#supported-agents).
 
+## Usage: `property-advisor-skill`
+
+The [advisor workflow](skills/property-advisor-skill/SKILL.md) handles focused
+questions as well as housing searches across HDB, EC, private flats/condos and
+landed. Native tools obtain actual property/document/route evidence; stdlib helpers
+screen supplied facts, reconcile documents, assess household functions and compare
+dated cash/CPF funding/scenarios. See the
+[input reference](skills/property-advisor-skill/references/assessment-inputs.md).
+
+```bash
+python3 skills/property-advisor-skill/scripts/advisor_cli.py \
+  --assess requirements --input skills/property-advisor-skill/assets/examples/requirements.json
+python3 skills/property-advisor-skill/scripts/advisor_cli.py \
+  --assess funding --input skills/property-advisor-skill/assets/examples/funding.json
+python3 skills/property-advisor-skill/scripts/advisor_cli.py \
+  --case skills/property-advisor-skill/assets/question-led-case.json --format json
+```
+
+Examples are synthetic. Source/route/OCR access and official eligibility/approval
+are not implied by a passed calculation. Design workings in `docs/property-advisor/`
+and raw reports remain local/Git-ignored; reusable implementation references,
+scripts, examples, tests and eval definitions are version-controlled.
+
 ## Usage: `cdc-voucher-locator-skill`
 
 Once installed, the agent triggers the skill automatically when the user asks things like:

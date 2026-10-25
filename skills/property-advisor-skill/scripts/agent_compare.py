@@ -91,6 +91,8 @@ def _option_summary(name: str, plan: dict, addons: list, rates: dict) -> dict:
     return {
         "name": name, "category": plan["option"]["category"], "price": plan["option"]["price"],
         "verdict": plan["verdict"],
+        "requirement_status": plan["option"].get("requirement_status", "unknown"),
+        "timing_result": plan.get("timing_check", {}).get("result", "unknown"),
         "upfront_cash": plan["upfront"]["cash"], "upfront_cpf": plan["upfront"]["cpf"],
         "move_in_costs_cash": plan["move_in_costs"]["cash"],
         "monthly_instalment": steady["instalment"],

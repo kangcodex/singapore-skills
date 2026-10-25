@@ -225,8 +225,7 @@ __marimo__/
 __MACOSX/
 .AppleDouble
 .LSOverride
-Icon[
-]
+Icon[[:cntrl:]]
 
 # Resource forks
 ._*
@@ -247,8 +246,7 @@ Icon[
 .file
 .disk_label*
 lost+found
-.HFS+ Private Directory Data[
-]
+.HFS+ Private Directory Data[[:cntrl:]]
 
 # Directories potentially created on remote AFP share
 .AppleDB
@@ -289,6 +287,7 @@ issue/
 prd/
 
 # Property advisor development workings (ship reusable skill assets and tests)
+/docs/property-advisor/
 /docs/property-advisor-prd.md
 /docs/property-advisor-cross-category-research.md
 /docs/property-advisor-requirements-spike.md
@@ -296,6 +295,7 @@ prd/
 /skills/property-advisor-skill/workings/
 /skills/property-advisor-skill/cases/
 /skills/property-advisor-skill/evals/runs/
+/skills/property-advisor-skill/evals/coverage.md
 /skills/property-advisor-skill/evals/benchmark*.json
 
 # Generated reports are local artifacts and are never committed

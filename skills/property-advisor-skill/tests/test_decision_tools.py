@@ -40,6 +40,11 @@ class TestCalculations(unittest.TestCase):
         self.assertFalse(result["complete"])
         self.assertEqual(result["excluded"], ["legal"])
 
+    def test_no_known_cost_is_unknown_rather_than_a_zero_subtotal(self) -> None:
+        result = self.math.cost_total({"price": None, "duty": None})
+        self.assertIsNone(result["subtotal"])
+        self.assertFalse(result["complete"])
+
     def test_zero_rate_mortgage(self) -> None:
         # Given / When
         result = self.math.monthly_payment("120000", "0", 10)
@@ -189,6 +194,28 @@ class TestCaseAudit(unittest.TestCase):
         for number in ("NaN", "Infinity", "1e9999"):
             with self.subTest(number=number), self.assertRaises(CaseError):
                 parse_json('{"value":' + number + '}')
+
+    def test_confirmed_hard_requirement_removal_needs_user_change_history(self) -> None:
+        previous = self.case.read_case(self.template)
+        previous["buyer_brief"]["requirements"] = [{"id": "budget", "priority": "hard", "state": "confirmed", "value": "Maximum2m"}]
+        current = self.case.read_case(self.template)
+        current["version"] = 2
+        current["supersedes"] = 1
+        current["history"] = [{"id": "h2", "reason": "Generic refresh"}]
+        result = self.case.audit_case(current, previous)
+        self.assertTrue(any("user change history" in error for error in result.errors))
+
+    def test_changed_wording_cannot_reuse_an_unreviewed_old_predicate(self) -> None:
+        import copy
+        previous = self.case.read_case(self.template)
+        previous["buyer_brief"]["requirements"] = [{"id": "budget", "priority": "hard", "state": "confirmed", "value": "Maximum2m", "condition": {"kind": "number", "field": "price", "op": "max", "value": "2000000", "unit": "SGD"}}]
+        current = copy.deepcopy(previous)
+        current["version"] = 2
+        current["supersedes"] = 1
+        current["history"] = [{"id": "h2", "source_kind": "user", "changed_requirement_ids": ["budget"], "reason": "Budget changed"}]
+        current["buyer_brief"]["requirements"][0]["value"] = "Maximum1.8m"
+        result = self.case.audit_case(current, previous)
+        self.assertTrue(any("normalization" in error for error in result.errors))
 
 
 if __name__ == "__main__":

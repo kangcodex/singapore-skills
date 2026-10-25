@@ -62,6 +62,30 @@ class TestAdvisorCLI(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout)["case"]["schema_version"], "3.0")
 
+    def test_shipped_focused_examples_execute_through_the_real_cli(self) -> None:
+        examples = {"question": "questions", "requirements": "checks", "location": "assessments", "amenities": "items", "documents": "effective_claims", "comfort": "rooms", "funding": "strategies", "loan_plan": "timeline", "cost_comparison": "options", "exit": "equity_before_costs", "comparables": "selected", "scenarios": "scenarios", "search": "rejected", "watch": "specification"}
+        for kind, output_key in examples.items():
+            with self.subTest(kind=kind):
+                result = subprocess.run([sys.executable, str(CLI), "--assess", kind, "--input", str(SKILL / "assets" / "examples" / f"{kind}.json"), "--format", "json"], capture_output=True, text=True, check=False)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertTrue(json.loads(result.stdout)[output_key])
+
+    def test_question_led_case_executes_bound_assessments(self) -> None:
+        result = subprocess.run([sys.executable, str(CLI), "--case", str(SKILL / "assets" / "question-led-case.json"), "--format", "json"], capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["audit"]["errors"], [])
+        self.assertEqual(payload["case"]["assessment_results"]["constraints"]["assessment"]["status"], "passes_supplied_constraints")
+
+    def test_focused_assessment_missing_input_is_a_real_error(self) -> None:
+        result = subprocess.run([sys.executable, str(CLI), "--assess", "funding", "--format", "json"], capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("--input", result.stderr)
+
+    def test_incompatible_cli_context_arguments_are_not_silently_ignored(self) -> None:
+        result = subprocess.run([sys.executable, str(CLI), "--calculate", "subtotal", "--previous-case", str(SKILL / "assets" / "case-template.json")], capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 2)
+
 
 if __name__ == "__main__":
     unittest.main()

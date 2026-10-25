@@ -17,9 +17,9 @@ import agent_policy as ap  # noqa: E402
 POLICY = ap.load_policy()
 
 
-def _buyers(cpf="300000", income="6000", props=0, residency="sc", ages=(32, 30)):
+def _buyers(cpf="300000", income="6000", props=0, residency="sc", ages=(32, 30), loans=0):
     return [{"age": a, "residency": residency, "existing_properties": props,
-             "monthly_income": income, "cpf_oa": str(D(cpf) / len(ages)),
+              "outstanding_loans": loans, "monthly_income": income, "cpf_oa": str(D(cpf) / len(ages)),
              "cpf_oa_monthly": "1000"} for a in ages]
 
 
@@ -117,7 +117,7 @@ class TestResaleCondo(unittest.TestCase):
         self.assertEqual(down_cpf + down_cash, D("375000.00"))
 
     def test_existing_property_triggers_absd_in_cash(self):
-        res = cf.plan(_scn("resale_condo", 1500000, buyers=_buyers(props=1)), POLICY)
+        res = cf.plan(_scn("resale_condo", 1500000, buyers=_buyers(props=1, loans=1)), POLICY)
         by = {e["stage"]: e for e in res["timeline"]}
         self.assertEqual(D(by["absd"]["cash"]), D("300000"))
         self.assertEqual(D(by["absd"]["cpf"]), D("0"))

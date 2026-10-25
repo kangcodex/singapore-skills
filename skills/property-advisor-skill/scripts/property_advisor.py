@@ -551,7 +551,7 @@ def _agent_args(argv):
 
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
-    if "--case" in argv:
+    if any(argument == flag or argument.startswith(flag + "=") for argument in argv for flag in ("--case", "--assess", "--calculate")):
         from advisor_cli import main as case_main
         return case_main(argv)
     agent_args = _agent_args(argv)

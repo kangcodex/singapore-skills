@@ -1,0 +1,9 @@
+{
+  "example_notice": "Synthetic supplied service/method evidence, not school eligibility.",
+  "as_of": "2026-10-24",
+  "cohort": "2028",
+  "items": [
+    {"id": "shop", "kind": "groceries", "operating_status": "closed", "source": "fixture://closure", "retrieved_at": "2026-10-24"},
+    {"id": "school", "kind": "primary_school", "operating_status": "operating", "distance_m": "750", "distance_basis": "official_method", "official_distance_method": "Supplied fictional method", "method_verified": true, "address_basis": "Supplied fictional address", "cohort": "2028", "source": "fixture://method", "retrieved_at": "2026-10-24"}
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "example_notice": "Synthetic task-planning example; no search has been performed.",
+  "kinds": ["proximity"],
+  "known_inputs": {"location": "Fixture Home"}
+}

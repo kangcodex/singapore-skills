@@ -1,0 +1,11 @@
+{
+  "example_notice": "Synthetic obligations and supplied fund eligibility, not statutory dates or CPF approval.",
+  "currency": "SGD",
+  "compare_strategies": true,
+  "funds": [{"id": "cash", "kind": "cash", "balance": "100000", "reserve": "20000"}, {"id": "cpf", "kind": "cpf", "balance": "50000", "reserve": "10000", "usable_cap": "50000"}],
+  "events": [
+    {"id": "deposit", "date": "2026-11-01", "kind": "payment", "amount": "5000", "allowed_funds": ["cash"]},
+    {"id": "balance", "date": "2026-11-05", "kind": "payment", "amount": "145000", "allowed_funds": ["cash", "cpf"]},
+    {"id": "sale-proceeds", "date": "2026-12-01", "kind": "receipt", "amount": "100000", "fund": "cash", "status": "confirmed"}
+  ]
+}

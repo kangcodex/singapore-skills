@@ -1,6 +1,6 @@
 ---
 name: property-advisor-skill
-description: "Research, discover and compare Singapore homes across HDB, executive condominiums (EC), private flats/condos and landed housing. Use for a property/block/address name, listing or quotation, household/budget/location brief, floor/site plans, exact-home selection, affordability and cash/CPF timelines, upgrading/downsizing, buy/rent/wait or sell/retain decisions, investment questions and changed evidence. Proactively research accessible sources, assess household liveability, apply category-specific policy checks, compare matched prices and total costs, and produce conditional advice with cited evidence and an updateable case. Do not restrict discovery to condos or require brochures before starting name-only research."
+description: "Question-led Singapore property advice across HDB, EC, private flats/condos and landed. Use for named-property research, needs-led discovery, listings/quotes, MRT and multi-destination transport, schools/amenities, e-brochure and floor/site-plan analysis, family comfort, flexible age/future-TOP requirements, total costs, cash/CPF timelines and funding choices, buy/rent/wait or sell/retain decisions, appreciation scenarios and case updates. Use actual native search/document/image tools, dated evidence and deterministic assessments; answer small questions without a full financial intake. Give conditional recommendations and next actions, not unsupported exact-unit values, live-route claims or approvals. Start name-only research proactively rather than requiring user brochures."
 ---
 
 # Singapore Property Advisor
@@ -17,6 +17,12 @@ home/unit selection, cost/price question, changed-case update or requested watch
 Research available information immediately; ask only material questions. If a
 name/address has multiple plausible identities, resolve it before using evidence.
 
+For a focused question (MRT, trips, schools/amenities, a brochure, family fit or
+funding), start with [question-led workflows](references/question-led-workflows.md).
+Answer at the requested depth. A proximity question does not need income/CPF;
+brochure extraction does not need a complete buying brief. Use §§2–5 in proportion
+to the decision, not as a mandatory questionnaire.
+
 Use available native search/web/browser, PDF/image, calculation and file tools.
 Never claim tools, searches, plan/panorama inspections or background jobs were
 used when they were not. If web search is absent, use accessible official search
@@ -27,7 +33,8 @@ Load references selectively:
 
 | Task | Read |
 |---|---|
-| Every case | [Brief and decision workflow](references/decision-workflow.md), [evidence and sources](references/research-and-evidence.md) |
+| Focused questions / runnable assessments | [Question-led workflows](references/question-led-workflows.md), [assessment inputs](references/assessment-inputs.md) |
+| Broad search or buying case | [Brief and decision workflow](references/decision-workflow.md), [evidence and sources](references/research-and-evidence.md) |
 | HDB | [HDB](references/hdb.md) |
 | EC | [EC](references/ec.md) |
 | Flats/condos | [Private non-landed](references/private-non-landed.md) |
@@ -56,6 +63,14 @@ Each requirement has priority (hard/strong/flexible), knowledge state
 (confirmed/assumed/unknown), provenance and revision. Unknown candidate facts
 cannot satisfy hard constraints. Do not infer future children, helpers, ethnicity,
 citizenship or school priorities. Explain why policy-specific facts are needed.
+
+Normalize important rules into explicit `condition` objects before semantic
+screening. “Maximum five years old, future launches allowed” means recent completed
+OR the permitted uncompleted branch; independently check practical occupancy and
+move deadline. Actual TOP, expected TOP, contractual possession and move-in are
+different. A rolling age cutoff differs from an inclusive year window. “Closer
+MRT preferred” does not imply a universal600m cutoff. Preserve the original wording,
+time/unit/area basis and user-approved exceptions; see the assessment-input contract.
 
 Optional built-in profiles (DINK, first-home couple, family of five/multigen) can
 seed questions and checklists. Their default rankings are hypotheses, not this
@@ -123,6 +138,13 @@ prices do not justify an entry premium. Missing matched data limits the verdict.
 Use the portable stdlib helpers (Python 3.11+; no installation):
 
 ```bash
+python3 scripts/advisor_cli.py --assess question --input assets/examples/question.json --format json
+python3 scripts/advisor_cli.py --assess requirements --input assets/examples/requirements.json
+python3 scripts/advisor_cli.py --assess documents --input assets/examples/documents.json
+python3 scripts/advisor_cli.py --assess comfort --input assets/examples/comfort.json
+python3 scripts/advisor_cli.py --assess location --input assets/examples/location.json
+python3 scripts/advisor_cli.py --assess funding --input assets/examples/funding.json
+python3 scripts/advisor_cli.py --assess scenarios --input assets/examples/scenarios.json
 python3 scripts/advisor_cli.py --calculate subtotal \
   --components '{"price":"2850000","bsd":"112100","legal":null}'
 python3 scripts/advisor_cli.py --calculate mortgage \
@@ -131,6 +153,7 @@ python3 scripts/advisor_cli.py --calculate premium \
   --asking 2000000 --asking-unit total --baseline 2000 --baseline-unit psf --area-sqft 1000
 python3 scripts/advisor_cli.py --case cases/example/v1.json --format json
 python3 scripts/advisor_cli.py --case cases/example/v2.json --previous-case cases/example/v1.json
+python3 scripts/advisor_cli.py --case assets/question-led-case.json --format json
 ```
 
 Paths are relative to this skill's installed directory. Start records from
@@ -139,6 +162,18 @@ Unknown costs are excluded, not zero. Calculator outputs are arithmetic/scenario
 not sourced rules or proof of comparability. The AT10 numbers above are historical
 fixtures, not refreshed tax advice. Trend helpers use completed calendar quarters;
 missing periods/sample evidence must remain visible.
+
+All bundled examples are synthetic. Focused helpers validate **supplied evidence
+contracts**; they do not perform a web search, route request, OCR or institutional
+approval. First obtain evidence with actual available native tools, then use the
+appropriate assessment. Do not reuse sibling arrival-ETA/haversine or fixed-net-yield
+heuristics as verified property journeys or unit yields.
+
+`--assess` also supports `amenities`, `search`, `comparables`, `exit`, `watch`,
+`loan_plan` and `cost_comparison`. Supported root fields are checked; unmapped inputs
+are errors rather than silently ignored. Read the input reference instead of inventing
+parameter names. Case `analysis_requests` can bind current fields/results through
+JSON Pointers; they recompute on each run with fingerprints and change summaries.
 
 ### Preserved offline agent planner
 
@@ -155,6 +190,15 @@ python3 scripts/property_advisor.py --mode agent --task advise --summary-only \
 affordability ceilings and horizon scenarios. `compare` adds cost of occupancy,
 equity, lifestyle add-ons and break-even; `advise` combines these with a profile.
 Scenario and case formats are distinct; read the agent-scenario reference.
+
+`loan_plan`/`cost_comparison` assessments bridge that scenario format into case
+execution. Use the event ledger for actual dated funding and user-selectable
+cash/CPF reserves/strategies; the legacy planner's aggregate cash check is not a
+household bank-balance proof. Missing loan counts are not inferred from ownership.
+Zero/prorated CPF usage applies cumulatively across stages/fees/monthly payments.
+Different price/valuation needs quoted loan amount and cash minimum; no COV
+entitlement is invented. Actual `payment_schedule`/`milestones` override illustrative
+offsets; material TOP metadata that conflicts with the offsets must be resolved.
 
 Inspect its dated policy tables, assumptions, warnings, unverified inputs and
 simplifications. They are not automatic current-rule verification. Scenario
@@ -186,6 +230,11 @@ not a sentence appended to obsolete advice. Explain old → new → reason and r
 superseded advice. Store personal casework only at a user-agreed location; local
 `cases/` and `workings/` are ignored in this repository. Keep reusable fixtures
 sanitized and separate. See the decision-record reference for storage and Git rules.
+
+On revision, update the normalized rule as well as its wording, cite user change
+history for confirmed requirement changes/removals, and rerun bound assessments.
+Unchanged summaries/recommendations become superseded when material facts change;
+write new consumer advice from the recomputed results rather than republishing them.
 
 Watch only on request: identify triggers, thresholds, frequency and expiry.
 Without an actual scheduler/channel, offer a saved watch specification or on-demand

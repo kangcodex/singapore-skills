@@ -1,0 +1,10 @@
+{
+  "example_notice": "Fictional metadata comparison; floor/condition and actual value unverified.",
+  "as_of": "2026-10-24",
+  "subject": {"property_id": "p", "bedrooms": 3, "area_sqft": "1000", "area_basis": "strata", "price": "1900000", "price_kind": "asking"},
+  "observations": [
+    {"id": "t1", "kind": "transaction", "property_id": "p", "bedrooms": 3, "area_sqft": "1000", "area_basis": "strata", "price": "1850000", "date": "2026-08-01", "source": "fixture://t1", "retrieved_at": "2026-10-24"},
+    {"id": "t2", "kind": "transaction", "property_id": "p", "bedrooms": 3, "area_sqft": "1010", "area_basis": "strata", "price": "1900000", "date": "2026-09-15", "source": "fixture://t2", "retrieved_at": "2026-10-24"},
+    {"id": "unknown-area", "kind": "transaction", "property_id": "p", "bedrooms": 3, "area_sqft": null, "area_basis": "strata", "price": "1800000", "date": "2026-09-15", "source": "fixture://pending", "retrieved_at": "2026-10-24"}
+  ]
+}

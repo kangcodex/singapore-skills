@@ -1,0 +1,7 @@
+{
+  "example_notice": "Synthetic loan illustration; no institutional approval or statutory dates.",
+  "start_date": "2026-11-01",
+  "buyers": [{"age": 32, "residency": "sc", "existing_properties": 0, "outstanding_loans": 0, "monthly_income": "15000", "cpf_oa": "300000", "cpf_oa_monthly": "2000"}],
+  "household": {"cash": "500000", "other_monthly_debts": "0"},
+  "option": {"name": "Synthetic purchase", "category": "resale_condo", "price": "1500000", "loan": {"type": "bank", "tenure_years": 25}, "renovation": "0", "furnishing": "0"}
+}

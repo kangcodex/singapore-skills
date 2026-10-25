@@ -1,0 +1,14 @@
+{
+  "example_notice": "Synthetic future-home policy; age permission does not override the move deadline.",
+  "as_of": "2026-10-24",
+  "requirements": [
+    {"id": "age", "priority": "hard", "state": "confirmed", "condition": {"kind": "age", "max_years": 5, "include_uncompleted": true}},
+    {"id": "move", "priority": "hard", "state": "confirmed", "condition": {"kind": "ready_by", "date": "2028-06-01"}}
+  ],
+  "facts": {
+    "completion_status": {"state": "known", "value": "uncompleted", "evidence_ids": ["fixture"]},
+    "actual_top": {"state": "not_applicable", "value": null},
+    "expected_top": {"state": "known", "value": "2029", "evidence_ids": ["fixture"]},
+    "occupancy_date": {"state": "known", "value": {"earliest": "2029-06-01", "latest": "2030-01-01"}, "evidence_ids": ["fixture"]}
+  }
+}

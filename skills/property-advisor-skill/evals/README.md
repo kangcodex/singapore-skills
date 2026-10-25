@@ -31,6 +31,27 @@ Unit tests are independently runnable with:
 They prove calculations/record/CLI invariants, not all natural-language expectations.
 Do not equate a green scripted fixture with validated real-world recommendations.
 
+## Question-led implementation cases
+
+`question-led-evals.json` adds native cases101–105 for flexible age/future TOP,
+focused MRT/journey answers, actual document revisions/family needs, dated cash/CPF
+and changed-price/scenario advice. Its file paths resolve from this eval directory.
+Keep run-specific coverage/status notes under ignored `runs/` or `reports/`.
+Executable contract tests, native interpretation/document reading and independent
+real-source/human qualification are separate forms of evidence.
+
+All14 `--assess` kinds have runnable synthetic files at `assets/examples/KIND.json`
+and are driven through the real CLI by `tests/test_advisor_cli.py`. This is
+deterministic interface/behavior evidence, not proof of actual provider access.
+The full bound-case example is `assets/question-led-case.json`.
+
+For native evaluation, retain exact prompts, fixture source, actual outputs and
+tool-use notes. A read-only evaluator interpreting controller-computed outputs is
+not an unassisted tool-orchestration benchmark. PDF parsed text does not prove
+scanned OCR or visual room clearances. Do not invent A/B scores/timings when no
+matching baseline/timing was run. Raw outputs, excerpts, grades and skill-creator
+review HTML belong under ignored `runs/` and stay outside the published skill.
+
 Minimum release-review evidence includes useful named research, cross-category
 discovery, exact-home/layout reasoning, category traps and multi-turn updates.
 Each category needs meaningful known-evidence and missing-evidence cases; returning

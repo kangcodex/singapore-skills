@@ -4,6 +4,26 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed — 2026-10-24
+
+- **Question-led property advisor implementation**: focused plans and executable
+  assessments for normalized requirements, actual/future-route evidence, amenities,
+  document versions, household function, supplied inventory, comparables, funding,
+  loan/cost scenarios, exit and inactive watch specifications.
+- Semantic age/date/unit/basis checks distinguish recent completed homes from
+  permitted future launches and practical occupancy. Case references recompute
+  assessments with fingerprints, retire unchanged stale advice and protect
+  confirmed requirement changes with user provenance.
+- Added chronological cash/CPF/loan eligibility/cap/reserve allocation, strategy
+  comparison, recurring household shocks and linked net-exit inputs. Corrected
+  zero/prorated CPF use across fees/instalments, nested policy uncertainty,
+  ownership-versus-loan count, resale EC stages, supplied dates, higher-duty value
+  basis and infeasible lowest-cost selection. Legacy scenarios remain illustrations.
+- Added synthetic runnable examples and regression/CLI coverage. Working design
+  files in `docs/property-advisor/` are ignored and untracked while retained locally;
+  maintained runtime guides and sanitized fixtures remain distributable. Live
+  provider/complex visual/institutional outcomes require actual native evidence.
+
 ### Changed — 2026-10-23
 
 - **`property-advisor-skill` cross-category decision workflow** — household-led

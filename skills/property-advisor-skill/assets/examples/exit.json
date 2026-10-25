@@ -1,0 +1,8 @@
+{
+  "example_notice": "Supplied fictional exit/refund amounts, not entitlement or tax advice.",
+  "sale_price": "2000000",
+  "loan_redemption": "1200000",
+  "selling_costs": "50000",
+  "cpf_principal_refund": "350000",
+  "cpf_accrued_refund": "30000"
+}
