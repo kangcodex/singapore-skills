@@ -10,7 +10,8 @@ A Singapore rental-yield estimator for private condo buyers. Given an asking pri
 ## Quick Start
 
 ```bash
-python3 skills/rental-yield-calculator-skill/scripts/rental_yield.py \
+# Run from the installed skill directory.
+python3 scripts/rental_yield.py \
     --asking 1500000 \
     --town "DISTRICT 9" \
     --region whole_sg \
@@ -151,29 +152,10 @@ Namespaces used:
 - **URA Private Resi Trans by region is region-aggregate, not town-aggregate.** `--region whole_sg` gives SG-wide median; `--region outside_central` gives the non-central region. For a town-specific buy price, you need the URA Private Resi Trans by town dataset, which this skill does not use.
 - **No inflation modelling.** The trend shows nominal rent; the real yield is lower if inflation is positive.
 
-## Tests
-
-Smoke tests use stdlib `unittest` + `unittest.mock` to stub `fetch_ura_rentals`, `fetch_ura_private_resi_trans`, `fetch_ura_master_plan`, and `geocode`:
-
-```bash
-python3 -m unittest discover -s skills/rental-yield-calculator-skill/tests
-```
-
-The suite covers:
-- Gross/net yield for a private condo (District 9)
-- HDB town (Bishan) where the rent data shape is different
-- Missing rent data (empty result)
-- No URA amenities within 1km
-- Geocoder failure (graceful fallback)
-- Trend block (last 8 quarters, sparkline, QoQ/YoY)
-- Module import + public surface
-- No top-level network calls
-
 ## References
 
 - `references/ura-rentals.md` — coll 1660 (rent series) schema and quirks
 - `references/ura-private-trans.md` — colls 1655-1658 (buy-price baseline) schema
-- `../docs/api/URA.md` — canonical URA catalog (273 collections)
 
 ## Install
 

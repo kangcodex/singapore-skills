@@ -11,16 +11,17 @@ A Singapore property salesperson (estate agent) directory backed by CEA's public
 
 ```bash
 # Look up by name
-python3 skills/agent-match-skill/scripts/agent_match.py --name "Alice Tan"
+# Run from the installed skill directory.
+python3 scripts/agent_match.py --name "Alice Tan"
 
 # Look up by registration number
-python3 skills/agent-match-skill/scripts/agent_match.py --registration-no R012345X
+python3 scripts/agent_match.py --registration-no R012345X
 
 # Filter to a postcode sector (e.g. postal district 23)
-python3 skills/agent-match-skill/scripts/agent_match.py --name "Alice Tan" --postcode 570123
+python3 scripts/agent_match.py --name "Alice Tan" --postcode 570123
 
 # Attach track-record (count of closed deals in Tiong Bahru, 5-room HDB)
-python3 skills/agent-match-skill/scripts/agent_match.py --name "Alice Tan" \
+python3 scripts/agent_match.py --name "Alice Tan" \
     --town "TIONG BAHRU" --flat-type "5-ROOM"
 ```
 
@@ -150,32 +151,10 @@ Namespaces used:
 - **No deal date filtering.** `--town` + `--flat-type` count all CEA-reported transactions since the dataset's start date, not a date window.
 - **Geocoder requires network.** If OneMap is unreachable, `--postcode` lookup fails with `{"error": "..."}` even if the salesperson register is cached.
 
-## Tests
-
-Smoke tests use stdlib `unittest` + `unittest.mock` to stub `fetch_cea_salesperson`, `fetch_cea_transaction_records`, and `geocode`:
-
-```bash
-python3 -m unittest discover -s skills/agent-match-skill/tests
-```
-
-The suite covers:
-- Name hit (1 row, 1 match)
-- Registration number hit (exact match on `R012345X`)
-- No match (`match_count: 0`, not an error)
-- Empty query rejected
-- Postcode sector extraction
-- Postcode hit / postcode miss
-- Track-record with deals
-- Track-record with no deals
-- Module import + public surface
-- No top-level network calls
-
 ## References
 
 - `references/cea-salesperson.md` — coll 54 register schema and quirks
 - `references/cea-transactions.md` — coll 55 transaction records schema and track-record logic
-- `../docs/api/CEA.md` — canonical CEA catalog (the v2 collection listing)
-- `../docs/api/OneMap.md` — geocoder reference for the `--postcode` path
 
 ## Install
 

@@ -12,7 +12,8 @@ The bundled `trip_concierge.py` does the **deterministic** work (parameter valid
 ## Quick start
 
 ```bash
-python3 skills/overseas-trip-planner-skill/scripts/trip_concierge.py \
+# Run from the installed skill directory.
+python3 scripts/trip_concierge.py \
     --destination "Kyoto" --month 2026-11 --transport self-drive \
     --companion couple --style cultural --pace moderate \
     --accommodation premium --rhythm early-starts
@@ -89,7 +90,7 @@ If the user can only give partial info, **ask the highest-leverage question firs
 The script is stdlib-only and runs offline. It is the **safety net**, not the brain.
 
 ```bash
-python3 skills/overseas-trip-planner-skill/scripts/trip_concierge.py \
+python3 scripts/trip_concierge.py \
     --destination CITY --month YYYY-MM --transport public|self-drive|mixed \
     [--companion solo|couple|family|friends|elderly] \
     [--style cultural|classic|nature|cityscape|historical] \
@@ -288,11 +289,3 @@ End every itinerary with:
 | Output template | Markdown skeleton the agent must follow | This file (Phase 5) |
 
 The skill ships **no** network-fetched data. The LLM does the subjective lookup; the user verifies real-time data.
-
-## Testing
-
-Smoke tests at `tests/test_trip_concierge.py` cover the full 5-dim model (param validation, sunset lookup, transit buffer math, companion/style/pace/accommodation/rhythm strategies, contradiction detection, heavy-transit flag). Run with:
-
-```bash
-python3 -m unittest discover -s skills/overseas-trip-planner-skill/tests -v
-```

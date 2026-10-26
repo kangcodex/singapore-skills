@@ -302,5 +302,11 @@ prd/
 /development/
 *.skill
 
+# Retired local graders/verifier
+/skills/overseas-trip-planner-skill/evals/grade.py
+/skills/sg-fruit-price-tracker-skill/evals/grade.py
+/skills/sg-home-chef-skill/evals/grade.py
+/scripts/verify_all_skills.sh
+
 # Generated reports are local artifacts and are never committed
 reports/

@@ -10,6 +10,14 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
   with existing files retained locally. Published package checks are independent;
   the broader regression/evaluation corpus is opt-in local material and is not
   included in fresh clones.
+- **Repository-wide skill distribution audit**: moved all remaining skill tests
+  and reusable eval prompts outside installable folders. Retired three bespoke
+  graders, an obsolete verifier and the working home-chef design note from Git;
+  local files are retained and ignored. Kept useful unique checks in unit tests.
+- Added one runtime-only exporter for all13 skills, with license materialization,
+  isolated import checks and the existing hawker-to-CDC companion dependency.
+  Kept required bundled API clients and agent-facing knowledge. Consolidated
+  packaging code, removed unused test scaffolding and streamlined installed guides.
 - **Lean property-advisor distribution**: moved developer tests, eval definitions
   and synthetic assessment/case/scenario fixtures to `development/property-advisor/`.
   Installed skills retain runtime scripts, reference docs/data, the case template,

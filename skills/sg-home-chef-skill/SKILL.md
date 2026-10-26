@@ -1,6 +1,6 @@
 ---
 name: sg-home-chef-skill
-description: "Singapore home chef skill that turns any dish request into a 3-tier recipe brief calibrated to your HDB-cookout-kitchen reality. Use this skill whenever the user asks for a recipe in Singapore, wants to know what ingredients to buy, asks how to cook a specific dish (Sambal Kang Kong, Hainanese Chicken Rice, Roti Prata, Laksa, Char Kway Teow, Bak Kut Teh, etc.), wants to plan meals, asks about rempah (paste), wants to know how to talk to a wet-market vendor, or wants to know what skill level a dish requires. Triggers on phrases like 'I want to cook [dish] in Singapore', 'recipe for [dish]', 'how do I make [dish]', 'what ingredients do I need for [dish]', 'where to buy rempah in Singapore', 'how to talk to Tekka vendor', 'beginner recipe SG', '30-minute dinner Singapore', 'what can I cook with chicken and rice', 'NTUC vs wet market shopping', 'how to wok hei at home', 'Singapore hawker recipe at home', 'gluten-free sambal', 'halal chicken rice', 'vegetarian laksa'. Skill ladders the user across beginner (one-pan + ready-made rempah, ≤30 min), intermediate (tumis, 30–60 min, blender paste), and advanced (wok hei, manual rempah, fermentation, 60–240 min). Sourcing ladder: supermarket (NTUC / Sheng Siong / Cold Storage) for labelled convenience, wet market (Tekka / Tiong Bahru / Geylang Serai) for fresh. Do NOT use for: eating-out recommendations (use hawker-discover-skill), nutrition / calorie planning, restaurant-business consulting, commercial kitchen design, or recipes that require commercial equipment (salamander, sous-vide circulator, plancha)."
+description: "Singapore home-cooking coach for recipes, meal ideas, ingredient shopping, rempah, wet-market vendor language and home technique. Use for dishes such as sambal kang kong, chicken rice, prata, laksa, char kway teow or bak kut teh, including halal, vegetarian, vegan and gluten-free requests. Produces a recipe brief suited to an HDB kitchen, the cook's beginner/intermediate/advanced skill level and supermarket or wet-market sourcing. Includes bilingual Malay/Chinese ingredient names, substitutions and visual/aroma milestones. Also use for NTUC-versus-wet-market shopping, 30-minute dinners and home wok-hei questions. Not for eating out, nutrition/calorie advice, restaurant consulting or commercial-kitchen equipment."
 ---
 
 # Singapore Home Chef
@@ -19,7 +19,8 @@ The output is a **single Markdown document** that the agent (you) writes by read
 Run the script with the user's parameters, read the JSON, then write the recipe brief.
 
 ```bash
-python3 skills/sg-home-chef-skill/scripts/sg_home_chef.py \
+# Run from the installed skill directory.
+python3 scripts/sg_home_chef.py \
   --dish "Sambal Kang Kong" \
   --skill-level beginner \
   --sourcing-track supermarket \
@@ -168,22 +169,6 @@ See `references/recipe-blueprint.md` for the full markdown skeleton. The 8-secti
 - **Wet market vendor language**: based on Vendor-Singlish-Market-Speak (Clement, 2018), Tiong Bahru Market Cookbook (Tan, 2019), and field observation
 - **Ingredient dictionary**: cross-referenced with Ya Kun Kaya Toast, Killiney Kopitiam, and 4 hawker stall ingredient lists (Bukit Merah, 2024)
 - **Skill tier calibration**: Home Cook Hacks (Seow, 2020), Wok Hei at Home (Leong, 2021), and observed failure modes from CDC Toa Payoh cooking classes (2023)
-
-## Testing
-
-Run the unit tests:
-
-```bash
-cd skills/sg-home-chef-skill && python3 -m unittest tests.test_sg_home_chef -v
-```
-
-Run the evals:
-
-```bash
-python3 skills/sg-home-chef-skill/evals/grade.py
-```
-
-The evals grade the *script output* (the deterministic JSON) — not the LLM prose. The grader checks the strategy dicts, ingredient lookups, dietary filters, milestone tables, and contradiction warnings. The LLM's job is to turn the JSON into a *good* recipe brief; the script's job is to ensure the *structure* is correct.
 
 ## Companion skills (this repo)
 

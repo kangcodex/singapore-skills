@@ -15,26 +15,20 @@ Usage:
     python3 scripts/sync_env_example.py --check     # exit 1 if any copy is stale
     python3 scripts/sync_env_example.py --dry-run   # show what would change
 
-Add a new skill to SKILL_FOLDERS when you create a new skills/<skill>/ folder.
-This list MUST match scripts/sync_singapore_api.py (consumed by CI).
+The skill registry is imported from scripts/sync_singapore_api.py.
+Add API-backed skills there to keep client and template distribution aligned.
 """
 import sys
 from pathlib import Path
 
+if __package__:
+    from .sync_singapore_api import SKILL_FOLDERS
+else:
+    from sync_singapore_api import SKILL_FOLDERS
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CANONICAL = REPO_ROOT / ".env.example"
 SKILLS_DIR = REPO_ROOT / "skills"
-
-SKILL_FOLDERS = [
-    "cdc-voucher-locator-skill",
-    "smart-commuter-skill",
-    "resale-property-advisor-skill",
-    "weekend-planner-skill",
-    "mrt-rerouter-skill",
-    "dengue-risk-advisor-skill",
-    "hawker-discover-skill",
-]
-
 
 def per_skill_path(skill_folder):
     return SKILLS_DIR / skill_folder / ".env.example"

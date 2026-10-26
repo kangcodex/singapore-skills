@@ -1,6 +1,6 @@
 ---
 name: sg-fruit-price-tracker-skill
-description: "Track fruit prices across Singapore supermarkets — FairPrice (NTUC), Cold Storage, and Sheng Siong. Covers 30 common and exotic fruits (apple, banana, orange, mango, durian, dragon fruit, rambutan, mangosteen, papaya, watermelon, pineapple, lychee, longan, jackfruit, pomelo, pear, peach, plum, strawberry, blueberry, raspberry, cherry, grape, kiwi, lemon, lime, persimmon, pomegranate, guava, star fruit). Captures product name, weight, price SGD, original/promo price, rating, source URL. Cold Storage and FairPrice are scraped directly via stdlib urllib; Sheng Siong is Meteor SPA, so data comes from web_search (best-effort, like a price-comparison site). Emits CSV (default) or JSON (--json) with rolling 7-day retention. Use this skill whenever the user mentions tracking, monitoring, scraping, or comparing fruit prices at SG supermarkets; asks for a weekly grocery price report; wants to know if durian is on promo at FairPrice; or wants a recurring price check on any of the 30 listed fruits. Does NOT trigger for general grocery shopping, recipe planning, hawker food, or non-fruit produce."
+description: "Track and compare fresh-fruit prices at Singapore supermarkets: FairPrice, Cold Storage and Sheng Siong. Use for fruit-price lookups, promotions, weekly reports or recurring monitoring, including mango, durian, dragon fruit/pitaya, lychee and the other curated fruits. The bundled stdlib scraper handles Cold Storage and FairPrice; native search is the best-effort fallback for Sheng Siong. Emits CSV/JSON with product, weight, price and source fields, excludes non-fruit products and supports retained-file cleanup. Not for recipes, eating-out recommendations or general non-fruit shopping."
 ---
 
 # SG Fruit Price Tracker
@@ -300,19 +300,3 @@ Do **not** trigger for:
 | Sheng Siong web_search snippets | Best-effort price data                 | `web_search` runtime function      |
 | Blocklist keywords              | Filter non-fruit products              | `scripts/fruit_price_tracker.py`   |
 | Cache layer                     | Avoid re-fetching within 1 hour        | `~/.hermes/cache/sg-fruit-prices/` |
-
-## Testing
-
-Smoke tests at `tests/test_fruit_price_tracker.py` cover pure helpers (blocklist, price validation, weight parsing, regex extraction for both retailers, dedup, CSV/JSON output, cache TTL) using canned HTML fixtures — no network. Run with:
-
-```bash
-python3 -m unittest discover -s skills/sg-fruit-price-tracker-skill/tests -v
-```
-
-## Evals
-
-Realistic test prompts at `evals/evals.json`. The grader at `evals/grade.py` runs the script with canned HTML and checks the output. Run with:
-
-```bash
-python3 skills/sg-fruit-price-tracker-skill/evals/grade.py
-```

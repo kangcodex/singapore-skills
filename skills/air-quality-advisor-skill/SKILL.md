@@ -11,13 +11,14 @@ A real-time Singapore air-quality advisor. Fetches current PSI, PM2.5, and UV in
 
 ```bash
 # By address
-python3 skills/air-quality-advisor-skill/scripts/air_quality.py --location "Bishan Park"
+# Run from the installed skill directory.
+python3 scripts/air_quality.py --location "Bishan Park"
 
 # By lat,lon
-python3 skills/air-quality-advisor-skill/scripts/air_quality.py --location 1.3508,103.8494
+python3 scripts/air_quality.py --location 1.3508,103.8494
 
 # By 6-digit Singapore postcode
-python3 skills/air-quality-advisor-skill/scripts/air_quality.py --postcode 570123
+python3 scripts/air_quality.py --postcode 570123
 ```
 
 Stdlib only — no `pip install`. No auth required for NEA endpoints (anonymous access works).
@@ -181,29 +182,10 @@ Namespaces used:
 - **No PM10.** The skill reports PM2.5 only. PM10 is a different (and usually higher) number; if you need both, that's a future enhancement.
 - **Geocoder is the only network call that requires external services.** NEA endpoints are anonymous; OneMap requires internet but no auth.
 
-## Tests
-
-Smoke tests use stdlib `unittest` + `unittest.mock` to stub `fetch_psi`, `fetch_pm25`, `fetch_uv`, `fetch_four_day_forecast`, and `geocode`:
-
-```bash
-python3 -m unittest discover -s skills/air-quality-advisor-skill/tests
-```
-
-The suite covers:
-- Location resolution (address, postcode, lat,lon)
-- Postcode validation (5-digit rejected)
-- PSI / PM2.5 / UV classification (good / unhealthy / hazardous / extreme)
-- Health advisory worst-band logic
-- Forecast summary (group by date, extract fields)
-- Assess end-to-end (all good, all hazardous)
-- Module import + public surface
-- No top-level network calls
-
 ## References
 
 - `references/nea-realtime.md` — NEA endpoint shapes, response payloads, example outputs
 - `references/health-advisories.md` — the 5-band table with NEA citations
-- `../docs/api/NEA.md` — canonical NEA catalog (109 collections)
 
 ## Install
 

@@ -12,7 +12,8 @@ Find CDC Voucher-accepting merchants near any Singapore location, with smart int
 After installing, run:
 
 ```bash
-python3 /path/to/your/skills/singapore/cdc-voucher-locator/scripts/cdc_voucher_locator.py "Ang Mo Kio Hub" B 500
+# Run from the installed skill directory.
+python3 scripts/cdc_voucher_locator.py "Ang Mo Kio Hub" B 500
 ```
 
 Arguments: `query`, `mode` (A|B|C|D), `radius_m` (default 500)

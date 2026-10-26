@@ -130,13 +130,3 @@ needed.
 The shared client (`singapore_api.py`) handles disk caching under
 `~/.hermes/cache/<namespace>/<sha1>.json`. The skill does not add
 its own cache layer.
-
-## Tests
-
-```bash
-python3 -m unittest discover -s tests
-```
-
-The test file mocks all four fetchers and covers the full tier matrix
-(4 tiers × 2 PSI tiers = 8 cells), the score formula, and the
-"insufficient history" fallback.

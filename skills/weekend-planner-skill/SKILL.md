@@ -8,7 +8,8 @@ description: "Plan a Singapore weekend around weather, air quality, UV, and hawk
 ## Quick start
 
 ```bash
-python3 skills/weekend-planner-skill/scripts/weekend_planner.py \
+# Run from the installed skill directory.
+python3 scripts/weekend_planner.py \
     --location "Botanic Gardens" --activity "makan" --time "Saturday noon"
 ```
 
@@ -100,17 +101,3 @@ Tunables live in the cache namespace argument, not in the script.
 | NEA Hawker Closures | `fetch_hawker_closures()` | All hawker centres + cleaning schedule |
 | ActiveSG Facilities | `fetch_activesg_facilities()` | All ActiveSG facilities + indoor flag |
 | OneMap Geocoder | `geocode()` | Address → (lat, lon, address, postal) |
-
-## Testing
-
-Smoke tests at `tests/test_weekend_planner.py` cover pure helpers (tier classification, pivot selection, hawker open/closed check, indoor-nearest) with no network. Integration tests mock the 5 fetchers and the geocoder via `unittest.mock.patch`. Run with:
-
-```bash
-python3 -m unittest discover -s skills/weekend-planner-skill/tests -v
-```
-
-Or include the whole repo:
-
-```bash
-python3 -m unittest discover -s tests
-```
