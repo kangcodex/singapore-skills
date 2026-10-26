@@ -4,6 +4,41 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed — 2026-10-25
+
+- **Local-only developer workspaces**: `development/` is ignored and untracked,
+  with existing files retained locally. Published package checks are independent;
+  the broader regression/evaluation corpus is opt-in local material and is not
+  included in fresh clones.
+- **Lean property-advisor distribution**: moved developer tests, eval definitions
+  and synthetic assessment/case/scenario fixtures to `development/property-advisor/`.
+  Installed skills retain runtime scripts, reference docs/data, the case template,
+  environment template and MIT license. Updated resource paths and test commands.
+- Added a tracked-runtime-only folder/`.skill` exporter and extracted-archive
+  regression checks, so local casework, eval outputs and caches are not packaged.
+  Removed the unused private demand helper and unused radius constant; supported
+  CLI/Python interfaces remain covered by compatibility tests.
+
+### Changed — 2026-10-24
+
+- **Question-led property advisor implementation**: focused plans and executable
+  assessments for normalized requirements, actual/future-route evidence, amenities,
+  document versions, household function, supplied inventory, comparables, funding,
+  loan/cost scenarios, exit and inactive watch specifications.
+- Semantic age/date/unit/basis checks distinguish recent completed homes from
+  permitted future launches and practical occupancy. Case references recompute
+  assessments with fingerprints, retire unchanged stale advice and protect
+  confirmed requirement changes with user provenance.
+- Added chronological cash/CPF/loan eligibility/cap/reserve allocation, strategy
+  comparison, recurring household shocks and linked net-exit inputs. Corrected
+  zero/prorated CPF use across fees/instalments, nested policy uncertainty,
+  ownership-versus-loan count, resale EC stages, supplied dates, higher-duty value
+  basis and infeasible lowest-cost selection. Legacy scenarios remain illustrations.
+- Added synthetic runnable examples and regression/CLI coverage. Working design
+  files in `docs/property-advisor/` are ignored and untracked while retained locally;
+  maintained runtime guides ship with the skill and verification fixtures stay local. Live
+  provider/complex visual/institutional outcomes require actual native evidence.
+
 ### Changed — 2026-10-23
 
 - **`property-advisor-skill` cross-category decision workflow** — household-led
@@ -17,7 +52,7 @@ All notable changes to singapore-skills. Format follows [Keep a Changelog](https
   scenario capabilities remain supported separately from researched decisions.
 - Added fixed behavioral eval definitions, synthetic evidence and regression/CLI
   checks. Development research, personal casework and generated eval outputs are
-  Git-ignored; reusable skill sources, fixtures and tests remain version-controlled.
+  Git-ignored; runtime skill sources and self-contained public checks remain version-controlled.
 
 ### Added — 2026-10-19
 

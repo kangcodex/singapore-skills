@@ -16,6 +16,7 @@ from pathlib import Path
 from advisor_calculations import CalculationError, cost_total, monthly_payment, price_premium
 from advisor_case import Audit, audit_case
 from advisor_records import CaseError, JSONValue, Record, parse_json, read_case, record, rows
+from advisor_workflow import ASSESSORS, assess, evaluate_case
 
 
 def cell(value: JSONValue) -> str:
@@ -44,9 +45,10 @@ def render_report(case: Record, audit: Audit) -> str:
     """Render the same audited record; never invent recommendations or source facts."""
     brief = record(case["buyer_brief"], "buyer_brief")
     search = record(case["search_brief"], "search_brief")
+    decision = "Prior summary is superseded pending reassessment. Use the recomputed checks below; the previous decision is not current advice." if case.get("summary_status") == "superseded_pending_reassessment" else str(case.get("summary") or "Research is incomplete; no purchase recommendation has been established.")
     lines = [f"# Housing decision: {cell(case['case_id'])}",
              f"Version {case['version']} | Research date: {case['research_date']}",
-             "", "## Decision", str(case.get("summary") or "Research is incomplete; no purchase recommendation has been established."),
+             "", "## Decision", decision,
              "", "## Household and assumptions", *describe(brief),
              "", "## Search coverage", str(search.get("coverage")),
              "", "## Candidate comparison", "| Home | Fit | Availability | Price basis |", "|---|---|---|---|"]
@@ -58,7 +60,13 @@ def render_report(case: Record, audit: Audit) -> str:
         if not entries:
             lines.append("Not established; further research or explicit assumptions are required.")
         for entry in entries:
+            if entry.get("status") == "superseded_pending_reassessment":
+                lines.append("Superseded recommendation — historical wording below is not current advice:")
             lines.extend(describe(entry))
+    if case.get("assessment_results"):
+        lines.extend(["", "## Computed question-led assessments", *describe(case["assessment_results"])])
+    if case.get("change_summary"):
+        lines.extend(["", "## Recomputed changes", *describe(case["change_summary"])])
     lines.extend(["", "## Source register", "| Claim | Kind / scope | Confidence | Source | Retrieved |", "|---|---|---|---|---|"])
     for claim in rows(case["evidence"], "evidence"):
         lines.append(f"| {cell(claim.get('id'))} | {cell(claim.get('kind'))} / {cell(claim.get('scope'))} | {cell(claim.get('confidence'))} | {cell(claim.get('source'))} | {cell(claim.get('retrieved_at'))} |")
@@ -76,6 +84,8 @@ def main(argv: list[str] | None = None) -> int:
     task = parser.add_mutually_exclusive_group(required=True)
     task.add_argument("--case", type=Path)
     task.add_argument("--calculate", choices=("subtotal", "mortgage", "premium"))
+    task.add_argument("--assess", choices=tuple(ASSESSORS))
+    parser.add_argument("--input", type=Path, help="JSON input for a focused assessment; only this explicit file is read")
     parser.add_argument("--previous-case", type=Path)
     parser.add_argument("--format", choices=("markdown", "json"), default="markdown")
     parser.add_argument("--components", help='JSON object of cost name to decimal string or null')
@@ -88,10 +98,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--baseline-unit", choices=("total", "psf", "monthly", "psf_month", "land_psf", "built_psf"))
     parser.add_argument("--area-sqft")
     args = parser.parse_args(argv)
+    if args.previous_case is not None and args.case is None:
+        parser.error("--previous-case is only valid with --case")
+    if args.input is not None and args.assess is None:
+        parser.error("--input is only valid with --assess")
     try:
+        if args.assess is not None:
+            if args.input is None:
+                parser.error("--assess requires --input FILE.json")
+            result = assess(args.assess, read_case(args.input))
+            if args.format == "json":
+                print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
+            else:
+                print(f"# {args.assess.replace('_', ' ').title()} assessment\n\n" + "\n".join(describe(result)))
+            return 0
         if args.case is not None:
             case = read_case(args.case)
             previous = read_case(args.previous_case) if args.previous_case else None
+            case = evaluate_case(case, previous)
             audit = audit_case(case, previous)
             if args.format == "json" or audit.errors:
                 print(json.dumps({"case": case, "audit": asdict(audit)}, ensure_ascii=False, indent=2, allow_nan=False))

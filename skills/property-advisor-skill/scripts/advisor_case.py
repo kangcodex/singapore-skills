@@ -6,6 +6,8 @@ from datetime import date
 from typing import Final
 
 from advisor_records import CaseError, Record, choice, read_case as read_case, record, rows, strings
+from advisor_screening import combined_facts, requirement_check, verified_support
+from advisor_revisions import revision_problems
 
 ENTITIES: Final = ("properties", "candidates", "evidence", "comparables", "cost_scenarios", "recommendations", "policy_assessments", "source_access", "history")
 CATEGORIES: Final = {"hdb", "ec", "private_non_landed", "landed"}
@@ -68,6 +70,7 @@ def audit_case(case: Record, previous: Record | None = None) -> Audit:
         return [evidence[ref] for ref in refs if ref in evidence]
 
     requirements = rows(brief.get("requirements"), "requirements")
+    requirement_map = {str(item.get("id")): item for item in requirements}
     hard = {str(item.get("id")) for item in requirements if item.get("priority") == "hard"}
     requirement_ids = {str(item.get("id")) for item in requirements}
     if len(requirement_ids) != len(requirements):
@@ -84,7 +87,9 @@ def audit_case(case: Record, previous: Record | None = None) -> Audit:
         if str(candidate.get("property_id")) not in indexes["properties"]:
             errors.append(f"candidate {identity}: unknown property_id")
         checks = rows(candidate.get("checks"), "checks")
+        facts = combined_facts(indexes["properties"].get(str(candidate.get("property_id")), {}), candidate)
         passed: set[str] = set()
+        active_hard = 0
         seen: set[str] = set()
         invalid_checks = False
         for check in checks:
@@ -94,12 +99,29 @@ def audit_case(case: Record, previous: Record | None = None) -> Audit:
                 errors.append(f"candidate {identity}: duplicate or unknown requirement check {requirement_id}")
                 invalid_checks = True
             seen.add(requirement_id)
-            if not choice(check.get("result"), {"pass", "fail", "unknown"}):
+            if not choice(check.get("result"), {"pass", "fail", "unknown", "not_applicable"}):
                 errors.append(f"candidate {identity}: invalid check result")
-            if check.get("result") == "pass" and supporting and all(choice(item.get("confidence"), {"verified", "corroborated"}) and item.get("extraction_status") == "completed" for item in supporting):
+            if choice(check.get("result"), {"pass", "not_applicable"}) and supporting and all(choice(item.get("confidence"), {"verified", "corroborated"}) and item.get("extraction_status") == "completed" for item in supporting):
+                requirement = requirement_map.get(requirement_id)
+                if requirement is not None and requirement.get("priority") == "hard":
+                    try:
+                        semantic = requirement_check(requirement, facts, research_date)
+                    except ValueError as exc:
+                        errors.append(f"candidate {identity}: semantic condition invalid: {exc}")
+                        continue
+                    if semantic.result != check.get("result") or not semantic.evidence_ids:
+                        errors.append(f"candidate {identity}: semantic hard constraint {requirement_id} is {semantic.result} or lacks fact provenance")
+                        continue
+                    if not set(semantic.evidence_ids).issubset(strings(check.get("evidence_ids", []), "evidence_ids")):
+                        errors.append(f"candidate {identity}: semantic fact evidence is absent from declared support")
+                        continue
+                    if not verified_support(list(semantic.evidence_ids), evidence, identity, str(candidate.get("property_id")), research_date):
+                        errors.append(f"candidate {identity}: semantic evidence is stale, hypothetical or belongs to another property/home")
+                        continue
+                    active_hard += semantic.result == "pass"
                 passed.add(str(check.get("requirement_id")))
         if candidate.get("fit") == "verified":
-            if not hard.issubset(passed) or not hard or invalid_checks:
+            if not hard.issubset(passed) or not hard or not active_hard or invalid_checks:
                 errors.append(f"candidate {identity}: hard constraint missing, failed or unsupported")
         if not choice(candidate.get("fit"), {"verified", "conditional", "stretch", "rejected"}):
             errors.append(f"candidate {identity}: invalid fit state")
@@ -139,6 +161,7 @@ def audit_case(case: Record, previous: Record | None = None) -> Audit:
     if not groups["recommendations"]:
         warnings.append("No recommendation yet; complete the human-readable decision before publication.")
     if previous is not None:
+        errors.extend(revision_problems(case, previous))
         prior_version = previous.get("version")
         if type(prior_version) is not int:
             errors.append("previous case version must be an integer")

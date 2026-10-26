@@ -69,8 +69,11 @@ def _policy():
 
 
 def _lowest_tco(comparison):
-    best = min(comparison["options"], key=lambda o: Decimal(o["tco"]["10"]["total"]))
-    return f"lowest 10-year cost of occupancy: {best['name']}"
+    eligible = [option for option in comparison["options"] if option.get("verdict") != "not affordable" and option.get("requirement_status") not in ("fail", "fails_supplied_constraints", "rejected") and option.get("timing_result") != "fail"]
+    if not eligible:
+        return "no feasible option under the supplied scenario checks"
+    best = min(eligible, key=lambda option: Decimal(option["tco"]["10"]["total"]))
+    return f"lowest 10-year cost of occupancy among nonfailed scenarios: {best['name']} (not an overall household recommendation)"
 
 
 def run_task(args):

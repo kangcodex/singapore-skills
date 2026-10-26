@@ -11,6 +11,26 @@ input or failed invariants. Markdown is the default for a valid case; audit erro
 are emitted as JSON even if Markdown was requested. Empty research-stage cases
 remain visibly incomplete, not successful purchase advice.
 
+## Focused executable assessments
+
+`advisor_cli.py --assess KIND --input FILE.json --format json` returns the focused
+assessment directly. Markdown is default. Inputs and examples are documented in
+[assessment-inputs.md](assessment-inputs.md). Supported kinds: question,
+requirements, location, amenities, documents, comfort, funding, loan_plan,
+cost_comparison, exit, comparables, scenarios, search and watch.
+
+Case schema3 remains supported with additive facts/conditions/analysis_requests.
+Current references recompute; input fingerprints/change summaries expose results
+and stale snapshot-only inputs. Strong verified hard-pass records need normalized
+conditions and sourced facts. Question plans/source-input assessments are not
+proof of actual web/route/PDF execution or institutional approval.
+
+Unknown cost subtotals with no known components are null, not zero. A known
+subtotal is still not an all-in total unless every relevant component/rule was
+established. Valid fail/conditional/shortfall assessments exit0 with their status;
+malformed/configuration/audit errors exit2. `--input` belongs to `--assess` and
+`--previous-case` to `--case`; incompatible context flags are rejected.
+
 ## Legacy context CLI / Python callers
 
 Existing v2 flags and assessor function signatures remain available. HDB context
@@ -55,8 +75,10 @@ Uniform agent keys: `mode: "agent"`, `task`, `town`, `since` (start date), `aski
 `trend: null`, `location: null`, `ura_context: null`, `cea_verification: null`.
 Additional keys: `agent`, `summary`, `disclaimer`, `policy_as_of`.
 
-The scenario `verdict` is `affordable|stretch|not affordable` for a plan, or
-`lowest 10-year cost of occupancy: <option>` for a multi-option comparison.
+The scenario `verdict` is `affordable|stretch|not affordable|conditional` for a plan,
+or a lowest modelled10-year occupancy cost among nonfailed scenarios for comparison.
+Known financial/requirement/timing failures are excluded; lowest cost remains
+different from an overall household recommendation.
 These are results under supplied/default assumptions, NOT a final household
 recommendation or current official eligibility. Inspect warnings, simplifications,
 assumptions and unverified policy items before use. `policy_as_of` is a table-date
@@ -72,3 +94,13 @@ Its numeric categories are `resale_hdb`, `resale_condo`, `new_launch_condo`, `ec
 Use the shared cross-category case workflow for new-HDB opportunities and landed
 instead of relabelling them as condo scenarios. Reconcile scenario inputs/results
 into the case with dates, assumptions, applicable rules and excluded costs.
+
+Loan-plan changes: zero/prorated CPF usage constrains the cumulative property limit
+including eligible fees and instalments; missing loan counts are conditional zero
+illustrations, never an ownership-count inference. Nested unverified policy fields
+reach the result. EC purchase_route distinguishes resale from developer stages;
+MSR applicability must be supplied/verified for resale status. Actual payment_schedule
+and milestones replace/default-override illustration dates. Unsupported contradictory
+TOP metadata is not silently ignored. Different price/valuation requires quoted
+loan.amount and loan.minimum_cash. Duties use max(price, supplied market_value),
+with omitted market value explicitly a price-basis assumption.

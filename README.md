@@ -83,6 +83,46 @@ cp -r skills/cdc-voucher-locator-skill ~/.claude/skills/cdc-voucher-locator-skil
 
 For other agents, the destination paths differ — see the [vercel-labs/skills supported agents list](https://github.com/vercel-labs/skills#supported-agents).
 
+## Usage: `property-advisor-skill`
+
+The [advisor workflow](skills/property-advisor-skill/SKILL.md) handles focused
+questions as well as housing searches across HDB, EC, private flats/condos and
+landed. Native tools obtain actual property/document/route evidence; stdlib helpers
+screen supplied facts, reconcile documents, assess household functions and compare
+dated cash/CPF funding/scenarios. See the
+[input reference](skills/property-advisor-skill/references/assessment-inputs.md).
+
+```bash
+python3 skills/property-advisor-skill/scripts/advisor_cli.py \
+  --case skills/property-advisor-skill/assets/case-template.json --format json
+```
+
+The empty template is an import/record smoke check, not completed advice. Create
+actual inputs from the bundled input reference and case template. Source/route/OCR
+access and official eligibility/approval are not implied by a passed calculation.
+
+### Property advisor distribution
+
+`skills/property-advisor-skill/` contains only the runtime: `SKILL.md`, `scripts/`,
+`references/` (including loaded policy/profile JSON), `assets/case-template.json`,
+`.env.example` and `LICENSE`. Tests, eval definitions and demo scenarios under
+`development/property-advisor/` are local-only and excluded from Git. The runtime
+and published package smoke check do not depend on that workspace.
+
+For a clean local folder or importable `.skill` ZIP:
+
+```bash
+python3 scripts/package_property_advisor.py
+# dist/property-advisor-skill/       — copy or install this folder
+# dist/property-advisor-skill.skill  — import this ZIP-format skill
+```
+
+Use a fresh `--output-dir PATH` for another build. The exporter includes tracked
+runtime files only, excluding untracked/local workings even when they are inside
+the checkout. The `npx skills` installer copies subdirectories rather than using
+`.gitignore` as a package filter; use the clean export for local imports. GitHub
+installs select the runtime-only skill folder directly.
+
 ## Usage: `cdc-voucher-locator-skill`
 
 Once installed, the agent triggers the skill automatically when the user asks things like:
@@ -204,16 +244,21 @@ below.
 
 ## Testing
 
-Smoke tests use stdlib `unittest` — no extra dependencies. **Each skill has its
-own `tests/` directory** (so the suite stays self-contained when a single skill
-is installed via `npx skills add --skill <name>`). The repo-root `tests/`
-covers only the **canonical shared client** (`singapore_api.py`).
+Smoke tests use stdlib `unittest` — no extra dependencies. Most skills keep a
+`tests/` directory beside their runtime. Property advisor keeps its developer suite
+in ignored, local-only `development/property-advisor/tests/`; fresh clones do not
+include that corpus. `make test-local` runs it when present. The
+repo-root `tests/` covers the canonical shared client and API integrations.
 
 ```bash
 # Run the shared-client suite
 python3 -m unittest discover -s tests
 
-# Run a per-skill suite
+# Local-only property suite (requires an existing development/ workspace)
+python3 -m unittest discover -s development/property-advisor/tests
+
+# Published package smoke check and other per-skill suites
+python3 -m pytest tests/test_property_distribution.py
 python3 -m unittest discover -s skills/cdc-voucher-locator-skill/tests
 python3 -m unittest discover -s skills/smart-commuter-skill/tests
 python3 -m unittest discover -s skills/resale-property-advisor-skill/tests

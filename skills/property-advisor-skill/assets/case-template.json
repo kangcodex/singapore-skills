@@ -19,5 +19,6 @@
   "policy_assessments": [],
   "source_access": [],
   "history": [],
-  "watchlist": null
+  "watchlist": null,
+  "analysis_requests": []
 }

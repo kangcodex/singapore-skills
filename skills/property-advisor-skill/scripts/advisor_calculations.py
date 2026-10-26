@@ -22,7 +22,7 @@ class CalculationError(ValueError):
 
 
 class CostTotal(TypedDict):
-    subtotal: str
+    subtotal: str | None
     complete: bool
     excluded: list[str]
 
@@ -70,8 +70,9 @@ def price_premium(
 def cost_total(components: dict[str, str | None]) -> CostTotal:
     """Subtotal supplied components; missing components remain excluded, not zero."""
     missing = [key for key, value in components.items() if value is None]
-    total = sum((amount(value) for value in components.values() if value is not None), Decimal(0))
-    return {"subtotal": str(total.quantize(Decimal("0.01"))), "complete": bool(components) and not missing, "excluded": missing}
+    known = [amount(value) for value in components.values() if value is not None]
+    total = sum(known, Decimal(0))
+    return {"subtotal": str(total.quantize(Decimal("0.01"))) if known else None, "complete": bool(components) and not missing, "excluded": missing}
 
 
 def monthly_payment(principal: str, annual_rate_pct: str, years: int) -> Decimal:

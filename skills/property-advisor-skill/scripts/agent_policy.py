@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from agent_money import D, ZERO, whole_dollars_down
+from advisor_records import JSONValue
 
 POLICY_PATH = Path(__file__).resolve().parent.parent / "references" / "policy-tables.json"
 STATUSES = ("verified", "unverified")
@@ -35,8 +36,20 @@ def validate_policy(policy: dict) -> list:
 
 
 def unverified_items(policy: dict) -> list:
-    return [(n, i["unverified_reason"]) for n, i in policy["items"].items()
-            if i.get("status") == "unverified"]
+    """Include nested applicability uncertainty, retaining its full field path."""
+    def walk(value: JSONValue | Decimal, path: str) -> list[tuple[str, str]]:
+        found = []
+        if isinstance(value, dict):
+            if value.get("status") == "unverified":
+                found.append((path, str(value.get("unverified_reason", "Verification is unresolved"))))
+            for name, child in value.items():
+                if isinstance(child, (dict, list)):
+                    found.extend(walk(child, f"{path}.{name}"))
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                found.extend(walk(child, f"{path}.{index}"))
+        return found
+    return [item for name, value in policy["items"].items() for item in walk(value, name)]
 
 
 def _item(policy: dict, name: str) -> dict:
